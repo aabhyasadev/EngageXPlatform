@@ -5,7 +5,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { sendEmail } from "./sendgrid.js";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { insertContactSchema, insertCampaignSchema, insertDomainSchema, insertContactGroupSchema } from "@shared/schema";
+import { insertContactSchema, insertCampaignSchema, insertDomainSchema, insertContactGroupSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Configure multer for file uploads
@@ -556,15 +556,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User not associated with organization" });
       }
       
-      const template = await storage.createEmailTemplate({
-        ...req.body,
-        organizationId: user.organizationId,
+      // Validate and sanitize input using drizzle-zod schema
+      const validatedData = insertEmailTemplateSchema.parse({
+        name: req.body.name,
+        subject: req.body.subject,
+        htmlContent: req.body.htmlContent,
+        textContent: req.body.textContent,
+        category: req.body.category,
+        isDefault: req.body.isDefault || false,
+        organizationId: user.organizationId, // Force organizationId from authenticated user
       });
       
+      const template = await storage.createEmailTemplate(validatedData);
       res.json(template);
     } catch (error) {
       console.error("Error creating template:", error);
       res.status(500).json({ message: "Failed to create template" });
+    }
+  });
+
+  app.put('/api/templates/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user?.organizationId) {
+        return res.status(400).json({ message: "User not associated with organization" });
+      }
+      
+      // Verify template belongs to user's organization
+      const existingTemplate = await storage.getEmailTemplate(req.params.id);
+      if (!existingTemplate || existingTemplate.organizationId !== user.organizationId) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // SECURITY: Validate and sanitize input - prevent organizationId/id/timestamps mutation
+      const validatedData = insertEmailTemplateSchema.parse({
+        name: req.body.name,
+        subject: req.body.subject,
+        htmlContent: req.body.htmlContent,
+        textContent: req.body.textContent,
+        category: req.body.category,
+        isDefault: req.body.isDefault,
+        organizationId: existingTemplate.organizationId, // Force existing organizationId (security)
+      });
+      
+      const template = await storage.updateEmailTemplate(req.params.id, validatedData);
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(500).json({ message: "Failed to update template" });
+    }
+  });
+
+  app.delete('/api/templates/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user?.organizationId) {
+        return res.status(400).json({ message: "User not associated with organization" });
+      }
+      
+      // Verify template belongs to user's organization
+      const existingTemplate = await storage.getEmailTemplate(req.params.id);
+      if (!existingTemplate || existingTemplate.organizationId !== user.organizationId) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      await storage.deleteEmailTemplate(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({ message: "Failed to delete template" });
     }
   });
 

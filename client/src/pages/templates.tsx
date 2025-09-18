@@ -10,10 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { RichEditor } from "@/components/templates/rich-editor";
+import { EmailTemplate, InsertEmailTemplate } from "@shared/schema";
 
 export default function Templates() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [newTemplate, setNewTemplate] = useState({
     name: "",
@@ -27,7 +32,7 @@ export default function Templates() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates, isLoading } = useQuery<EmailTemplate[]>({
     queryKey: ["/api/templates"],
   });
 
@@ -61,6 +66,38 @@ export default function Templates() {
     },
   });
 
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({ id, templateData }: { id: string; templateData: Partial<InsertEmailTemplate> }) => {
+      // Only send allowed fields to prevent mutation of immutable fields
+      const safeData = {
+        name: templateData.name,
+        subject: templateData.subject,
+        htmlContent: templateData.htmlContent,
+        textContent: templateData.textContent,
+        category: templateData.category,
+        isDefault: templateData.isDefault,
+      };
+      const response = await apiRequest("PUT", `/api/templates/${id}`, safeData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Template updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/templates"] });
+      setShowEditModal(false);
+      setSelectedTemplate(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update template",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: string) => {
       await apiRequest("DELETE", `/api/templates/${templateId}`);
@@ -81,7 +118,7 @@ export default function Templates() {
     },
   });
 
-  const filteredTemplates = templates?.filter((template: any) => {
+  const filteredTemplates = (templates as any)?.filter((template: any) => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          template.subject?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || template.category === selectedCategory;
@@ -120,6 +157,45 @@ export default function Templates() {
     createTemplateMutation.mutate(newTemplate);
   };
 
+  const handleEditTemplate = (template: any) => {
+    setSelectedTemplate({ ...template });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateTemplate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTemplate?.name || !selectedTemplate?.htmlContent) {
+      toast({
+        title: "Validation Error",
+        description: "Name and HTML content are required",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateTemplateMutation.mutate({
+      id: selectedTemplate.id,
+      templateData: selectedTemplate
+    });
+  };
+
+  const handlePreviewTemplate = (template: any) => {
+    setSelectedTemplate(template);
+    setShowPreviewModal(true);
+  };
+
+  const handleDuplicateTemplate = async (template: any) => {
+    const duplicatedTemplate = {
+      ...template,
+      name: `${template.name} (Copy)`,
+      isDefault: false
+    };
+    delete duplicatedTemplate.id;
+    delete duplicatedTemplate.createdAt;
+    delete duplicatedTemplate.updatedAt;
+    
+    createTemplateMutation.mutate(duplicatedTemplate);
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -156,7 +232,7 @@ export default function Templates() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-foreground" data-testid="text-total-templates">
-              {templates?.length || 0}
+              {(templates as any)?.length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Total Templates</p>
           </CardContent>
@@ -164,7 +240,7 @@ export default function Templates() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-foreground" data-testid="text-marketing-templates">
-              {templates?.filter((t: any) => t.category === 'marketing').length || 0}
+              {(templates as any)?.filter((t: any) => t.category === 'marketing').length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Marketing</p>
           </CardContent>
@@ -172,7 +248,7 @@ export default function Templates() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-foreground" data-testid="text-transactional-templates">
-              {templates?.filter((t: any) => t.category === 'transactional').length || 0}
+              {(templates as any)?.filter((t: any) => t.category === 'transactional').length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Transactional</p>
           </CardContent>
@@ -180,7 +256,7 @@ export default function Templates() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-foreground" data-testid="text-default-templates">
-              {templates?.filter((t: any) => t.isDefault).length || 0}
+              {(templates as any)?.filter((t: any) => t.isDefault).length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Default</p>
           </CardContent>
@@ -227,15 +303,41 @@ export default function Templates() {
                     </CardDescription>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deleteTemplateMutation.mutate(template.id)}
-                  disabled={deleteTemplateMutation.isPending}
-                  data-testid={`button-delete-template-${template.id}`}
-                >
-                  <i className="fas fa-trash text-destructive"></i>
-                </Button>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handlePreviewTemplate(template)}
+                    data-testid={`button-preview-template-${template.id}`}
+                  >
+                    <i className="fas fa-eye text-muted-foreground"></i>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditTemplate(template)}
+                    data-testid={`button-edit-template-${template.id}`}
+                  >
+                    <i className="fas fa-edit text-muted-foreground"></i>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDuplicateTemplate(template)}
+                    data-testid={`button-duplicate-template-${template.id}`}
+                  >
+                    <i className="fas fa-copy text-muted-foreground"></i>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteTemplateMutation.mutate(template.id)}
+                    disabled={deleteTemplateMutation.isPending}
+                    data-testid={`button-delete-template-${template.id}`}
+                  >
+                    <i className="fas fa-trash text-destructive"></i>
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -339,14 +441,12 @@ export default function Templates() {
 
             <div>
               <Label htmlFor="htmlContent">HTML Content *</Label>
-              <Textarea
-                id="htmlContent"
+              <RichEditor
                 value={newTemplate.htmlContent}
-                onChange={(e) => setNewTemplate({ ...newTemplate, htmlContent: e.target.value })}
-                placeholder="Enter HTML content for your template"
-                rows={12}
-                required
-                data-testid="textarea-template-html"
+                onChange={(value) => setNewTemplate({ ...newTemplate, htmlContent: value })}
+                placeholder="Design your email template with rich text formatting..."
+                className="min-h-[300px]"
+                data-testid="rich-editor-template-html"
               />
             </div>
 
@@ -375,6 +475,163 @@ export default function Templates() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Template Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Template</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleUpdateTemplate} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="editName">Template Name *</Label>
+                <Input
+                  id="editName"
+                  value={selectedTemplate?.name || ""}
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
+                  placeholder="Enter template name"
+                  required
+                  data-testid="input-edit-template-name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCategory">Category</Label>
+                <Select 
+                  value={selectedTemplate?.category || "marketing"} 
+                  onValueChange={(value) => setSelectedTemplate({ ...selectedTemplate, category: value })}
+                >
+                  <SelectTrigger data-testid="select-edit-template-category">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="editSubject">Default Subject Line</Label>
+              <Input
+                id="editSubject"
+                value={selectedTemplate?.subject || ""}
+                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
+                placeholder="Enter default subject line"
+                data-testid="input-edit-template-subject"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="editHtmlContent">HTML Content *</Label>
+              <RichEditor
+                value={selectedTemplate?.htmlContent || ""}
+                onChange={(value) => setSelectedTemplate({ ...selectedTemplate, htmlContent: value })}
+                placeholder="Design your email template with rich text formatting..."
+                className="min-h-[300px]"
+                data-testid="rich-editor-edit-template-html"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="editTextContent">Text Content</Label>
+              <Textarea
+                id="editTextContent"
+                value={selectedTemplate?.textContent || ""}
+                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, textContent: e.target.value })}
+                placeholder="Enter plain text version"
+                rows={6}
+                data-testid="textarea-edit-template-text"
+              />
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-border">
+              <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateTemplateMutation.isPending}
+                data-testid="button-update-template"
+              >
+                {updateTemplateMutation.isPending ? "Updating..." : "Update Template"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Template Modal */}
+      <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Preview Template: {selectedTemplate?.name}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Template Info */}
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div>
+                <h3 className="font-semibold">{selectedTemplate?.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Category: {selectedTemplate?.category} • 
+                  Subject: {selectedTemplate?.subject || "No subject"}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge className={getCategoryColor(selectedTemplate?.category || "")}>
+                  {selectedTemplate?.category}
+                </Badge>
+                {selectedTemplate?.isDefault && (
+                  <Badge variant="outline">Default</Badge>
+                )}
+              </div>
+            </div>
+
+            {/* HTML Preview */}
+            <div>
+              <Label>HTML Preview</Label>
+              <div className="border rounded-lg p-4 bg-white min-h-[400px] max-h-[600px] overflow-y-auto">
+                <div 
+                  dangerouslySetInnerHTML={{ 
+                    __html: selectedTemplate?.htmlContent || '<p>No HTML content</p>' 
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Text Version */}
+            {selectedTemplate?.textContent && (
+              <div>
+                <Label>Text Version</Label>
+                <div className="border rounded-lg p-4 bg-muted min-h-[200px] max-h-[300px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap font-mono text-sm">
+                    {selectedTemplate.textContent}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-border">
+              <Button variant="outline" onClick={() => setShowPreviewModal(false)}>
+                Close
+              </Button>
+              <Button onClick={() => {
+                handleEditTemplate(selectedTemplate);
+                setShowPreviewModal(false);
+              }}>
+                <i className="fas fa-edit mr-2"></i>
+                Edit Template
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
