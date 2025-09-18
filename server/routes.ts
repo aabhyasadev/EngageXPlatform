@@ -11,6 +11,229 @@ import { z } from "zod";
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Default templates seeding function with idempotency
+async function seedDefaultTemplates(organizationId: string) {
+  // Double-check to prevent race conditions
+  const existingTemplates = await storage.getEmailTemplatesByOrganization(organizationId);
+  if (existingTemplates.length > 0) {
+    return existingTemplates;
+  }
+  const defaultTemplates = [
+    {
+      name: "Welcome Email",
+      subject: "Welcome to {{organizationName}}! 🎉",
+      category: "marketing",
+      isDefault: true,
+      organizationId,
+      htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #333; text-align: center;">Welcome to Our Community!</h1>
+        <p>Hi {{firstName}},</p>
+        <p>We're thrilled to have you join us! Your account has been successfully created and you're now part of our growing community.</p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #495057; margin-top: 0;">What's Next?</h3>
+          <ul style="color: #6c757d;">
+            <li>Complete your profile setup</li>
+            <li>Explore our features and services</li>
+            <li>Connect with other members</li>
+          </ul>
+        </div>
+        <p>If you have any questions, feel free to reach out to our support team.</p>
+        <p>Best regards,<br>The {{organizationName}} Team</p>
+      </div>`,
+      textContent: `Hi {{firstName}},
+
+Welcome to our community! We're thrilled to have you join us.
+
+Your account has been successfully created and you're now part of our growing community.
+
+What's Next?
+- Complete your profile setup
+- Explore our features and services  
+- Connect with other members
+
+If you have any questions, feel free to reach out to our support team.
+
+Best regards,
+The {{organizationName}} Team`
+    },
+    {
+      name: "Order Confirmation", 
+      subject: "Order Confirmation #{{orderNumber}}",
+      category: "transactional",
+      isDefault: true,
+      organizationId,
+      htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #28a745; text-align: center;">Order Confirmed! ✅</h1>
+        <p>Hi {{firstName}},</p>
+        <p>Thank you for your order! We've received your payment and your order is being processed.</p>
+        <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #155724; margin-top: 0;">Order Details</h3>
+          <p><strong>Order Number:</strong> #{{orderNumber}}</p>
+          <p><strong>Order Date:</strong> {{orderDate}}</p>
+          <p><strong>Total Amount:</strong> $${'{{orderTotal}}'}</p>
+        </div>
+        <p>We'll send you a shipping confirmation email with tracking information once your order ships.</p>
+        <p>Thank you for choosing {{organizationName}}!</p>
+        <p>Best regards,<br>Customer Service Team</p>
+      </div>`,
+      textContent: `Hi {{firstName}},
+
+Thank you for your order! We've received your payment and your order is being processed.
+
+Order Details:
+- Order Number: #{{orderNumber}}
+- Order Date: {{orderDate}}
+- Total Amount: $${'{{orderTotal}}'}
+
+We'll send you a shipping confirmation email with tracking information once your order ships.
+
+Thank you for choosing {{organizationName}}!
+
+Best regards,
+Customer Service Team`
+    },
+    {
+      name: "Monthly Newsletter",
+      subject: "{{organizationName}} Monthly Update - {{monthYear}}",
+      category: "newsletter", 
+      isDefault: true,
+      organizationId,
+      htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #007bff; text-align: center;">Monthly Newsletter</h1>
+        <h2 style="color: #495057;">Hi {{firstName}}!</h2>
+        <p>Here's what's been happening at {{organizationName}} this month:</p>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #495057; margin-top: 0;">📈 This Month's Highlights</h3>
+          <ul style="color: #6c757d;">
+            <li>New product launches and updates</li>
+            <li>Customer success stories</li>
+            <li>Upcoming events and webinars</li>
+          </ul>
+        </div>
+        
+        <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #856404; margin-top: 0;">🚀 Coming Next Month</h3>
+          <p style="color: #856404;">Stay tuned for exciting new features and improvements!</p>
+        </div>
+        
+        <p>Thank you for being part of our community!</p>
+        <p>Best regards,<br>The {{organizationName}} Team</p>
+      </div>`,
+      textContent: `Hi {{firstName}}!
+
+Here's what's been happening at {{organizationName}} this month:
+
+This Month's Highlights:
+- New product launches and updates
+- Customer success stories  
+- Upcoming events and webinars
+
+Coming Next Month:
+Stay tuned for exciting new features and improvements!
+
+Thank you for being part of our community!
+
+Best regards,
+The {{organizationName}} Team`
+    },
+    {
+      name: "Password Reset",
+      subject: "Reset Your Password - {{organizationName}}",
+      category: "transactional",
+      isDefault: true,
+      organizationId,
+      htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #dc3545; text-align: center;">Password Reset Request 🔒</h1>
+        <p>Hi {{firstName}},</p>
+        <p>We received a request to reset the password for your account associated with {{email}}.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{resetLink}}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+        </div>
+        <p style="color: #6c757d; font-size: 14px;">This link will expire in 24 hours for security reasons.</p>
+        <p>If you didn't request a password reset, please ignore this email or contact our support team if you have concerns.</p>
+        <p>Best regards,<br>Security Team</p>
+      </div>`,
+      textContent: `Hi {{firstName}},
+
+We received a request to reset the password for your account associated with {{email}}.
+
+Please click the following link to reset your password:
+{{resetLink}}
+
+This link will expire in 24 hours for security reasons.
+
+If you didn't request a password reset, please ignore this email or contact our support team if you have concerns.
+
+Best regards,
+Security Team`
+    },
+    {
+      name: "Product Launch Announcement",
+      subject: "🚀 Introducing Our Latest Product!",
+      category: "marketing",
+      isDefault: true,
+      organizationId,
+      htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #28a745; text-align: center;">🚀 New Product Launch!</h1>
+        <p>Hi {{firstName}},</p>
+        <p>We're excited to announce the launch of our newest product that will revolutionize the way you work!</p>
+        
+        <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <h3 style="color: #155724; margin-top: 0;">{{productName}}</h3>
+          <p style="color: #155724; font-size: 18px;">{{productDescription}}</p>
+        </div>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #495057; margin-top: 0;">✨ Key Features</h3>
+          <ul style="color: #6c757d;">
+            <li>Feature 1: Enhanced productivity</li>
+            <li>Feature 2: Seamless integration</li>
+            <li>Feature 3: Advanced security</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{productLink}}" style="background-color: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 16px;">Learn More</a>
+        </div>
+        
+        <p>Best regards,<br>The {{organizationName}} Team</p>
+      </div>`,
+      textContent: `Hi {{firstName}},
+
+We're excited to announce the launch of our newest product that will revolutionize the way you work!
+
+{{productName}}
+{{productDescription}}
+
+Key Features:
+- Feature 1: Enhanced productivity
+- Feature 2: Seamless integration  
+- Feature 3: Advanced security
+
+Learn more: {{productLink}}
+
+Best regards,
+The {{organizationName}} Team`
+    }
+  ];
+
+  // Create all default templates with better error handling
+  const createdTemplates = [];
+  for (const template of defaultTemplates) {
+    try {
+      const validatedData = insertEmailTemplateSchema.parse(template);
+      const createdTemplate = await storage.createEmailTemplate(validatedData);
+      createdTemplates.push(createdTemplate);
+    } catch (error) {
+      console.error('Error creating default template:', template.name, error);
+    }
+  }
+
+  // Re-query to get the authoritative list after seeding
+  return await storage.getEmailTemplatesByOrganization(organizationId);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -507,7 +730,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedDomain = await storage.updateDomain(req.params.id, {
         status: verificationResult.verified ? 'verified' : 'failed',
         verifiedAt: verificationResult.verified ? new Date() : undefined,
-        verificationDetails: JSON.stringify(verificationResult),
       });
       
       res.json({
@@ -521,7 +743,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         await storage.updateDomain(req.params.id, {
           status: 'failed',
-          verificationDetails: JSON.stringify({ error: error instanceof Error ? error.message : 'Verification failed' }),
         });
       } catch (updateError) {
         console.error("Error updating domain status:", updateError);
@@ -540,7 +761,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User not associated with organization" });
       }
       
-      const templates = await storage.getEmailTemplatesByOrganization(user.organizationId);
+      let templates = await storage.getEmailTemplatesByOrganization(user.organizationId);
+      
+      // If no templates exist, seed with default templates
+      if (templates.length === 0) {
+        try {
+          templates = await seedDefaultTemplates(user.organizationId);
+        } catch (seedError) {
+          console.error("Error seeding default templates:", seedError);
+          // Continue with empty array if seeding fails
+        }
+      }
+      
       res.json(templates);
     } catch (error) {
       console.error("Error fetching templates:", error);
