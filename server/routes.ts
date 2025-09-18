@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { sendEmail } from "./sendgrid.js";
+import { setupDjangoProxy } from "./proxy";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { insertContactSchema, insertCampaignSchema, insertDomainSchema, insertContactGroupSchema, insertEmailTemplateSchema } from "@shared/schema";
@@ -878,6 +879,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch analytics events" });
     }
   });
+
+  // Setup Django proxy AFTER all Express routes are registered  
+  setupDjangoProxy(app);
 
   const httpServer = createServer(app);
   return httpServer;

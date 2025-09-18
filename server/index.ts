@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { startDjangoServer } from "./django";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Start Django backend server
+  try {
+    await startDjangoServer();
+    log("Django backend integration ready");
+  } catch (error) {
+    console.error("Failed to start Django backend:", error);
+    // Continue with Express-only mode for now
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
