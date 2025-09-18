@@ -205,9 +205,16 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_name = 'HTTP_X_CSRFTOKEN'
 
 # Authentication bridge configuration
+# Auth bridge secret - required for Express-Django integration
 AUTH_BRIDGE_SECRET = config('SESSION_SECRET', default=None)
 if not AUTH_BRIDGE_SECRET:
-    raise ValueError("SESSION_SECRET is required for Express-Django auth bridge")
+    if DEBUG:
+        # In development, provide clear warning but allow startup
+        print("WARNING: SESSION_SECRET not set - Django auth bridge disabled in development")
+        print("Set SESSION_SECRET environment variable for full Express-Django integration")
+        AUTH_BRIDGE_SECRET = 'development-only-secret-do-not-use-in-production'
+    else:
+        raise ValueError("SESSION_SECRET is required for Express-Django auth bridge in production")
 
 # Redis configuration
 REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
@@ -299,12 +306,13 @@ LOGGING = {
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = True
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# Only force SSL in production to prevent development breakage
+SECURE_SSL_REDIRECT = config('ENABLE_SSL_REDIRECT', default=not DEBUG, cast=bool)
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0  # 1 year in production only
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = 'Lax'
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'

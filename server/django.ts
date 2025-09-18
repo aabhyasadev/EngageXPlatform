@@ -21,17 +21,6 @@ export async function startDjangoServer(): Promise<void> {
     djangoProcess.stdout?.on("data", (data) => {
       const output = data.toString();
       log("Django stdout:", output.trim());
-      // More flexible startup detection
-      if (output.includes("Starting development server") || 
-          output.includes("Django version") || 
-          output.includes("development server at http://")) {
-        log("Django server started on port 8001");
-        if (!resolved) {
-          resolved = true;
-          if (startupTimeout) clearTimeout(startupTimeout);
-          resolve();
-        }
-      }
     });
 
     djangoProcess.stderr?.on("data", (data) => {
@@ -61,15 +50,35 @@ export async function startDjangoServer(): Promise<void> {
       djangoProcess = null;
     });
 
-    // Timeout after 30 seconds for debugging
+    // Robust health polling - poll /health endpoint every 500ms for up to 60s
+    const pollHealth = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8001/health");
+        if (response.ok && !resolved) {
+          log("Django health check passed - server ready");
+          resolved = true;
+          if (startupTimeout) clearTimeout(startupTimeout);
+          resolve();
+        }
+      } catch (error) {
+        // Health check failed - continue polling
+      }
+    };
+
+    // Start polling immediately and every 500ms
+    const pollInterval = setInterval(pollHealth, 500);
+    pollHealth(); // Initial poll
+
+    // Timeout after 60 seconds
     startupTimeout = setTimeout(() => {
+      clearInterval(pollInterval);
       if (!resolved) {
         resolved = true;
-        log("Django startup timeout - process may have failed to start");
+        log("Django startup timeout - health check never succeeded");
         djangoProcess?.kill();
         reject(new Error("Django startup timeout"));
       }
-    }, 30000);
+    }, 60000);
   });
 }
 
