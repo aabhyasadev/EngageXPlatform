@@ -15,9 +15,10 @@ import Analytics from "@/pages/analytics";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
 import MainLayout from "@/components/layout/main-layout";
+import OrganizationSetup from "@/components/onboarding/organization-setup";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -34,6 +35,8 @@ function Router() {
     <Switch>
       {!isAuthenticated ? (
         <Route path="/" component={Landing} />
+      ) : !user?.organizationId ? (
+        <Route path="/" component={OrganizationSetup} />
       ) : (
         <MainLayout>
           <Route path="/" component={Dashboard} />

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { sendEmail } from "./sendgrid";
+import { sendEmail } from "./sendgrid.js";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { insertContactSchema, insertCampaignSchema, insertDomainSchema, insertContactGroupSchema } from "@shared/schema";
@@ -64,6 +64,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating organization:", error);
       res.status(500).json({ message: "Failed to create organization" });
+    }
+  });
+
+  app.get('/api/organizations/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const orgId = req.params.id;
+      
+      // Verify user has access to this organization
+      if (user?.organizationId !== orgId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const organization = await storage.getOrganization(orgId);
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      
+      res.json(organization);
+    } catch (error) {
+      console.error("Error fetching organization:", error);
+      res.status(500).json({ message: "Failed to fetch organization" });
+    }
+  });
+
+  app.put('/api/organizations/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const orgId = req.params.id;
+      
+      // Verify user has access to this organization and is admin
+      if (user?.organizationId !== orgId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { name, industry, employeesRange } = req.body;
+      
+      const updatedOrganization = await storage.updateOrganization(orgId, {
+        name,
+        industry,
+        employeesRange,
+      });
+      
+      res.json(updatedOrganization);
+    } catch (error) {
+      console.error("Error updating organization:", error);
+      res.status(500).json({ message: "Failed to update organization" });
     }
   });
 

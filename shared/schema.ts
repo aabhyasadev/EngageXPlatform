@@ -297,6 +297,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const upsertUserSchema = createInsertSchema(users).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertDomainSchema = createInsertSchema(domains).omit({
   id: true,
   createdAt: true,
@@ -333,7 +338,7 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
 });
 
 // Types
-export type UpsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = z.infer<typeof insertUserSchema> & { id?: string };
 export type User = typeof users.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
@@ -350,3 +355,18 @@ export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
 export type CampaignRecipient = typeof campaignRecipients.$inferSelect;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+
+// API Response Types
+export interface DashboardStats {
+  totalContacts: number;
+  activeCampaigns: number;
+  totalSent: number;
+  totalOpened: number;
+  totalClicked: number;
+  openRate: number;
+  clickRate: number;
+}
+
+export interface UserWithOrganization extends User {
+  organization?: Organization | null;
+}
