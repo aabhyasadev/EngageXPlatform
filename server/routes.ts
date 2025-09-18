@@ -485,17 +485,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/domains/:id/verify', isAuthenticated, async (req: any, res) => {
     try {
-      // In a real implementation, this would verify DNS records
-      // For now, we'll simulate verification
-      const domain = await storage.updateDomain(req.params.id, {
-        status: 'verified',
-        verifiedAt: new Date(),
+      // Get the domain first
+      const domain = await storage.getDomain(req.params.id);
+      if (!domain) {
+        return res.status(404).json({ message: "Domain not found" });
+      }
+      
+      // Import DNS verification service
+      const { DnsVerificationService } = await import('./dns-verification.js');
+      const dnsService = new DnsVerificationService();
+      
+      // Perform real DNS verification
+      const verificationResult = await dnsService.verifyDomain(domain.domain, {
+        txtRecord: domain.txtRecord!,
+        cnameRecord: domain.cnameRecord!,
+        dkimRecord: domain.dkimRecord!,
+        dmarcRecord: domain.dmarcRecord!,
       });
       
-      res.json(domain);
+      // Update domain based on verification result
+      const updatedDomain = await storage.updateDomain(req.params.id, {
+        status: verificationResult.verified ? 'verified' : 'failed',
+        verifiedAt: verificationResult.verified ? new Date() : undefined,
+        verificationDetails: JSON.stringify(verificationResult),
+      });
+      
+      res.json({
+        ...updatedDomain,
+        verificationResult
+      });
     } catch (error) {
       console.error("Error verifying domain:", error);
-      res.status(500).json({ message: "Failed to verify domain" });
+      
+      // Update domain status to failed on error
+      try {
+        await storage.updateDomain(req.params.id, {
+          status: 'failed',
+          verificationDetails: JSON.stringify({ error: error instanceof Error ? error.message : 'Verification failed' }),
+        });
+      } catch (updateError) {
+        console.error("Error updating domain status:", updateError);
+      }
+      
+      res.status(500).json({ message: "DNS verification failed" });
     }
   });
 

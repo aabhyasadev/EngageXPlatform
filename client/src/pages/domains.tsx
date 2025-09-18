@@ -19,9 +19,27 @@ export default function Domains() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: domains, isLoading } = useQuery({
+  const { data: domains, isLoading, error } = useQuery({
     queryKey: ["/api/domains"],
+    retry: 3,
+    staleTime: 30000,
   });
+
+  // Show error state if query failed
+  if (error) {
+    console.error("Domains query error:", error);
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Domains</h2>
+          <p className="text-muted-foreground mb-4">
+            There was an error loading your domains. Please try refreshing the page.
+          </p>
+          <Button onClick={() => window.location.reload()}>Refresh</Button>
+        </div>
+      </div>
+    );
+  }
 
   const createDomainMutation = useMutation({
     mutationFn: async (domain: string) => {
@@ -139,7 +157,7 @@ export default function Domains() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-foreground" data-testid="text-total-domains">
-              {domains?.length || 0}
+              {(domains as any)?.length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Total Domains</p>
           </CardContent>
@@ -147,7 +165,7 @@ export default function Domains() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600" data-testid="text-verified-domains">
-              {domains?.filter((d: any) => d.status === 'verified').length || 0}
+              {(domains as any)?.filter((d: any) => d.status === 'verified').length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Verified</p>
           </CardContent>
@@ -155,7 +173,7 @@ export default function Domains() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-600" data-testid="text-pending-domains">
-              {domains?.filter((d: any) => d.status === 'pending').length || 0}
+              {(domains as any)?.filter((d: any) => d.status === 'pending').length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Pending</p>
           </CardContent>
@@ -163,7 +181,7 @@ export default function Domains() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-red-600" data-testid="text-failed-domains">
-              {domains?.filter((d: any) => d.status === 'failed').length || 0}
+              {(domains as any)?.filter((d: any) => d.status === 'failed').length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Failed</p>
           </CardContent>
@@ -214,7 +232,7 @@ export default function Domains() {
 
       {/* Domains List */}
       <div className="space-y-4">
-        {domains?.map((domain: any) => (
+        {(domains as any)?.map((domain: any) => (
           <Card key={domain.id}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -262,7 +280,7 @@ export default function Domains() {
           </Card>
         ))}
 
-        {(!domains || domains.length === 0) && (
+        {(!domains || (domains as any).length === 0) && (
           <Card>
             <CardContent className="p-12 text-center">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">

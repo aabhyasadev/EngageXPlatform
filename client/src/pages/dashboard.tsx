@@ -8,19 +8,41 @@ import CampaignModal from "@/components/campaigns/campaign-modal";
 export default function Dashboard() {
   const [showCampaignModal, setShowCampaignModal] = useState(false);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ["/api/dashboard/stats"],
+    retry: 3,
+    staleTime: 30000,
   });
 
-  const { data: campaigns, isLoading: campaignsLoading } = useQuery({
+  const { data: campaigns, isLoading: campaignsLoading, error: campaignsError } = useQuery({
     queryKey: ["/api/campaigns"],
+    retry: 3,
+    staleTime: 30000,
   });
 
-  const { data: domains } = useQuery({
+  const { data: domains, error: domainsError } = useQuery({
     queryKey: ["/api/domains"],
+    retry: 3,
+    staleTime: 30000,
   });
 
-  if (statsLoading) {
+  // Show error state if any query failed
+  if (statsError || campaignsError || domainsError) {
+    console.error("Dashboard query errors:", { statsError, campaignsError, domainsError });
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Dashboard</h2>
+          <p className="text-muted-foreground mb-4">
+            There was an error loading your dashboard data. Please try refreshing the page.
+          </p>
+          <Button onClick={() => window.location.reload()}>Refresh</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (statsLoading || campaignsLoading) {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-6">
