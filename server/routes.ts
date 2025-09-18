@@ -176,7 +176,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/contacts/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const contact = await storage.updateContact(req.params.id, req.body);
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user?.organizationId) {
+        return res.status(400).json({ message: "User not associated with organization" });
+      }
+      
+      // Verify contact belongs to user's organization
+      const existingContact = await storage.getContact(req.params.id);
+      if (!existingContact || existingContact.organizationId !== user.organizationId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate and sanitize update data - never allow organizationId changes
+      const updateData = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName, 
+        email: req.body.email,
+        phone: req.body.phone,
+        language: req.body.language,
+        isSubscribed: req.body.isSubscribed,
+      };
+      
+      const contact = await storage.updateContact(req.params.id, updateData);
       res.json(contact);
     } catch (error) {
       console.error("Error updating contact:", error);
@@ -186,6 +208,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/contacts/:id', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user?.organizationId) {
+        return res.status(400).json({ message: "User not associated with organization" });
+      }
+      
+      // Verify contact belongs to user's organization
+      const existingContact = await storage.getContact(req.params.id);
+      if (!existingContact || existingContact.organizationId !== user.organizationId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
       await storage.deleteContact(req.params.id);
       res.json({ success: true });
     } catch (error) {

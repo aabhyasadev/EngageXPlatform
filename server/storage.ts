@@ -104,7 +104,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    // If we have an ID (like from auth), try to update the existing user first
+    // Always use onConflictDoUpdate with email as the conflict target
+    // This handles both ID-based and email-based conflicts properly
+    if (userData.email) {
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.email,
+          set: {
+            // Only update safe fields, never mutate ID or organizationId
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return user;
+    }
+    
+    // If no email provided (edge case), try ID-based upsert
     if (userData.id) {
       const existingUser = await this.getUser(userData.id);
       if (existingUser) {
@@ -115,31 +135,9 @@ export class DatabaseStorage implements IStorage {
           .returning();
         return user;
       }
-      // If user doesn't exist, create new one with specific ID
-      const [user] = await db
-        .insert(users)
-        .values(userData)
-        .returning();
-      return user;
     }
     
-    // If no ID provided, use email conflict
-    if (userData.email) {
-      const [user] = await db
-        .insert(users)
-        .values(userData)
-        .onConflictDoUpdate({
-          target: users.email,
-          set: {
-            ...userData,
-            updatedAt: new Date(),
-          },
-        })
-        .returning();
-      return user;
-    }
-    
-    // Fallback: just insert
+    // Fallback: just insert (should rarely happen)
     const [user] = await db.insert(users).values(userData).returning();
     return user;
   }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Contact, ContactGroup } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,11 +26,11 @@ export default function Contacts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: contacts, isLoading } = useQuery({
+  const { data: contacts, isLoading } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
   });
 
-  const { data: contactGroups } = useQuery({
+  const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups"],
   });
 
@@ -82,7 +83,7 @@ export default function Contacts() {
     },
   });
 
-  const filteredContacts = contacts?.filter((contact: any) =>
+  const filteredContacts = contacts?.filter((contact) =>
     contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
