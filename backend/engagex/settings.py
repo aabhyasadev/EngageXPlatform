@@ -169,6 +169,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
+    # Allow Replit development URLs
+    "https://*.replit.dev",
+    "https://*.replit.app",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False  # Production security
