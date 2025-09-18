@@ -19,7 +19,7 @@ export default function Templates() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [newTemplate, setNewTemplate] = useState({
     name: "",
     subject: "",
@@ -121,7 +121,7 @@ export default function Templates() {
   const filteredTemplates = (templates as any)?.filter((template: any) => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          template.subject?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || template.category === selectedCategory;
+    const matchesCategory = selectedCategory === "all" || template.category === selectedCategory;
     return matchesSearch && matchesCategory;
   }) || [];
 
@@ -277,7 +277,7 @@ export default function Templates() {
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All categories</SelectItem>
+            <SelectItem value="all">All categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.value} value={category.value}>
                 {category.label}
