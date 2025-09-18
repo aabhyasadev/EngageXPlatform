@@ -124,13 +124,15 @@ export class DatabaseStorage implements IStorage {
         }
         
         if (existingUser) {
-          // Update existing user with safe fields only
+          // Update existing user with provided fields only (prevent accidental nulling)
           const [user] = await db
             .update(users)
             .set({
               firstName: userData.firstName,
               lastName: userData.lastName,
               profileImageUrl: userData.profileImageUrl,
+              ...(userData.organizationId !== undefined && { organizationId: userData.organizationId }),
+              ...(userData.role !== undefined && { role: userData.role }),
               updatedAt: new Date(),
             })
             .where(eq(users.id, existingUser.id))
