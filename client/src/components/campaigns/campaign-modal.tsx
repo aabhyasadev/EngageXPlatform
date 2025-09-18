@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Domain, ContactGroup } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -30,11 +31,11 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: domains } = useQuery({
+  const { data: domains } = useQuery<Domain[]>({
     queryKey: ["/api/domains"],
   });
 
-  const { data: contactGroups } = useQuery({
+  const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups"],
   });
 
@@ -96,7 +97,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
     createCampaignMutation.mutate(campaignData);
   };
 
-  const verifiedDomains = domains?.filter((domain: any) => domain.status === 'verified') || [];
+  const verifiedDomains = domains?.filter((domain) => domain.status === 'verified') || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

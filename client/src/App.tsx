@@ -31,26 +31,41 @@ function Router() {
     );
   }
 
-  return (
-    <Switch>
-      {!isAuthenticated ? (
+  // Handle unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <Switch>
         <Route path="/" component={Landing} />
-      ) : !user?.organizationId ? (
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  // Handle authenticated users without organization
+  if (!user?.organizationId) {
+    return (
+      <Switch>
         <Route path="/" component={OrganizationSetup} />
-      ) : (
-        <MainLayout>
-          <Route path="/" component={Dashboard} />
-          <Route path="/contacts" component={Contacts} />
-          <Route path="/campaigns" component={Campaigns} />
-          <Route path="/templates" component={Templates} />
-          <Route path="/domains" component={Domains} />
-          <Route path="/analytics" component={Analytics} />
-          <Route path="/team" component={Team} />
-          <Route path="/settings" component={Settings} />
-        </MainLayout>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  // Handle authenticated users with organization
+  return (
+    <MainLayout>
+      <Switch>
+        <Route path="/" component={Dashboard} />
+        <Route path="/contacts" component={Contacts} />
+        <Route path="/campaigns" component={Campaigns} />
+        <Route path="/templates" component={Templates} />
+        <Route path="/domains" component={Domains} />
+        <Route path="/analytics" component={Analytics} />
+        <Route path="/team" component={Team} />
+        <Route path="/settings" component={Settings} />
+        <Route component={NotFound} />
+      </Switch>
+    </MainLayout>
   );
 }
 

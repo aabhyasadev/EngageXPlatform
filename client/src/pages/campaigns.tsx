@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Campaign, ContactGroup } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +21,11 @@ export default function Campaigns() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: campaigns, isLoading } = useQuery({
+  const { data: campaigns, isLoading } = useQuery<Campaign[]>({
     queryKey: ["/api/campaigns"],
   });
 
-  const { data: contactGroups } = useQuery({
+  const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups"],
   });
 
@@ -72,7 +73,7 @@ export default function Campaigns() {
     },
   });
 
-  const filteredCampaigns = campaigns?.filter((campaign: any) =>
+  const filteredCampaigns = campaigns?.filter((campaign) =>
     campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     campaign.subject.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];

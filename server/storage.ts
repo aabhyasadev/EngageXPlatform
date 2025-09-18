@@ -104,42 +104,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    // Always use onConflictDoUpdate with email as the conflict target
-    // This handles both ID-based and email-based conflicts properly
-    if (userData.email) {
-      const [user] = await db
-        .insert(users)
-        .values(userData)
-        .onConflictDoUpdate({
-          target: users.email,
-          set: {
-            // Only update safe fields, never mutate ID or organizationId
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            profileImageUrl: userData.profileImageUrl,
-            updatedAt: new Date(),
-          },
-        })
-        .returning();
+    // Handle both email and ID conflicts by using try-catch with multiple strategies
+    try {
+      // First try: insert new user (will fail if email OR ID already exists)
+      const [user] = await db.insert(users).values(userData).returning();
       return user;
-    }
-    
-    // If no email provided (edge case), try ID-based upsert
-    if (userData.id) {
-      const existingUser = await this.getUser(userData.id);
-      if (existingUser) {
-        const [user] = await db
-          .update(users)
-          .set({ ...userData, updatedAt: new Date() })
-          .where(eq(users.id, userData.id))
-          .returning();
-        return user;
+    } catch (error: any) {
+      // If insertion fails due to conflict, handle it gracefully
+      if (error.code === '23505') { // PostgreSQL unique constraint violation
+        // Try to find existing user by email first, then by ID
+        let existingUser: User | undefined;
+        
+        if (userData.email) {
+          [existingUser] = await db.select().from(users).where(eq(users.email, userData.email));
+        }
+        
+        if (!existingUser && userData.id) {
+          existingUser = await this.getUser(userData.id);
+        }
+        
+        if (existingUser) {
+          // Update existing user with safe fields only
+          const [user] = await db
+            .update(users)
+            .set({
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              profileImageUrl: userData.profileImageUrl,
+              updatedAt: new Date(),
+            })
+            .where(eq(users.id, existingUser.id))
+            .returning();
+          return user;
+        }
       }
+      
+      // If we can't handle the error gracefully, re-throw it
+      throw error;
     }
-    
-    // Fallback: just insert (should rarely happen)
-    const [user] = await db.insert(users).values(userData).returning();
-    return user;
   }
 
   async getUsersByOrganization(organizationId: string): Promise<User[]> {
