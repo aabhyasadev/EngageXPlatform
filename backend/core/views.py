@@ -1,3 +1,458 @@
-from django.shortcuts import render
+from rest_framework import viewsets, status, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Q, Count, Sum
+from django.db import transaction
+from django.utils import timezone
+import csv
+import io
+import openpyxl
 
-# Create your views here.
+from .models import (
+    Organization, User, Domain, ContactGroup, Contact, 
+    ContactGroupMembership, EmailTemplate, Campaign, 
+    CampaignRecipient, AnalyticsEvent
+)
+from .serializers import (
+    OrganizationSerializer, UserSerializer, DomainSerializer,
+    ContactGroupSerializer, ContactSerializer, ContactGroupMembershipSerializer,
+    EmailTemplateSerializer, CampaignSerializer, CampaignRecipientSerializer,
+    AnalyticsEventSerializer, DashboardStatsSerializer, ContactImportSerializer,
+    CampaignSendSerializer
+)
+from .tasks import send_campaign_emails, verify_domain_dns, import_contacts_from_csv
+
+
+class BaseOrganizationViewSet(viewsets.ModelViewSet):
+    """Base viewset that filters by organization"""
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not self.request.user.organization:
+            return self.queryset.none()
+        return self.queryset.filter(organization=self.request.user.organization)
+
+    def perform_create(self, serializer):
+        if self.request.user.organization:
+            serializer.save(organization=self.request.user.organization)
+
+
+class OrganizationViewSet(viewsets.ModelViewSet):
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Organization.objects.all()
+        if self.request.user.organization:
+            return Organization.objects.filter(id=self.request.user.organization.id)
+        return Organization.objects.none()
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not self.request.user.organization:
+            return User.objects.none()
+        return User.objects.filter(organization=self.request.user.organization)
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """Get current user profile"""
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['patch'])
+    def update_profile(self, request):
+        """Update current user profile"""
+        serializer = self.get_serializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DomainViewSet(BaseOrganizationViewSet):
+    queryset = Domain.objects.all()
+    serializer_class = DomainSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['status']
+    search_fields = ['domain']
+
+    @action(detail=True, methods=['post'])
+    def verify(self, request, pk=None):
+        """Trigger domain verification"""
+        domain = self.get_object()
+        verify_domain_dns.delay(domain.id)
+        return Response({'message': 'Domain verification started'})
+
+    @action(detail=True, methods=['post'])
+    def generate_dns_records(self, request, pk=None):
+        """Generate DNS records for domain"""
+        domain = self.get_object()
+        
+        # Generate DNS records (simplified)
+        txt_record = f"engagex-verification={domain.id}"
+        dkim_record = f"v=DKIM1; k=rsa; p=..."  # Would be actual DKIM key
+        cname_record = "engagex.tracking.domain.com"
+        dmarc_record = "v=DMARC1; p=none; rua=mailto:dmarc@engagex.com"
+        
+        domain.txt_record = txt_record
+        domain.dkim_record = dkim_record
+        domain.cname_record = cname_record
+        domain.dmarc_record = dmarc_record
+        domain.save()
+        
+        serializer = self.get_serializer(domain)
+        return Response(serializer.data)
+
+
+class ContactGroupViewSet(BaseOrganizationViewSet):
+    queryset = ContactGroup.objects.all()
+    serializer_class = ContactGroupSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['name', 'description']
+
+    @action(detail=True, methods=['post'])
+    def add_contacts(self, request, pk=None):
+        """Add contacts to group"""
+        group = self.get_object()
+        contact_ids = request.data.get('contact_ids', [])
+        
+        contacts = Contact.objects.filter(
+            id__in=contact_ids,
+            organization=self.request.user.organization
+        )
+        
+        for contact in contacts:
+            ContactGroupMembership.objects.get_or_create(
+                contact=contact,
+                group=group
+            )
+        
+        return Response({'message': f'Added {contacts.count()} contacts to group'})
+
+    @action(detail=True, methods=['post'])
+    def remove_contacts(self, request, pk=None):
+        """Remove contacts from group"""
+        group = self.get_object()
+        contact_ids = request.data.get('contact_ids', [])
+        
+        ContactGroupMembership.objects.filter(
+            contact_id__in=contact_ids,
+            group=group
+        ).delete()
+        
+        return Response({'message': 'Contacts removed from group'})
+
+
+class ContactViewSet(BaseOrganizationViewSet):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['is_subscribed', 'language']
+    search_fields = ['email', 'first_name', 'last_name']
+
+    @action(detail=False, methods=['post'])
+    def import_csv(self, request):
+        """Import contacts from CSV file"""
+        serializer = ContactImportSerializer(data=request.data)
+        if serializer.is_valid():
+            file = serializer.validated_data['file']
+            
+            # Read file content
+            if file.name.lower().endswith('.csv'):
+                content = file.read().decode('utf-8')
+            elif file.name.lower().endswith('.xlsx'):
+                workbook = openpyxl.load_workbook(file)
+                sheet = workbook.active
+                
+                # Convert Excel to CSV format
+                output = io.StringIO()
+                writer = csv.writer(output)
+                
+                for row in sheet.iter_rows(values_only=True):
+                    writer.writerow(row)
+                
+                content = output.getvalue()
+            
+            # Start background task
+            task = import_contacts_from_csv.delay(
+                self.request.user.organization.id,
+                content,
+                self.request.user.id
+            )
+            
+            return Response({
+                'message': 'Import started',
+                'task_id': task.id
+            })
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def bulk_update(self, request):
+        """Bulk update contacts"""
+        contact_ids = request.data.get('contact_ids', [])
+        update_data = request.data.get('data', {})
+        
+        contacts = Contact.objects.filter(
+            id__in=contact_ids,
+            organization=self.request.user.organization
+        )
+        
+        updated_count = contacts.update(**update_data)
+        
+        return Response({
+            'message': f'Updated {updated_count} contacts'
+        })
+
+
+class EmailTemplateViewSet(BaseOrganizationViewSet):
+    queryset = EmailTemplate.objects.all()
+    serializer_class = EmailTemplateSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['category', 'is_default']
+    search_fields = ['name', 'subject']
+
+    def list(self, request, *args, **kwargs):
+        """List templates and seed defaults if none exist"""
+        queryset = self.get_queryset()
+        
+        # If no templates exist, seed default templates
+        if not queryset.exists():
+            self.seed_default_templates()
+            queryset = self.get_queryset()
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def seed_default_templates(self):
+        """Seed default email templates"""
+        if not self.request.user.organization:
+            return
+            
+        default_templates = [
+            {
+                'name': 'Welcome Email',
+                'subject': 'Welcome to {{organizationName}}! 🎉',
+                'category': 'marketing',
+                'is_default': True,
+                'html_content': '''<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #333; text-align: center;">Welcome to Our Community!</h1>
+                    <p>Hi {{firstName}},</p>
+                    <p>We're thrilled to have you join us! Your account has been successfully created.</p>
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #495057; margin-top: 0;">What's Next?</h3>
+                        <ul><li>Complete your profile</li><li>Explore features</li><li>Connect with others</li></ul>
+                    </div>
+                    <p>Best regards,<br>The {{organizationName}} Team</p>
+                </div>''',
+                'text_content': '''Hi {{firstName}},
+
+Welcome to {{organizationName}}! We're thrilled to have you join us.
+
+What's Next?
+- Complete your profile
+- Explore our features
+- Connect with other members
+
+Best regards,
+The {{organizationName}} Team'''
+            },
+            {
+                'name': 'Order Confirmation',
+                'subject': 'Order Confirmation #{{orderNumber}}',
+                'category': 'transactional',
+                'is_default': True,
+                'html_content': '''<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #28a745; text-align: center;">Order Confirmed! ✅</h1>
+                    <p>Hi {{firstName}},</p>
+                    <p>Thank you for your order! We've received your payment and your order is being processed.</p>
+                    <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3>Order Details</h3>
+                        <p><strong>Order Number:</strong> #{{orderNumber}}</p>
+                        <p><strong>Total Amount:</strong> ${{orderTotal}}</p>
+                    </div>
+                    <p>Thank you for choosing {{organizationName}}!</p>
+                </div>''',
+                'text_content': '''Hi {{firstName}},
+
+Thank you for your order! We've received your payment.
+
+Order Details:
+- Order Number: #{{orderNumber}}
+- Total Amount: ${{orderTotal}}
+
+Thank you for choosing {{organizationName}}!'''
+            }
+        ]
+        
+        for template_data in default_templates:
+            EmailTemplate.objects.get_or_create(
+                organization=self.request.user.organization,
+                name=template_data['name'],
+                defaults=template_data
+            )
+
+
+class CampaignViewSet(BaseOrganizationViewSet):
+    queryset = Campaign.objects.all()
+    serializer_class = CampaignSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status']
+    search_fields = ['name', 'subject']
+    ordering_fields = ['created_at', 'sent_at', 'name']
+    ordering = ['-created_at']
+
+    def perform_create(self, serializer):
+        serializer.save(
+            organization=self.request.user.organization,
+            created_by=self.request.user
+        )
+
+    @action(detail=True, methods=['post'])
+    def send(self, request, pk=None):
+        """Send campaign emails"""
+        campaign = self.get_object()
+        
+        if campaign.status != 'draft':
+            return Response(
+                {'error': 'Campaign must be in draft status to send'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer = CampaignSendSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            
+            # Get recipient contacts
+            contacts = Contact.objects.filter(
+                organization=self.request.user.organization,
+                is_subscribed=True
+            )
+            
+            if data.get('send_all'):
+                # Send to all subscribed contacts
+                pass
+            elif data.get('contact_ids'):
+                contacts = contacts.filter(id__in=data['contact_ids'])
+            elif data.get('group_ids'):
+                contacts = contacts.filter(
+                    group_memberships__group_id__in=data['group_ids']
+                ).distinct()
+            
+            # Create campaign recipients
+            recipients = []
+            for contact in contacts:
+                recipients.append(
+                    CampaignRecipient(
+                        campaign=campaign,
+                        contact=contact,
+                        status='pending'
+                    )
+                )
+            
+            CampaignRecipient.objects.bulk_create(recipients, ignore_conflicts=True)
+            
+            # Update campaign statistics
+            campaign.total_recipients = len(recipients)
+            campaign.save()
+            
+            # Start sending emails asynchronously
+            send_campaign_emails.delay(campaign.id)
+            
+            return Response({
+                'message': f'Campaign queued for sending to {len(recipients)} recipients',
+                'recipients': len(recipients)
+            })
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """Duplicate a campaign"""
+        original_campaign = self.get_object()
+        
+        # Create copy
+        new_campaign = Campaign(
+            organization=original_campaign.organization,
+            name=f"{original_campaign.name} (Copy)",
+            subject=original_campaign.subject,
+            from_email=original_campaign.from_email,
+            from_name=original_campaign.from_name,
+            reply_to_email=original_campaign.reply_to_email,
+            html_content=original_campaign.html_content,
+            text_content=original_campaign.text_content,
+            created_by=self.request.user,
+            status='draft'
+        )
+        new_campaign.save()
+        
+        serializer = self.get_serializer(new_campaign)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AnalyticsEventViewSet(BaseOrganizationViewSet):
+    queryset = AnalyticsEvent.objects.all()
+    serializer_class = AnalyticsEventSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['event_type', 'campaign']
+    ordering = ['-created_at']
+
+
+class DashboardViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get dashboard statistics"""
+        if not request.user.organization:
+            return Response({'error': 'No organization found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        org = request.user.organization
+        
+        # Calculate statistics
+        total_contacts = Contact.objects.filter(organization=org).count()
+        active_campaigns = Campaign.objects.filter(
+            organization=org,
+            status__in=['sending', 'scheduled']
+        ).count()
+        
+        # Aggregate campaign statistics
+        campaign_stats = Campaign.objects.filter(organization=org).aggregate(
+            total_sent=Sum('total_sent'),
+            total_opened=Sum('total_opened'),
+            total_clicked=Sum('total_clicked')
+        )
+        
+        total_sent = campaign_stats['total_sent'] or 0
+        total_opened = campaign_stats['total_opened'] or 0
+        total_clicked = campaign_stats['total_clicked'] or 0
+        
+        open_rate = (total_opened / total_sent * 100) if total_sent > 0 else 0
+        click_rate = (total_clicked / total_sent * 100) if total_sent > 0 else 0
+        
+        stats_data = {
+            'total_contacts': total_contacts,
+            'active_campaigns': active_campaigns,
+            'total_sent': total_sent,
+            'total_opened': total_opened,
+            'total_clicked': total_clicked,
+            'open_rate': round(open_rate, 2),
+            'click_rate': round(click_rate, 2)
+        }
+        
+        serializer = DashboardStatsSerializer(stats_data)
+        return Response(serializer.data)
