@@ -83,6 +83,12 @@ DATABASES = {
 # Custom User Model
 AUTH_USER_MODEL = 'core.User'
 
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    'core.authentication.ReplitAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -120,11 +126,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'core.authentication.SignedHeaderAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        # Disable authentication for testing API endpoints initially
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -191,6 +196,11 @@ CSRF_TRUSTED_ORIGINS = [
 # Disable CSRF for API endpoints since Express didn't use CSRF protection
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_name = 'HTTP_X_CSRFTOKEN'
+
+# Authentication bridge configuration
+AUTH_BRIDGE_SECRET = config('SESSION_SECRET', default=None)
+if not AUTH_BRIDGE_SECRET:
+    raise ValueError("SESSION_SECRET is required for Express-Django auth bridge")
 
 # Redis configuration
 REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
