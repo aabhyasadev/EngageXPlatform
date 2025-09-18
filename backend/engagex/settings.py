@@ -9,7 +9,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security settings
 SECRET_KEY = config('SECRET_KEY', default=get_random_secret_key())
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = ['*']  # Configure properly for production
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1", 
+    "0.0.0.0",
+    ".replit.dev",
+    ".replit.app",
+    ".repl.co"
+]
 
 # Application definition
 DJANGO_APPS = [
@@ -131,6 +138,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_PAGINATION_CLASS': None,  # Disable pagination to match Express
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
@@ -164,7 +172,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5000",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
+CORS_ALLOW_ALL_ORIGINS = False  # Production security
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_HEADERS = [
@@ -292,9 +300,15 @@ LOGGING = {
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
 # Development settings
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-    ALLOWED_HOSTS = ['*']
+# Removed DEBUG override to maintain security restrictions in all modes

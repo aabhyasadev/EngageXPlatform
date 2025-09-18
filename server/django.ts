@@ -21,7 +21,10 @@ export async function startDjangoServer(): Promise<void> {
     djangoProcess.stdout?.on("data", (data) => {
       const output = data.toString();
       log("Django stdout:", output.trim());
-      if (output.includes("Starting development server") || output.includes("Django version")) {
+      // More flexible startup detection
+      if (output.includes("Starting development server") || 
+          output.includes("Django version") || 
+          output.includes("development server at http://")) {
         log("Django server started on port 8001");
         if (!resolved) {
           resolved = true;
