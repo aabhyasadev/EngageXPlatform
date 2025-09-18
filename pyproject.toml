@@ -19,4 +19,5 @@ dependencies = [
     "sendgrid>=6.12.4",
     "whitenoise>=6.11.0",
     "openpyxl>=3.1.5",
+    "requests>=2.32.5",
 ]

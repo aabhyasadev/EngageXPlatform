@@ -133,7 +133,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'core.authentication.SignedHeaderAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'core.authentication.SignedHeaderAuthentication',  # Keep for backward compatibility
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -153,25 +154,29 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour'
-    }
+    # Remove throttling for development to avoid Redis dependency
+    # 'DEFAULT_THROTTLE_CLASSES': [
+    #     'rest_framework.throttling.AnonRateThrottle',
+    #     'rest_framework.throttling.UserRateThrottle'
+    # ],
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'anon': '100/hour',
+    #     'user': '1000/hour'
+    # }
 }
 
 # CORS settings - Allow frontend to access backend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3000", 
     "http://localhost:5000",
     "http://127.0.0.1:5000",
-    # Allow Replit development URLs
-    "https://*.replit.dev",
-    "https://*.replit.app",
+]
+
+# Use regex patterns for wildcard domains (wildcards don't work in CORS_ALLOWED_ORIGINS)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.replit\.dev$",
+    r"^https://.*\.replit\.app$",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False  # Production security
@@ -222,14 +227,10 @@ if not AUTH_BRIDGE_SECRET:
 # Redis configuration
 REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 
-# Cache configuration
+# Cache configuration - Use dummy cache instead of Redis for development
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
 
@@ -314,9 +315,11 @@ SECURE_SSL_REDIRECT = config('ENABLE_SSL_REDIRECT', default=not DEBUG, cast=bool
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0  # 1 year in production only
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = not DEBUG
+# Session cookies for cross-origin authentication (frontend to Django API)  
+SESSION_COOKIE_SECURE = True  # Required for SameSite=None
 CSRF_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-origin session sharing
+SESSION_COOKIE_HTTPONLY = True  # Security - prevent XSS access
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
