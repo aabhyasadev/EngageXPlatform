@@ -176,24 +176,29 @@ def create_subscription(request):
             org.save()
         
         # Create Stripe subscription
-        subscription = stripe.Subscription.create(
-            customer=org.stripe_customer_id,
-            items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': plan_config['name'],
-                    },
-                    'unit_amount': plan_config['price'] * 100,  # Convert to cents
-                    'recurring': {
-                        'interval': 'year' if 'yearly' in plan_id else 'month',
-                    },
-                }
-            }],
-            payment_behavior='default_incomplete',
-            payment_settings={'save_default_payment_method': 'on_subscription'},
-            expand=['latest_invoice.payment_intent'],
-        )
+        try:
+            subscription = stripe.Subscription.create(
+                customer=org.stripe_customer_id,
+                items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': plan_config['name'],
+                        },
+                        'unit_amount': plan_config['price'] * 100,  # Convert to cents
+                        'recurring': {
+                            'interval': 'year' if 'yearly' in plan_id else 'month',
+                        },
+                    }
+                }],
+                payment_behavior='default_incomplete',
+                payment_settings={'save_default_payment_method': 'on_subscription'},
+                expand=['latest_invoice.payment_intent'],
+            )
+        except Exception as stripe_error:
+            return Response({
+                'error': f'Failed to create subscription: {str(stripe_error)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         # Update organization with subscription details
         org.stripe_subscription_id = subscription.id
@@ -210,15 +215,17 @@ def create_subscription(request):
         
         org.save()
         
+        # Safely access the client_secret from payment_intent
+        client_secret = None
+        if hasattr(subscription, 'latest_invoice') and subscription.latest_invoice:
+            if hasattr(subscription.latest_invoice, 'payment_intent') and subscription.latest_invoice.payment_intent:
+                client_secret = subscription.latest_invoice.payment_intent.client_secret
+        
         return Response({
-            'client_secret': subscription.latest_invoice.payment_intent.client_secret,
+            'client_secret': client_secret,
             'subscription_id': subscription.id
         })
         
-    except stripe.error.StripeError as e:
-        return Response({
-            'error': f'Stripe error: {str(e)}'
-        }, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({
             'error': f'Error creating subscription: {str(e)}'
@@ -252,7 +259,7 @@ def cancel_subscription(request):
             'message': 'Subscription will be canceled at the end of the billing period'
         })
         
-    except stripe.error.StripeError as e:
+    except Exception as e:
         return Response({
             'error': f'Stripe error: {str(e)}'
         }, status=status.HTTP_400_BAD_REQUEST)
