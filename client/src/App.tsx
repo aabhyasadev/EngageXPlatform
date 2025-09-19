@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Signup from "@/pages/signup";
+import SignIn from "@/pages/signin";
 import SubscriptionPage from "@/pages/subscription";
 import Dashboard from "@/pages/dashboard";
 import Contacts from "@/pages/contacts";
@@ -39,6 +40,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/signup" component={Signup} />
+        <Route path="/signin" component={SignIn} />
         <Route path="/subscription" component={SubscriptionPage} />
         <Route component={NotFound} />
       </Switch>
