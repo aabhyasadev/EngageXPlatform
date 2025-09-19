@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { setupAuth } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -11,9 +12,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'healthy', service: 'express-frontend' });
   });
 
-  // All API routes are now handled by Django directly
-  // Frontend calls Django at http://127.0.0.1:8001/api/*
-  // Express now only serves static files and the React frontend
+  // Proxy all API requests to Django backend
+  app.use('/api', createProxyMiddleware({
+    target: 'http://127.0.0.1:8001',
+    changeOrigin: true,
+    // Don't rewrite the path - keep /api prefix as Django expects it
+    logLevel: 'debug'
+  }));
   
   const httpServer = createServer(app);
   return httpServer;

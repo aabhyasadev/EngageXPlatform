@@ -7,18 +7,17 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Django backend URL - Use public domain in Replit environment
-const DJANGO_BASE_URL = window.location.hostname.includes('replit.dev') || window.location.hostname.includes('replit.app') 
-  ? `https://${window.location.hostname}:8001`
-  : "http://127.0.0.1:8001";
+// Use Express proxy for API requests - no need to specify backend URL
+// All /api requests will be proxied to Django by Express
+const API_BASE_URL = "";
 
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Convert relative URLs to absolute Django URLs
-  const fullUrl = url.startsWith('/') ? `${DJANGO_BASE_URL}${url}` : url;
+  // Use relative URLs - Express will proxy /api requests to Django
+  const fullUrl = url;
   
   const res = await fetch(fullUrl, {
     method,
@@ -37,11 +36,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Convert relative URLs to absolute Django URLs
+    // Use relative URLs - Express will proxy /api requests to Django
     const url = queryKey.join("/") as string;
-    const fullUrl = url.startsWith('/') ? `${DJANGO_BASE_URL}${url}` : url;
     
-    const res = await fetch(fullUrl, {
+    const res = await fetch(url, {
       credentials: "include",
     });
 
