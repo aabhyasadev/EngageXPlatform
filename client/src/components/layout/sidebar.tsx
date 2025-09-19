@@ -13,6 +13,7 @@ export default function Sidebar() {
     { name: "Domains", href: "/domains", icon: "fas fa-globe" },
     { name: "Analytics", href: "/analytics", icon: "fas fa-chart-bar" },
     { name: "Team", href: "/team", icon: "fas fa-user-cog" },
+    { name: "Subscription", href: "/subscription", icon: "fas fa-credit-card" },
     { name: "Settings", href: "/settings", icon: "fas fa-cog" },
   ];
 

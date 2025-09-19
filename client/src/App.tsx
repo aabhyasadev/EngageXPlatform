@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Signup from "@/pages/signup";
+import SubscriptionPage from "@/pages/subscription";
 import Dashboard from "@/pages/dashboard";
 import Contacts from "@/pages/contacts";
 import Campaigns from "@/pages/campaigns";
@@ -65,6 +66,7 @@ function Router() {
         <Route path="/analytics" component={Analytics} />
         <Route path="/team" component={Team} />
         <Route path="/settings" component={Settings} />
+        <Route path="/subscription" component={SubscriptionPage} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

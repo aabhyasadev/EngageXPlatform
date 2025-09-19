@@ -49,6 +49,8 @@ MIDDLEWARE = [
     # CSRF middleware disabled for API compatibility with Express
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middleware.SubscriptionAccessMiddleware',
+    'core.middleware.FeatureLimitMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
