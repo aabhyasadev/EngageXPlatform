@@ -15,8 +15,12 @@ class UserRole(models.TextChoices):
 
 class SubscriptionPlan(models.TextChoices):
     FREE_TRIAL = 'free_trial', 'Free Trial'
-    MONTHLY = 'monthly', 'Monthly'
-    YEARLY = 'yearly', 'Yearly'
+    BASIC_MONTHLY = 'basic_monthly', 'Basic Monthly'
+    BASIC_YEARLY = 'basic_yearly', 'Basic Yearly'
+    PRO_MONTHLY = 'pro_monthly', 'Pro Monthly'
+    PRO_YEARLY = 'pro_yearly', 'Pro Yearly'
+    PREMIUM_MONTHLY = 'premium_monthly', 'Premium Monthly'
+    PREMIUM_YEARLY = 'premium_yearly', 'Premium Yearly'
 
 
 class CampaignStatus(models.TextChoices):
@@ -57,13 +61,17 @@ class Organization(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     subscription_plan = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=SubscriptionPlan.choices,
         default=SubscriptionPlan.FREE_TRIAL
     )
     trial_ends_at = models.DateTimeField(null=True, blank=True)
+    subscription_ends_at = models.DateTimeField(null=True, blank=True)
+    stripe_customer_id = models.CharField(max_length=255, null=True, blank=True)
+    stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
     contacts_limit = models.IntegerField(default=1000)
     campaigns_limit = models.IntegerField(default=10)
+    is_subscription_active = models.BooleanField(default=True)
     industry = models.CharField(max_length=100, null=True, blank=True)
     employees_range = models.CharField(max_length=50, null=True, blank=True)
     contacts_range = models.CharField(max_length=50, null=True, blank=True)
@@ -102,6 +110,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=100, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)  # For signup process
     profile_image_url = models.URLField(max_length=500, null=True, blank=True)
+    stripe_customer_id = models.CharField(max_length=255, null=True, blank=True)
     organization = models.ForeignKey(
         Organization, 
         on_delete=models.CASCADE, 

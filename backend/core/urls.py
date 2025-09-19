@@ -13,6 +13,14 @@ from .auth_views import (
 from .signup_views import (
     check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account
 )
+from .subscription_views import (
+    get_subscription_plans,
+    get_current_subscription,
+    create_subscription,
+    cancel_subscription,
+    stripe_webhook,
+    check_subscription_access
+)
 
 def health_check(request):
     """Health check endpoint for Django startup verification"""
@@ -56,6 +64,14 @@ urlpatterns = [
     path('api/signup/resend-otp', resend_otp, name='signup_resend_otp'),
     path('api/signup/verify-otp', verify_otp, name='signup_verify_otp'),
     path('api/signup/create-account', create_account, name='signup_create_account'),
+    
+    # Subscription management endpoints
+    path('api/subscription/plans', get_subscription_plans, name='subscription_plans'),
+    path('api/subscription/current', get_current_subscription, name='current_subscription'),
+    path('api/subscription/create', create_subscription, name='create_subscription'),
+    path('api/subscription/cancel', cancel_subscription, name='cancel_subscription'),
+    path('api/subscription/check-access', check_subscription_access, name='check_subscription_access'),
+    path('api/subscription/webhook', stripe_webhook, name='stripe_webhook'),
     
     # Standard DRF routes
     path('api/', include(router.urls)),
