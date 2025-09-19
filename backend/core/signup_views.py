@@ -310,8 +310,13 @@ def resend_otp(request):
             'error': 'No active verification code found. Please request a new one.'
         }, status=status.HTTP_404_NOT_FOUND)
     
-    # For development: if email service not configured, return dev OTP
-    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+    # For development: if email service not configured, ensure dev OTP
+    if not settings.SENDGRID_API_KEY:
+        # Update existing OTP to use dev code for consistency
+        if existing_otp.otp_code != "123456":
+            existing_otp.otp_code = "123456"
+            existing_otp.save()
+            
         return Response({
             'message': 'Development mode: Use OTP code 123456',
             'dev_mode': True,
@@ -440,8 +445,11 @@ def create_account(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
+        print(f"DEBUG: Starting account creation for {email}")
+        print(f"DEBUG: Session data: {signup_data}")
         with transaction.atomic():
             # Create organization first
+            print(f"DEBUG: Creating organization with data: industry={industry}, employees={employees_range}, contacts={contacts_range}")
             organization = Organization.objects.create(
                 name=f"{first_name} {last_name}'s Organization",
                 subscription_plan=SubscriptionPlan.FREE_TRIAL,
@@ -481,6 +489,10 @@ def create_account(request):
             }, status=status.HTTP_201_CREATED)
             
     except Exception as e:
+        print(f"DEBUG: Account creation failed with error: {str(e)}")
+        print(f"DEBUG: Error type: {type(e)}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
         return Response({
             'error': f'Failed to create account: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
