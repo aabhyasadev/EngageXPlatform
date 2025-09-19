@@ -217,8 +217,13 @@ def send_otp(request):
     ).first()
     
     if existing_otp:
-        # For development: if email service not configured, return dev OTP
-        if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+        # For development: if email service not configured, ensure dev OTP
+        if not settings.SENDGRID_API_KEY:
+            # Update existing OTP to use dev code
+            if existing_otp.otp_code != "123456":
+                existing_otp.otp_code = "123456"
+                existing_otp.save()
+            
             return Response({
                 'message': 'Development mode: Use OTP code 123456',
                 'expires_in_minutes': 20,
@@ -238,7 +243,7 @@ def send_otp(request):
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     
     # Generate new OTP - use fixed OTP in dev mode
-    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+    if not settings.SENDGRID_API_KEY:
         otp_code = "123456"  # Fixed OTP for development
     else:
         otp_code = generate_otp()
@@ -253,7 +258,7 @@ def send_otp(request):
     )
     
     # For development: if email service not configured, return dev OTP
-    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+    if not settings.SENDGRID_API_KEY:
         return Response({
             'message': 'Development mode: Use OTP code 123456',
             'expires_in_minutes': 20,

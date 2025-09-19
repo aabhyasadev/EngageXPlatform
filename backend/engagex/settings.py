@@ -266,6 +266,9 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = f'EngageX <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'EngageX <noreply@example.com>'
 
+# SendGrid settings
+SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
+
 # Stripe settings - Use testing keys in development, production keys in production
 STRIPE_SECRET_KEY = config('TESTING_STRIPE_SECRET_KEY' if DEBUG else 'STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
