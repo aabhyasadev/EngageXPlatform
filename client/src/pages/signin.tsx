@@ -90,7 +90,7 @@ export default function SignInPage() {
       if (response.ok) {
         const data = await response.json();
         setStep1Data(values);
-        setOrganizationName(data.organization_name);
+        setOrganizationName("your organization"); // Generic name for security
         setCurrentStep(2);
       } else {
         const error = await response.json();

@@ -34,16 +34,8 @@ def validate_organization_email(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        # Validate organization exists
+        # Validate organization exists and user exists in organization
         organization = Organization.objects.get(id=organization_id)
-    except Organization.DoesNotExist:
-        return Response({
-            'error': 'Invalid Organization ID',
-            'code': 'INVALID_ORG_ID'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Check if user exists with this email in this organization
-    try:
         user = User.objects.get(email=email, organization=organization)
         
         # Store validation in session for next step
@@ -52,15 +44,15 @@ def validate_organization_email(request):
         request.session['signin_user_id'] = str(user.id)
         
         return Response({
-            'message': 'Organization and email validated',
-            'organization_name': organization.name,
+            'message': 'Validation successful - please proceed to next step',
             'next_step': 'credentials'
         })
         
-    except User.DoesNotExist:
+    except (Organization.DoesNotExist, User.DoesNotExist):
+        # Generic response to prevent account enumeration
         return Response({
-            'error': 'No account found with this email in the specified organization',
-            'code': 'USER_NOT_FOUND'
+            'error': 'Invalid credentials. Please check your Organization ID and email address.',
+            'code': 'INVALID_CREDENTIALS'
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -99,66 +91,61 @@ def authenticate_credentials(request):
                 'code': 'ACCOUNT_LOCKED'
             }, status=status.HTTP_423_LOCKED)
         
-        # Authenticate user
-        # For this implementation, we'll check if username matches and use Django's password check
+        # Authenticate user - support both username and email-based login
+        # Check if provided username matches either the user's username or email
+        is_valid_credential = False
         if user.username and user.username == username:
-            if user.check_password(password):
-                # Reset login attempts on successful login
-                user.login_attempts = 0
-                user.locked_until = None
-                user.last_login_at = timezone.now()
-                user.save()
-                
-                # Check if MFA/OTP/SSO is required
-                if user.mfa_enabled or user.sso_enabled:
-                    # Store successful credential validation for MFA step
-                    request.session['signin_credentials_validated'] = True
-                    return Response({
-                        'message': 'Credentials validated',
-                        'requires_verification': True,
-                        'mfa_enabled': user.mfa_enabled,
-                        'sso_enabled': user.sso_enabled,
-                        'next_step': 'verification'
-                    })
-                else:
-                    # Login user directly if no additional verification needed
-                    login(request, user)
-                    
-                    # Clear signin session data
-                    request.session.pop('signin_organization_id', None)
-                    request.session.pop('signin_email', None)
-                    request.session.pop('signin_user_id', None)
-                    
-                    return Response({
-                        'message': 'Login successful',
-                        'user': {
-                            'id': str(user.id),
-                            'email': user.email,
-                            'full_name': user.full_name,
-                            'organization': user.organization.name,
-                            'role': user.role
-                        }
-                    })
+            is_valid_credential = True
+        elif not user.username and user.email == username:
+            # Fallback for users without username - allow email as username
+            is_valid_credential = True
+        
+        if is_valid_credential and user.check_password(password):
+            # Reset login attempts on successful login
+            user.login_attempts = 0
+            user.locked_until = None
+            user.last_login_at = timezone.now()
+            user.save()
+            
+            # Check if MFA/OTP/SSO is required
+            if user.mfa_enabled or user.sso_enabled:
+                # Store successful credential validation for MFA step
+                request.session['signin_credentials_validated'] = True
+                return Response({
+                    'message': 'Credentials validated',
+                    'requires_verification': True,
+                    'mfa_enabled': user.mfa_enabled,
+                    'sso_enabled': user.sso_enabled,
+                    'next_step': 'verification'
+                })
             else:
-                # Invalid password
-                user.login_attempts += 1
-                if user.login_attempts >= 5:
-                    user.locked_until = timezone.now() + timedelta(minutes=30)
-                user.save()
+                # Login user directly if no additional verification needed
+                login(request, user)
+                
+                # Clear signin session data
+                request.session.pop('signin_organization_id', None)
+                request.session.pop('signin_email', None)
+                request.session.pop('signin_user_id', None)
                 
                 return Response({
-                    'error': 'Invalid username or password',
-                    'code': 'INVALID_CREDENTIALS'
-                }, status=status.HTTP_401_UNAUTHORIZED)
+                    'message': 'Login successful',
+                    'user': {
+                        'id': str(user.id),
+                        'email': user.email,
+                        'full_name': user.full_name,
+                        'organization': user.organization.name,
+                        'role': user.role
+                    }
+                })
         else:
-            # Invalid username
+            # Invalid credentials
             user.login_attempts += 1
             if user.login_attempts >= 5:
                 user.locked_until = timezone.now() + timedelta(minutes=30)
             user.save()
             
             return Response({
-                'error': 'Invalid username or password',
+                'error': 'Invalid credentials',
                 'code': 'INVALID_CREDENTIALS'
             }, status=status.HTTP_401_UNAUTHORIZED)
             
@@ -245,85 +232,76 @@ def forgot_account(request):
             'error': 'Email is required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
+    # Always return success message to prevent email enumeration
+    # Send email only if user exists
     try:
-        # Find user by email
         user = User.objects.get(email=email)
         
-        if not user.organization:
-            return Response({
-                'error': 'No organization associated with this account'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Send email with organization ID
-        try:
-            html_message = f"""
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">Your EngageX Organization ID</h2>
-                <p style="font-size: 16px; color: #666;">
-                    Hello {user.full_name},
-                </p>
-                <p style="font-size: 16px; color: #666;">
-                    Your organization ID is:
-                </p>
-                <div style="background: #f8f9fa; padding: 20px; text-align: center; margin: 20px 0;">
-                    <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 2px;">
-                        {user.organization.id}
-                    </h1>
+        if user.organization:
+            # Send email with organization ID only if user exists and has organization
+            try:
+                html_message = f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #333;">Your EngageX Organization ID</h2>
+                    <p style="font-size: 16px; color: #666;">
+                        Hello {user.full_name},
+                    </p>
+                    <p style="font-size: 16px; color: #666;">
+                        Your organization ID is:
+                    </p>
+                    <div style="background: #f8f9fa; padding: 20px; text-align: center; margin: 20px 0;">
+                        <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 2px;">
+                            {user.organization.id}
+                        </h1>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">
+                        Organization: {user.organization.name}
+                    </p>
+                    <p style="color: #666; font-size: 14px;">
+                        Use this Organization ID to sign in to your EngageX account.
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">
+                        EngageX - Professional Email Marketing Platform
+                    </p>
                 </div>
-                <p style="color: #666; font-size: 14px;">
-                    Organization: {user.organization.name}
-                </p>
-                <p style="color: #666; font-size: 14px;">
-                    Use this Organization ID to sign in to your EngageX account.
-                </p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="color: #999; font-size: 12px;">
-                    EngageX - Professional Email Marketing Platform
-                </p>
-            </div>
-            """
-            
-            plain_message = f"""
-            Your EngageX Organization ID
-            
-            Hello {user.full_name},
-            
-            Your organization ID is: {user.organization.id}
-            Organization: {user.organization.name}
-            
-            Use this Organization ID to sign in to your EngageX account.
-            
-            EngageX - Professional Email Marketing Platform
-            """
-            
-            sent = send_mail(
-                subject='Your EngageX Organization ID',
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message=html_message,
-                fail_silently=False,
-            )
-            
-            if sent:
-                return Response({
-                    'message': 'Your Org ID has been sent to your email',
-                    'email': email
-                })
-            else:
-                raise Exception("Email sending failed")
+                """
                 
-        except Exception as e:
-            logger.error(f"Error sending organization ID email: {e}")
-            return Response({
-                'error': 'Failed to send email. Please try again later'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+                plain_message = f"""
+                Your EngageX Organization ID
+                
+                Hello {user.full_name},
+                
+                Your organization ID is: {user.organization.id}
+                Organization: {user.organization.name}
+                
+                Use this Organization ID to sign in to your EngageX account.
+                
+                EngageX - Professional Email Marketing Platform
+                """
+                
+                send_mail(
+                    subject='Your EngageX Organization ID',
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    html_message=html_message,
+                    fail_silently=True,  # Fail silently to prevent enumeration
+                )
+                
+            except Exception as e:
+                logger.error(f"Error sending organization ID email: {e}")
+                # Don't return error to prevent enumeration
+                
     except User.DoesNotExist:
-        return Response({
-            'error': 'No account exists with this email',
-            'code': 'EMAIL_NOT_FOUND'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        # User doesn't exist, but don't reveal this information
+        pass
+    
+    # Always return the same success message regardless of whether user exists
+    return Response({
+        'message': f'If an account exists with {email}, we have sent the Organization ID to that email address.',
+        'email': email
+    })
 
 
 @api_view(['POST'])
