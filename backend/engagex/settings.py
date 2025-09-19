@@ -255,14 +255,14 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-# Email settings (SendGrid)
-SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
+# Email settings (SMTP)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'apikey'
-EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = f'EngageX <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'EngageX <noreply@example.com>'
 
 # Logging configuration
 LOGGING = {

@@ -1,9 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation } from "wouter";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   const handleLogin = () => {
     window.location.href = "/api/login";
+  };
+
+  const handleSignup = () => {
+    setLocation("/signup");
   };
 
   return (
@@ -19,14 +26,25 @@ export default function Landing() {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             The complete email marketing platform for organizations. Create, send, and track campaigns with enterprise-grade security and multi-tenant architecture.
           </p>
-          <Button 
-            size="lg" 
-            onClick={handleLogin}
-            className="text-lg px-8 py-3"
-            data-testid="button-login"
-          >
-            Get Started with Free Trial
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={handleSignup}
+              className="text-lg px-8 py-3"
+              data-testid="button-signup"
+            >
+              Start Free Trial
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={handleLogin}
+              className="text-lg px-8 py-3"
+              data-testid="button-login"
+            >
+              Sign In with Replit
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
