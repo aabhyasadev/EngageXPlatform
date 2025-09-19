@@ -18,8 +18,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     target: 'http://127.0.0.1:8001',
     changeOrigin: true,
     pathRewrite: { '^/api': '' }, // Strip /api prefix before forwarding to Django
-    logLevel: 'debug',
+    logLevel: 'info', // Reduced log level
+    timeout: 30000, // 30 second timeout
+    proxyTimeout: 30000, // 30 second proxy timeout
     onProxyReq: (proxyReq, req, res) => {
+      // Log request for debugging
+      console.log(`[express] Proxying ${req.method} ${req.url} to Django`);
+      
       // Inject signed user headers for Django authentication bridge
       if (req.isAuthenticated && req.isAuthenticated() && req.user) {
         const user = req.user as any;
@@ -42,6 +47,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Add headers for Django middleware
         proxyReq.setHeader('X-Replit-User', userData);
         proxyReq.setHeader('X-Replit-User-Signature', signature);
+      }
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      console.log(`[express] ${req.method} ${req.url} ${proxyRes.statusCode} from Django`);
+    },
+    onError: (err, req, res) => {
+      console.error(`[express] Proxy Error for ${req.method} ${req.url}:`, err.message);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Proxy Error', details: err.message });
       }
     }
   }));
