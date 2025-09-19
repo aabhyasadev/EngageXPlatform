@@ -13,11 +13,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'healthy', service: 'express-frontend' });
   });
 
-  // Proxy all API requests to Django backend - keep full path including /api
+  // Proxy all API requests to Django backend - strip /api prefix for Django
   app.use('/api', createProxyMiddleware({
     target: 'http://127.0.0.1:8001',
     changeOrigin: true,
-    // Remove pathRewrite - let Django receive full path including /api prefix
+    pathRewrite: { '^/api': '' }, // Strip /api prefix before forwarding to Django
     logLevel: 'debug',
     onProxyReq: (proxyReq, req, res) => {
       // Inject signed user headers for Django authentication bridge
