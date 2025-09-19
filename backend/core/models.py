@@ -109,6 +109,7 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     replit_id = models.CharField(max_length=100, unique=True, null=True, blank=True)  # External Replit Auth ID
+    username = models.CharField(max_length=150, null=True, blank=True)  # For new sign-in flow
     email = models.EmailField(unique=True, validators=[EmailValidator()])
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
@@ -126,6 +127,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=UserRole.choices,
         default=UserRole.CAMPAIGN_MANAGER
     )
+    # New fields for enhanced authentication
+    mfa_enabled = models.BooleanField(default=False)
+    otp_secret = models.CharField(max_length=32, null=True, blank=True)
+    sso_enabled = models.BooleanField(default=False)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+    login_attempts = models.IntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -13,6 +13,13 @@ from .auth_views import (
 from .signup_views import (
     check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account
 )
+from .signin_views import (
+    validate_organization_email,
+    authenticate_credentials, 
+    verify_mfa_otp_sso,
+    forgot_account,
+    logout_user
+)
 from .subscription_views import (
     get_subscription_plans,
     get_current_subscription,
@@ -64,6 +71,13 @@ urlpatterns = [
     path('signup/resend-otp', resend_otp, name='signup_resend_otp'),
     path('signup/verify-otp', verify_otp, name='signup_verify_otp'),
     path('signup/create-account', create_account, name='signup_create_account'),
+    
+    # New sign-in flow endpoints (proxy strips /api prefix)
+    path('signin/validate-org-email', validate_organization_email, name='signin_validate_org_email'),
+    path('signin/authenticate', authenticate_credentials, name='signin_authenticate'),
+    path('signin/verify', verify_mfa_otp_sso, name='signin_verify'),
+    path('signin/forgot-account', forgot_account, name='signin_forgot_account'),
+    path('signin/logout', logout_user, name='signin_logout'),
     
     # Subscription management endpoints (proxy strips /api prefix)
     path('subscription/plans', get_subscription_plans, name='subscription_plans'),
