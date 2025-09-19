@@ -15,7 +15,7 @@ interface BasicInfoStepProps {
   };
   onNext: () => void;
   onBack: () => void;
-  onDataUpdate: (data: { first_name: string; last_name: string; phone: string; email: string }) => void;
+  onDataUpdate: (data: { first_name: string; last_name: string; phone: string }) => void;
 }
 
 export default function BasicInfoStep({ data, onNext, onBack, onDataUpdate }: BasicInfoStepProps) {
@@ -33,10 +33,7 @@ export default function BasicInfoStep({ data, onNext, onBack, onDataUpdate }: Ba
       return response.json();
     },
     onSuccess: () => {
-      onDataUpdate({ 
-        ...formData, 
-        email: "" // This will be populated from session on backend
-      });
+      onDataUpdate(formData);
       toast({
         title: "Information saved",
         description: "Your basic information has been saved.",

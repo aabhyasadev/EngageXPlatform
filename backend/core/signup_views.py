@@ -90,6 +90,12 @@ def check_email(request):
             'exists': True
         }, status=status.HTTP_409_CONFLICT)
     
+    # Store email in session for next steps
+    request.session['signup_data'] = {
+        'email': email,
+        'step': 1
+    }
+    
     return Response({
         'message': 'Email is available',
         'exists': False
@@ -102,30 +108,38 @@ def basic_info(request):
     """
     Step 2: Collect basic user information
     """
-    email = request.data.get('email', '').lower().strip()
     first_name = request.data.get('first_name', '').strip()
     last_name = request.data.get('last_name', '').strip()
     phone = request.data.get('phone', '').strip()
     
-    if not all([email, first_name, last_name, phone]):
+    if not all([first_name, last_name, phone]):
         return Response({
-            'error': 'All fields are required (email, first_name, last_name, phone)'
+            'error': 'All fields are required (first_name, last_name, phone)'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Validate email not already registered
+    # Get existing signup data from session (should have email from step 1)
+    signup_data = request.session.get('signup_data', {})
+    if not signup_data or not signup_data.get('email'):
+        return Response({
+            'error': 'Please complete email verification first'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    email = signup_data.get('email')
+    
+    # Validate email not already registered (double check)
     if User.objects.filter(email=email).exists():
         return Response({
             'error': 'This email is already registered'
         }, status=status.HTTP_409_CONFLICT)
     
-    # Store in session for later use
-    request.session['signup_data'] = {
-        'email': email,
+    # Update session with basic info
+    signup_data.update({
         'first_name': first_name,
         'last_name': last_name,
         'phone': phone,
         'step': 2
-    }
+    })
+    request.session['signup_data'] = signup_data
     
     return Response({
         'message': 'Basic information saved',
