@@ -13,17 +13,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'healthy', service: 'express-frontend' });
   });
 
+  // Temporary logger to verify any browser request touches Express
+  app.all('/api/*', (req, res, next) => {
+    console.log(`[express] inbound ${req.method} ${req.url}`);
+    next();
+  });
+
+  // Temporary stub for signup email check to test POST pathway
+  app.post('/api/signup/check-email', (req, res) => {
+    console.log(`[express] Stub handling POST /api/signup/check-email`);
+    console.log(`[express] Request body:`, req.body);
+    res.json({ exists: false, message: "Test stub response" });
+  });
+
   // Proxy all API requests to Django backend - strip /api prefix for Django
   app.use('/api', createProxyMiddleware({
-    target: 'http://127.0.0.1:8001',
+    target: 'http://localhost:8001',
     changeOrigin: true,
-    pathRewrite: { '^/api': '' }, // Strip /api prefix before forwarding to Django
-    logLevel: 'info', // Reduced log level
-    timeout: 30000, // 30 second timeout
-    proxyTimeout: 30000, // 30 second proxy timeout
+    pathRewrite: {
+      '^/api': '', // Strip /api prefix before forwarding to Django
+    },
+    logLevel: 'debug',
     onProxyReq: (proxyReq, req, res) => {
-      // Log request for debugging
-      console.log(`[express] Proxying ${req.method} ${req.url} to Django`);
+      console.log(`[express] Proxying ${req.method} ${req.url} to Django at localhost:8001`);
+      
+      // For JSON POST/PUT/PATCH requests, manually write body and end the request
+      if (['POST', 'PUT', 'PATCH'].includes(req.method!) && 
+          req.headers['content-type']?.includes('application/json') && 
+          req.body) {
+        const body = JSON.stringify(req.body);
+        proxyReq.setHeader('Content-Type', 'application/json');
+        proxyReq.setHeader('Content-Length', Buffer.byteLength(body));
+        proxyReq.write(body);
+        proxyReq.end(); // Critical: end the request stream
+      }
       
       // Inject signed user headers for Django authentication bridge
       if (req.isAuthenticated && req.isAuthenticated() && req.user) {
@@ -50,12 +73,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
     onProxyRes: (proxyRes, req, res) => {
-      console.log(`[express] ${req.method} ${req.url} ${proxyRes.statusCode} from Django`);
+      console.log(`[express] Response ${proxyRes.statusCode} from Django for ${req.method} ${req.url}`);
     },
     onError: (err, req, res) => {
       console.error(`[express] Proxy Error for ${req.method} ${req.url}:`, err.message);
+      console.error('[express] Error stack:', err.stack);
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Proxy Error', details: err.message });
+        res.status(502).json({ 
+          error: 'Bad Gateway - Proxy Error', 
+          details: err.message,
+          target: 'Django backend at localhost:8001'
+        });
       }
     }
   }));

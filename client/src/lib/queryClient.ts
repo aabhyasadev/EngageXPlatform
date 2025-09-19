@@ -19,6 +19,9 @@ export async function apiRequest(
   // Use relative URLs - Express will proxy /api requests to Django
   const fullUrl = url;
   
+  // Temporary debugging to see what URL is being constructed
+  console.log(`[DEBUG] apiRequest: ${method} ${fullUrl}`, { data });
+  
   const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
