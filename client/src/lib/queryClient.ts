@@ -7,8 +7,10 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Django backend URL
-const DJANGO_BASE_URL = "http://127.0.0.1:8001";
+// Django backend URL - Use public domain in Replit environment
+const DJANGO_BASE_URL = window.location.hostname.includes('replit.dev') || window.location.hostname.includes('replit.app') 
+  ? `https://${window.location.hostname}:8001`
+  : "http://127.0.0.1:8001";
 
 export async function apiRequest(
   method: string,
