@@ -262,7 +262,7 @@ def cancel_subscription(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
+@csrf_exempt  # Webhook must be exempt from CSRF protection
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def stripe_webhook(request):

@@ -10,9 +10,9 @@ import { CheckCircle, Clock, CreditCard, AlertTriangle } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-// Initialize Stripe with testing keys in development
+// Initialize Stripe with properly prefixed environment variables
 const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLIC_KEY || import.meta.env.TESTING_VITE_STRIPE_PUBLIC_KEY!
+  import.meta.env.VITE_STRIPE_PUBLIC_KEY || import.meta.env.VITE_TESTING_STRIPE_PUBLIC_KEY!
 );
 
 interface SubscriptionPlan {
