@@ -71,12 +71,13 @@ class ExpressSessionBridgeMiddleware(MiddlewareMixin):
     
     def _verify_signature(self, data, signature):
         """Verify HMAC signature for user data"""
-        if not settings.SESSION_SECRET:
-            logger.error("SESSION_SECRET not configured")
+        # Use AUTH_BRIDGE_SECRET which is derived from SESSION_SECRET env var
+        if not hasattr(settings, 'AUTH_BRIDGE_SECRET') or not settings.AUTH_BRIDGE_SECRET:
+            logger.error("AUTH_BRIDGE_SECRET not configured")
             return False
             
         expected_signature = hmac.new(
-            settings.SESSION_SECRET.encode(),
+            settings.AUTH_BRIDGE_SECRET.encode(),
             data.encode(),
             hashlib.sha256
         ).hexdigest()
