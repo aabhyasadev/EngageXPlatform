@@ -1,0 +1,89 @@
+--------------------------------------------
+|  Package Plans – Functional Specification
+--------------------------------------------
+Free Trial
+  Duration: 14 days.
+  Features: Full feature access.
+  Activation: Automatically enabled upon first signup.
+  Expiration: After 14 days → prompt user to upgrade to a paid plan.
+
+Paid Plans
+ Basic Plan
+   Subscription options: Monthly / Yearly.
+   Limited features (to be defined).
+
+ Pro Plan
+   Subscription options: Monthly / Yearly.
+   Extended features compared to Basic.
+
+ Premium Plan
+   Subscription options: Monthly / Yearly.
+   All available features unlocked.
+
+Functionalities
+ Trial Activation
+   On first signup, assign Free Trial (14 days) automatically.
+   Track start and end dates.
+
+ Subscription Management
+   Allow upgrade/downgrade between Basic, Pro, Premium.
+   Handle monthly and yearly billing cycles.
+   Send reminders before expiration.
+
+ Access Control
+   Check active subscription before allowing feature usage.
+   Redirect to upgrade page if trial/plan expires.
+
+ Billing & Payments
+   Integrate with payment gateway.
+   Support recurring payments for monthly/yearly subscriptions.
+   Handle failed payments gracefully (retry → suspend → notify).
+
+
+-----------------------------
+|  Signup Process Flow
+-----------------------------
+
+System Rules
+  On first signup:
+   The system automatically activates a 14-day free trial.
+   The first registered user becomes the Organizer User (Organization Owner).
+   The Organizer User can invite additional users to join and manage the organization’s account.
+
+Step-by-Step Flow
+Page 1 – Email Input
+
+  User enters their email ID.
+  If the email already exists in the database → show a toast message (“This email is already registered”).
+  If the email does not exist → proceed to Page 2.
+
+Page 2 – Basic User Information
+Collect:
+  Full Name
+  Phone Number (auto-detect country code)
+
+After completion → proceed to Page 3.
+
+Page 3 – Business Information
+Collect:
+  Contacts Range
+  Employees Range
+  Industry
+
+After completion → proceed to Page 4.
+
+Page 4 – Email Verification
+Send an OTP to the user’s email.
+Verification rules:
+  If OTP is valid → proceed to Page 5.
+  If OTP is invalid → show error message (“Invalid OTP”).
+  OTP validity: 20 minutes.
+  Provide option to resend OTP.
+
+Page 5 – Password Setup
+User enters and confirms a password.
+If both match → create:
+  A new Organization User with a unique Org ID.
+  Assign the user as the Organizer User (Organization Owner).
+Redirect the user to the Dashboard.
+Automatically enable the 14-day free trial.
