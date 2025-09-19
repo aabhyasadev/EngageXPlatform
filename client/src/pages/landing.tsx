@@ -5,8 +5,12 @@ import { useLocation } from "wouter";
 export default function Landing() {
   const [, setLocation] = useLocation();
 
-  const handleLogin = () => {
+  const handleOIDCLogin = () => {
     window.location.href = "/api/login";
+  };
+
+  const handleCustomSignin = () => {
+    setLocation("/signin");
   };
 
   const handleSignup = () => {
@@ -26,7 +30,7 @@ export default function Landing() {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             The complete email marketing platform for organizations. Create, send, and track campaigns with enterprise-grade security and multi-tenant architecture.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
               size="lg" 
               onClick={handleSignup}
@@ -35,15 +39,26 @@ export default function Landing() {
             >
               Start Free Trial
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={handleLogin}
-              className="text-lg px-8 py-3"
-              data-testid="button-login"
-            >
-              Sign In with Replit
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={handleCustomSignin}
+                className="text-lg px-6 py-3"
+                data-testid="button-custom-signin"
+              >
+                Sign In
+              </Button>
+              <Button 
+                size="lg" 
+                variant="secondary"
+                onClick={handleOIDCLogin}
+                className="text-lg px-6 py-3"
+                data-testid="button-oidc-login"
+              >
+                Replit Login
+              </Button>
+            </div>
           </div>
         </div>
 
