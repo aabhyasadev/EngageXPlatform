@@ -49,29 +49,29 @@ urlpatterns = [
     path('api/login', oidc_login, name='oidc_login'),
     path('api/callback', oidc_callback, name='oidc_callback'),
     
-    # Exact Express API compatibility routes
-    path('api/auth/user', auth_user, name='auth_user'),
-    path('api/auth/login', replit_auth_login, name='replit_auth_login'),
-    path('api/auth/logout', logout_view, name='logout'),
-    path('api/auth/csrf', get_csrf_token, name='csrf_token'),
-    path('api/dashboard/stats', dashboard_stats, name='dashboard_stats'),
+    # Express proxy routes (proxy strips /api prefix, so Django receives without /api)
+    path('auth/user', auth_user, name='auth_user'),
+    path('auth/login', replit_auth_login, name='replit_auth_login'),
+    path('auth/logout', logout_view, name='logout'),
+    path('auth/csrf', get_csrf_token, name='csrf_token'),
+    path('dashboard/stats', dashboard_stats, name='dashboard_stats'),
     
-    # Signup flow endpoints
-    path('api/signup/check-email', check_email, name='signup_check_email'),
-    path('api/signup/basic-info', basic_info, name='signup_basic_info'),
-    path('api/signup/business-info', business_info, name='signup_business_info'),
-    path('api/signup/send-otp', send_otp, name='signup_send_otp'),
-    path('api/signup/resend-otp', resend_otp, name='signup_resend_otp'),
-    path('api/signup/verify-otp', verify_otp, name='signup_verify_otp'),
-    path('api/signup/create-account', create_account, name='signup_create_account'),
+    # Signup flow endpoints (proxy strips /api prefix)
+    path('signup/check-email', check_email, name='signup_check_email'),
+    path('signup/basic-info', basic_info, name='signup_basic_info'),
+    path('signup/business-info', business_info, name='signup_business_info'),
+    path('signup/send-otp', send_otp, name='signup_send_otp'),
+    path('signup/resend-otp', resend_otp, name='signup_resend_otp'),
+    path('signup/verify-otp', verify_otp, name='signup_verify_otp'),
+    path('signup/create-account', create_account, name='signup_create_account'),
     
-    # Subscription management endpoints
-    path('api/subscription/plans', get_subscription_plans, name='subscription_plans'),
-    path('api/subscription/current', get_current_subscription, name='current_subscription'),
-    path('api/subscription/create', create_subscription, name='create_subscription'),
-    path('api/subscription/cancel', cancel_subscription, name='cancel_subscription'),
-    path('api/subscription/check-access', check_subscription_access, name='check_subscription_access'),
-    path('api/subscription/webhook', stripe_webhook, name='stripe_webhook'),
+    # Subscription management endpoints (proxy strips /api prefix)
+    path('subscription/plans', get_subscription_plans, name='subscription_plans'),
+    path('subscription/current', get_current_subscription, name='current_subscription'),
+    path('subscription/create', create_subscription, name='create_subscription'),
+    path('subscription/cancel', cancel_subscription, name='cancel_subscription'),
+    path('subscription/check-access', check_subscription_access, name='check_subscription_access'),
+    path('subscription/webhook', stripe_webhook, name='stripe_webhook'),
     
     # Standard DRF routes
     path('api/', include(router.urls)),

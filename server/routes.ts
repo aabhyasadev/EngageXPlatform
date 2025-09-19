@@ -12,11 +12,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'healthy', service: 'express-frontend' });
   });
 
-  // Proxy all API requests to Django backend
+  // Proxy all API requests to Django backend - keep full path including /api
   app.use('/api', createProxyMiddleware({
     target: 'http://127.0.0.1:8001',
     changeOrigin: true,
-    // Don't rewrite the path - keep /api prefix as Django expects it
+    // Remove pathRewrite - let Django receive full path including /api prefix
     logLevel: 'debug'
   }));
   
