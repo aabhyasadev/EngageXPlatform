@@ -39,6 +39,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/signup" component={Signup} />
+        <Route path="/subscription" component={SubscriptionPage} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -49,6 +50,7 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={OrganizationSetup} />
+        <Route path="/subscription" component={SubscriptionPage} />
         <Route component={NotFound} />
       </Switch>
     );

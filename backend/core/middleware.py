@@ -1,8 +1,87 @@
 from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
-from .models import Organization, SubscriptionPlan
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
+from .models import Organization, SubscriptionPlan, User
 import json
+import hmac
+import hashlib
+import logging
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+
+class ExpressSessionBridgeMiddleware(MiddlewareMixin):
+    """
+    Middleware to bridge Express sessions to Django authentication
+    """
+    
+    def process_request(self, request):
+        """
+        Extract user information from Express session data and set Django user
+        """
+        # Check for signed user header from Express proxy
+        user_header = request.META.get('HTTP_X_REPLIT_USER')
+        signature_header = request.META.get('HTTP_X_REPLIT_USER_SIGNATURE')
+        
+        if not user_header or not signature_header:
+            request.user = AnonymousUser()
+            return None
+            
+        # Verify signature
+        if not self._verify_signature(user_header, signature_header):
+            logger.warning("Invalid signature for user header")
+            request.user = AnonymousUser()
+            return None
+            
+        try:
+            # Parse user data from header
+            user_data = json.loads(user_header)
+            user_id = user_data.get('sub')
+            email = user_data.get('email')
+            
+            if not user_id or not email:
+                request.user = AnonymousUser()
+                return None
+            
+            # Get or create Django user
+            try:
+                user = User.objects.get(replit_user_id=user_id)
+            except User.DoesNotExist:
+                # Create new user
+                user = User.objects.create(
+                    replit_user_id=user_id,
+                    email=email,
+                    first_name=user_data.get('first_name', ''),
+                    last_name=user_data.get('last_name', ''),
+                    profile_image_url=user_data.get('profile_image_url', '')
+                )
+                logger.info(f"Created new user for Replit ID: {user_id}")
+            
+            # Set the user on the request
+            request.user = user
+            
+        except (json.JSONDecodeError, KeyError, Exception) as e:
+            logger.error(f"Error processing user header: {e}")
+            request.user = AnonymousUser()
+            
+        return None
+    
+    def _verify_signature(self, data, signature):
+        """Verify HMAC signature for user data"""
+        if not settings.SESSION_SECRET:
+            logger.error("SESSION_SECRET not configured")
+            return False
+            
+        expected_signature = hmac.new(
+            settings.SESSION_SECRET.encode(),
+            data.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(signature, expected_signature)
 
 
 class SubscriptionAccessMiddleware(MiddlewareMixin):

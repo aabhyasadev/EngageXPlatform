@@ -47,6 +47,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',  # Re-enabled for security
+    'core.middleware.ExpressSessionBridgeMiddleware',  # Bridge Express sessions to Django auth
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'core.middleware.SubscriptionAccessMiddleware',
     'core.middleware.FeatureLimitMiddleware',
