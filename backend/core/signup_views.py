@@ -203,12 +203,6 @@ def send_otp(request):
             'error': 'Email not found in session'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Check if SMTP is configured
-    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
-        return Response({
-            'error': 'Email service not configured'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-    
     # Clean up expired OTPs
     EmailOTP.objects.filter(
         email=email,
@@ -223,6 +217,15 @@ def send_otp(request):
     ).first()
     
     if existing_otp:
+        # For development: if email service not configured, return dev OTP
+        if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+            return Response({
+                'message': 'Development mode: Use OTP code 123456',
+                'expires_in_minutes': 20,
+                'dev_mode': True,
+                'dev_otp': '123456'
+            })
+        
         # Resend existing OTP
         if send_otp_email(email, existing_otp.otp_code):
             return Response({
@@ -234,8 +237,12 @@ def send_otp(request):
                 'error': 'Failed to send verification email'
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     
-    # Generate new OTP
-    otp_code = generate_otp()
+    # Generate new OTP - use fixed OTP in dev mode
+    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+        otp_code = "123456"  # Fixed OTP for development
+    else:
+        otp_code = generate_otp()
+        
     expires_at = timezone.now() + timedelta(minutes=20)
     
     # Create OTP record
@@ -244,6 +251,15 @@ def send_otp(request):
         otp_code=otp_code,
         expires_at=expires_at
     )
+    
+    # For development: if email service not configured, return dev OTP
+    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+        return Response({
+            'message': 'Development mode: Use OTP code 123456',
+            'expires_in_minutes': 20,
+            'dev_mode': True,
+            'dev_otp': '123456'
+        })
     
     # Send OTP email
     if send_otp_email(email, otp_code):
@@ -289,6 +305,14 @@ def resend_otp(request):
             'error': 'No active verification code found. Please request a new one.'
         }, status=status.HTTP_404_NOT_FOUND)
     
+    # For development: if email service not configured, return dev OTP
+    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+        return Response({
+            'message': 'Development mode: Use OTP code 123456',
+            'dev_mode': True,
+            'dev_otp': '123456'
+        })
+    
     # Send OTP email
     if send_otp_email(email, existing_otp.otp_code):
         return Response({
@@ -326,26 +350,35 @@ def verify_otp(request):
             'error': 'Email not found in session'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Find OTP record
+    print(f"DEBUG: verify_otp - email: {email}, otp_code: {otp_code}")
+    
+    # Find OTP record - check all OTPs for this email first
+    all_otps = EmailOTP.objects.filter(email=email)
+    print(f"DEBUG: All OTPs for {email}: {list(all_otps.values('otp_code', 'is_verified', 'expires_at'))}")
+    
     try:
         email_otp = EmailOTP.objects.get(
             email=email,
             otp_code=otp_code,
             is_verified=False
         )
+        print(f"DEBUG: Found OTP record - expires_at: {email_otp.expires_at}, is_expired: {email_otp.is_expired()}")
     except EmailOTP.DoesNotExist:
+        print(f"DEBUG: OTP not found for email={email}, otp_code={otp_code}, is_verified=False")
         return Response({
             'error': 'Invalid verification code'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Check if expired
     if email_otp.is_expired():
+        print(f"DEBUG: OTP expired - current time: {timezone.now()}, expires_at: {email_otp.expires_at}")
         return Response({
             'error': 'Verification code has expired'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Check max attempts
     if email_otp.is_max_attempts_reached():
+        print(f"DEBUG: Max attempts reached - attempts: {email_otp.attempts}, max: {email_otp.max_attempts}")
         return Response({
             'error': 'Maximum attempts exceeded. Please request a new code.'
         }, status=status.HTTP_400_BAD_REQUEST)
@@ -353,6 +386,7 @@ def verify_otp(request):
     # Mark as verified
     email_otp.is_verified = True
     email_otp.save()
+    print(f"DEBUG: OTP verified successfully for {email}")
     
     # Update session
     signup_data['step'] = 4
