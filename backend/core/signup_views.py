@@ -350,35 +350,26 @@ def verify_otp(request):
             'error': 'Email not found in session'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    print(f"DEBUG: verify_otp - email: {email}, otp_code: {otp_code}")
-    
-    # Find OTP record - check all OTPs for this email first
-    all_otps = EmailOTP.objects.filter(email=email)
-    print(f"DEBUG: All OTPs for {email}: {list(all_otps.values('otp_code', 'is_verified', 'expires_at'))}")
-    
+    # Find OTP record
     try:
         email_otp = EmailOTP.objects.get(
             email=email,
             otp_code=otp_code,
             is_verified=False
         )
-        print(f"DEBUG: Found OTP record - expires_at: {email_otp.expires_at}, is_expired: {email_otp.is_expired()}")
     except EmailOTP.DoesNotExist:
-        print(f"DEBUG: OTP not found for email={email}, otp_code={otp_code}, is_verified=False")
         return Response({
             'error': 'Invalid verification code'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Check if expired
     if email_otp.is_expired():
-        print(f"DEBUG: OTP expired - current time: {timezone.now()}, expires_at: {email_otp.expires_at}")
         return Response({
             'error': 'Verification code has expired'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Check max attempts
     if email_otp.is_max_attempts_reached():
-        print(f"DEBUG: Max attempts reached - attempts: {email_otp.attempts}, max: {email_otp.max_attempts}")
         return Response({
             'error': 'Maximum attempts exceeded. Please request a new code.'
         }, status=status.HTTP_400_BAD_REQUEST)
@@ -386,7 +377,6 @@ def verify_otp(request):
     # Mark as verified
     email_otp.is_verified = True
     email_otp.save()
-    print(f"DEBUG: OTP verified successfully for {email}")
     
     # Update session
     signup_data['step'] = 4
