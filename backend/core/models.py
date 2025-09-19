@@ -2,6 +2,10 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import EmailValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+from datetime import timedelta
 import json
 
 
@@ -425,3 +429,17 @@ class Session(models.Model):
 
     class Meta:
         db_table = 'sessions'
+
+
+# Signal to automatically activate 14-day trial when organization is created
+@receiver(post_save, sender=Organization)
+def activate_trial_on_organization_creation(sender, instance, created, **kwargs):
+    """Automatically activate 14-day trial when a new organization is created"""
+    if created and not instance.trial_ends_at:
+        # Set trial to end 14 days from creation
+        instance.trial_ends_at = instance.created_at + timedelta(days=14)
+        instance.subscription_plan = SubscriptionPlan.FREE_TRIAL
+        instance.is_subscription_active = True
+        instance.contacts_limit = 1000
+        instance.campaigns_limit = 10
+        instance.save(update_fields=['trial_ends_at', 'subscription_plan', 'is_subscription_active', 'contacts_limit', 'campaigns_limit'])

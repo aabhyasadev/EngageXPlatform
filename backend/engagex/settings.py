@@ -46,8 +46,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # CSRF middleware disabled for API compatibility with Express
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',  # Re-enabled for security
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'core.middleware.SubscriptionAccessMiddleware',
     'core.middleware.FeatureLimitMiddleware',
@@ -266,9 +265,16 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = f'EngageX <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'EngageX <noreply@example.com>'
 
-# Stripe settings
-STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+# Stripe settings - Use testing keys in development, production keys in production
+STRIPE_SECRET_KEY = config('TESTING_STRIPE_SECRET_KEY' if DEBUG else 'STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
+# Ensure Stripe keys are available
+if not STRIPE_SECRET_KEY:
+    if DEBUG:
+        print("WARNING: TESTING_STRIPE_SECRET_KEY not set - Stripe integration disabled in development")
+    else:
+        raise ValueError("STRIPE_SECRET_KEY is required for production")
 
 # Logging configuration
 LOGGING = {

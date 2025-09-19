@@ -11,9 +11,15 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Organization, SubscriptionPlan, User
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# Store processed webhook events to prevent replay attacks
+processed_webhook_events = set()
 
 # Plan configuration with pricing and features
 PLAN_CONFIG = {
