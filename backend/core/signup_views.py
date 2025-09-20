@@ -2,7 +2,6 @@ import secrets
 import random
 from datetime import timedelta
 from django.utils import timezone
-from django.contrib.auth import login
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
