@@ -17,14 +17,8 @@ export default function OTPStep({ email, onNext, onBack }: OTPStepProps) {
   const [otpCode, setOtpCode] = useState("");
   const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes in seconds
   const [otpSent, setOtpSent] = useState(false);
+  const [autoSendComplete, setAutoSendComplete] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (timeLeft > 0 && otpSent) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [timeLeft, otpSent]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -60,6 +54,8 @@ export default function OTPStep({ email, onNext, onBack }: OTPStepProps) {
       return response.json();
     },
     onSuccess: () => {
+      setTimeLeft(1200); // Reset timer for new code
+      setOtpCode(""); // Clear any previously entered code
       toast({
         title: "Verification code resent",
         description: "A new verification code has been sent to your email.",
@@ -111,9 +107,20 @@ export default function OTPStep({ email, onNext, onBack }: OTPStepProps) {
     },
   });
 
-  const handleSendOtp = () => {
-    sendOtpMutation.mutate();
-  };
+  // Automatically send OTP when component mounts
+  useEffect(() => {
+    if (!autoSendComplete && !otpSent) {
+      sendOtpMutation.mutate();
+      setAutoSendComplete(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft > 0 && otpSent) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft, otpSent]);
 
   const handleResendOtp = () => {
     resendOtpMutation.mutate();
@@ -144,11 +151,34 @@ export default function OTPStep({ email, onNext, onBack }: OTPStepProps) {
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Mail className="w-8 h-8 text-blue-600" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Verify Your Email</h3>
+          <h3 className="text-lg font-semibold mb-2">Sending Verification Code</h3>
           <p className="text-muted-foreground mb-4">
-            We'll send a verification code to:
+            We're sending a verification code to:
           </p>
           <p className="font-medium text-foreground mb-6">{email}</p>
+          
+          {sendOtpMutation.isPending && (
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span className="text-sm text-muted-foreground">Sending...</span>
+            </div>
+          )}
+          
+          {sendOtpMutation.isError && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm mb-3">
+                Failed to send verification code. Please try again.
+              </p>
+              <Button
+                onClick={() => sendOtpMutation.mutate()}
+                variant="outline"
+                size="sm"
+                data-testid="button-retry-send"
+              >
+                Retry Sending
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3">
@@ -161,15 +191,6 @@ export default function OTPStep({ email, onNext, onBack }: OTPStepProps) {
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
-          </Button>
-
-          <Button
-            onClick={handleSendOtp}
-            className="flex-1"
-            disabled={isPending}
-            data-testid="button-send-otp"
-          >
-            {sendOtpMutation.isPending ? "Sending..." : "Send Verification Code"}
           </Button>
         </div>
       </div>
