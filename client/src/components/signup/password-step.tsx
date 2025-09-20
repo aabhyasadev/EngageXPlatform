@@ -28,9 +28,17 @@ export default function PasswordStep({ onBack, signupData }: PasswordStepProps) 
       return response.json();
     },
     onSuccess: (data) => {
+      console.log("Account created successfully:", data);
+      
+      // Store username for optional login pre-fill
+      if (data.username) {
+        localStorage.setItem('signup_username', data.username);
+      }
+      
+      // Show personalized welcome message
       toast({
-        title: "Registration successful!",
-        description: "Please log in to continue.",
+        title: data.message || "Registration successful!",
+        description: data.username ? `Your username is: ${data.username}` : "Please log in to continue.",
       });
       
       // Redirect to login page

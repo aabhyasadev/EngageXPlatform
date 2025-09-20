@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
 from django.conf import settings
+import os
 from .models import User, Organization, EmailOTP, UserRole, SubscriptionPlan
 from .serializers import UserSerializer, OrganizationSerializer
 
@@ -17,6 +18,95 @@ from .serializers import UserSerializer, OrganizationSerializer
 def generate_otp():
     """Generate a 6-digit OTP"""
     return str(random.randint(100000, 999999))
+
+
+def generate_unique_username(first_name):
+    """Generate a unique username based on first name"""
+    base_username = first_name.lower().strip()
+    # Remove any non-alphanumeric characters
+    import re
+    base_username = re.sub(r'[^a-z0-9]', '', base_username)
+    
+    if not base_username:
+        base_username = "user"
+    
+    # Check if base username is available
+    if not User.objects.filter(username=base_username).exists():
+        return base_username
+    
+    # If not available, try with incrementing numbers
+    counter = 1
+    while True:
+        username_candidate = f"{base_username}{counter}"
+        if not User.objects.filter(username=username_candidate).exists():
+            return username_candidate
+        counter += 1
+        # Safety check to avoid infinite loop
+        if counter > 9999:
+            # Fallback to uuid if we can't find a unique username
+            import uuid
+            return f"{base_username}{str(uuid.uuid4())[:8]}"
+
+
+def send_welcome_email(email, first_name, username):
+    """Send welcome email using Django SMTP"""
+    try:
+        html_message = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #007bff;">Welcome to EngageX, {first_name}! 🎉</h2>
+            <p style="font-size: 16px; color: #333;">
+                Your account has been successfully created and you're all set to start your email marketing journey!
+            </p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #333; margin-top: 0;">Your Account Details:</h3>
+                <p style="margin: 5px 0;"><strong>Username:</strong> {username}</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> {email}</p>
+            </div>
+            <p style="color: #666;">
+                You can now log in to your account and start creating powerful email campaigns. 
+                We've set up a 14-day free trial for you to explore all features.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="/signin" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                    Log In to Your Account
+                </a>
+            </div>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #999; font-size: 12px;">
+                EngageX - Professional Email Marketing Platform
+            </p>
+        </div>
+        """
+        
+        plain_message = f"""
+        Welcome to EngageX, {first_name}!
+        
+        Your account has been successfully created and you're all set to start your email marketing journey!
+        
+        Your Account Details:
+        Username: {username}
+        Email: {email}
+        
+        You can now log in to your account and start creating powerful email campaigns. 
+        We've set up a 14-day free trial for you to explore all features.
+        
+        EngageX - Professional Email Marketing Platform
+        """
+        
+        sent = send_mail(
+            subject=f'Welcome to EngageX, {first_name}!',
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        
+        return sent == 1
+        
+    except Exception as e:
+        print(f"Error sending welcome email: {e}")
+        return False
 
 
 def send_otp_email(email, otp_code):
@@ -458,9 +548,13 @@ def create_account(request):
                 contacts_range=contacts_range
             )
             
+            # Generate unique username based on first name
+            generated_username = generate_unique_username(first_name)
+            
             # Create user as ORGANIZER (organization owner)
             user = User.objects.create(
                 email=email,
+                username=generated_username,
                 first_name=first_name,
                 last_name=last_name,
                 phone=phone,
@@ -469,6 +563,9 @@ def create_account(request):
                 role=UserRole.ORGANIZER,  # First user becomes organization owner
                 is_active=True
             )
+            
+            # Send welcome email
+            welcome_email_sent = send_welcome_email(email, first_name, generated_username)
             
             # Note: User will need to log in manually after account creation
             
@@ -480,7 +577,9 @@ def create_account(request):
             EmailOTP.objects.filter(email=email, is_verified=True).delete()
             
             return Response({
-                'message': 'Account created successfully!',
+                'message': f'Welcome to EngageX, {first_name}! Your account has been successfully created.',
+                'username': generated_username,
+                'welcome_email_sent': welcome_email_sent,
                 'user': UserSerializer(user).data,
                 'organization': OrganizationSerializer(organization).data,
                 'trial_ends_at': organization.trial_ends_at.isoformat()
