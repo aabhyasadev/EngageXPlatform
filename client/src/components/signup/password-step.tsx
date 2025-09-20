@@ -29,15 +29,12 @@ export default function PasswordStep({ onBack, signupData }: PasswordStepProps) 
     },
     onSuccess: (data) => {
       toast({
-        title: "Welcome to EngageX!",
-        description: `Account created successfully! Your 14-day free trial has started.`,
+        title: "Registration successful!",
+        description: "Please log in to continue.",
       });
       
-      // Invalidate auth query to trigger re-fetch
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
-      // Redirect to dashboard
-      setLocation("/");
+      // Redirect to login page
+      setLocation("/signin");
     },
     onError: (error: any) => {
       toast({
