@@ -471,8 +471,8 @@ def create_account(request):
                 is_active=True
             )
             
-            # Log the user in
-            login(request, user)
+            # Log the user in with the appropriate backend
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             
             # Clean up session data
             if 'signup_data' in request.session:
