@@ -21,7 +21,7 @@ def generate_otp():
 
 
 def generate_unique_username(first_name):
-    """Generate a unique username based on first name"""
+    """Generate a unique username based on first name with numeric suffix starting from 1"""
     base_username = first_name.lower().strip()
     # Remove any non-alphanumeric characters
     import re
@@ -30,11 +30,7 @@ def generate_unique_username(first_name):
     if not base_username:
         base_username = "user"
     
-    # Check if base username is available
-    if not User.objects.filter(username=base_username).exists():
-        return base_username
-    
-    # If not available, try with incrementing numbers
+    # Always start with numeric suffix from 1 as per requirements
     counter = 1
     while True:
         username_candidate = f"{base_username}{counter}"
@@ -67,7 +63,7 @@ def send_welcome_email(email, first_name, username):
                 We've set up a 14-day free trial for you to explore all features.
             </p>
             <div style="text-align: center; margin: 30px 0;">
-                <a href="/signin" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                <a href="http://localhost:5000/signin" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
                     Log In to Your Account
                 </a>
             </div>
@@ -105,7 +101,9 @@ def send_welcome_email(email, first_name, username):
         return sent == 1
         
     except Exception as e:
-        print(f"Error sending welcome email: {e}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to send welcome email to {email}: {str(e)}")
         return False
 
 
@@ -536,36 +534,52 @@ def create_account(request):
     try:
         print(f"DEBUG: Starting account creation for {email}")
         print(f"DEBUG: Session data: {signup_data}")
-        with transaction.atomic():
-            # Create organization first
-            print(f"DEBUG: Creating organization with data: industry={industry}, employees={employees_range}, contacts={contacts_range}")
-            organization = Organization.objects.create(
-                name=f"{first_name} {last_name}'s Organization",
-                subscription_plan=SubscriptionPlan.FREE_TRIAL,
-                trial_ends_at=timezone.now() + timedelta(days=14),  # 14-day trial
-                industry=industry,
-                employees_range=employees_range,
-                contacts_range=contacts_range
-            )
-            
-            # Generate unique username based on first name
-            generated_username = generate_unique_username(first_name)
-            
-            # Create user as ORGANIZER (organization owner)
-            user = User.objects.create(
-                email=email,
-                username=generated_username,
-                first_name=first_name,
-                last_name=last_name,
-                phone=phone,
-                password=make_password(password),
-                organization=organization,
-                role=UserRole.ORGANIZER,  # First user becomes organization owner
-                is_active=True
-            )
-            
-            # Send welcome email
-            welcome_email_sent = send_welcome_email(email, first_name, generated_username)
+        # Handle username generation with race condition protection
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                with transaction.atomic():
+                    # Create organization first
+                    print(f"DEBUG: Creating organization with data: industry={industry}, employees={employees_range}, contacts={contacts_range}")
+                    organization = Organization.objects.create(
+                        name=f"{first_name} {last_name}'s Organization",
+                        subscription_plan=SubscriptionPlan.FREE_TRIAL,
+                        trial_ends_at=timezone.now() + timedelta(days=14),  # 14-day trial
+                        industry=industry,
+                        employees_range=employees_range,
+                        contacts_range=contacts_range
+                    )
+                    
+                    # Generate unique username based on first name
+                    generated_username = generate_unique_username(first_name)
+                    
+                    # Create user as ORGANIZER (organization owner)
+                    user = User.objects.create(
+                        email=email,
+                        username=generated_username,
+                        first_name=first_name,
+                        last_name=last_name,
+                        phone=phone,
+                        password=make_password(password),
+                        organization=organization,
+                        role=UserRole.ORGANIZER,  # First user becomes organization owner
+                        is_active=True
+                    )
+                    
+                    break  # Success, exit retry loop
+                    
+            except Exception as e:
+                from django.db import IntegrityError
+                if isinstance(e, IntegrityError) and 'username' in str(e) and attempt < max_retries - 1:
+                    # Username collision, retry with next available username
+                    print(f"DEBUG: Username collision on attempt {attempt + 1}, retrying...")
+                    continue
+                else:
+                    # Not a username collision or max retries reached, re-raise
+                    raise
+        
+        # Send welcome email
+        welcome_email_sent = send_welcome_email(email, first_name, generated_username)
             
             # Note: User will need to log in manually after account creation
             
