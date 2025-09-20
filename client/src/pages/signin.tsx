@@ -79,6 +79,16 @@ export default function SignInPage() {
     setError("");
   }, [currentStep, showForgotAccount]);
 
+  // Pre-fill username if available from recent signup
+  useEffect(() => {
+    const signupUsername = localStorage.getItem('signup_username');
+    if (signupUsername && currentStep === 2) {
+      step2Form.setValue('username', signupUsername);
+      // Clear the stored username after using it
+      localStorage.removeItem('signup_username');
+    }
+  }, [currentStep, step2Form]);
+
   // Step 1: Validate Organization ID & Email
   const onStep1Submit = async (values: z.infer<typeof step1Schema>) => {
     setIsLoading(true);
