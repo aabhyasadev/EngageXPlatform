@@ -62,13 +62,21 @@ def authenticate_credentials(request):
     """
     Step 2: Authenticate with Username and Password
     """
+    print("DEBUG: authenticate_credentials function called!")
     username = request.data.get('username', '').strip()
     password = request.data.get('password', '')
+    
+    # Debug logging
+    print(f"DEBUG: Authentication attempt for username: {username}")
+    print(f"DEBUG: Session ID: {request.session.session_key}")
+    print(f"DEBUG: Session data: {dict(request.session)}")
     
     # Get validated data from session
     signin_email = request.session.get('signin_email')
     signin_user_id = request.session.get('signin_user_id')
     signin_organization_id = request.session.get('signin_organization_id')
+    
+    print(f"DEBUG: Session values - email: {signin_email}, user_id: {signin_user_id}, org_id: {signin_organization_id}")
     
     if not signin_email or not signin_user_id:
         return Response({

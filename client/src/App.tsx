@@ -63,6 +63,7 @@ function Router() {
     <MainLayout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/contacts" component={Contacts} />
         <Route path="/campaigns" component={Campaigns} />
         <Route path="/templates" component={Templates} />

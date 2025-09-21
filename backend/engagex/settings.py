@@ -201,6 +201,11 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_SECURE = False  # Allow cookies over HTTP in development
+SESSION_COOKIE_HTTPONLY = False  # Allow JavaScript access for debugging
+SESSION_COOKIE_SAMESITE = 'Lax'  # Allow cross-origin requests
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_DOMAIN = None  # Use default domain
 
 # CSRF settings - Disable CSRF for API endpoints to match Express behavior
 CSRF_TRUSTED_ORIGINS = [
