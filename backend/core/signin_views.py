@@ -234,13 +234,11 @@ def forgot_account(request):
             'error': 'Email is required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Always return success message to prevent email enumeration
-    # Send email only if user exists
     try:
         user = User.objects.get(email=email)
         
         if user.organization:
-            # Send email with organization ID only if user exists and has organization
+            # Send email with organization ID
             try:
                 html_message = f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -282,28 +280,41 @@ def forgot_account(request):
                 EngageX - Professional Email Marketing Platform
                 """
                 
-                send_mail(
+                email_sent = send_mail(
                     subject='Your EngageX Organization ID',
                     message=plain_message,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
                     html_message=html_message,
-                    fail_silently=True,  # Fail silently to prevent enumeration
+                    fail_silently=False,  # Don't fail silently so we can catch errors
                 )
+                
+                if email_sent:
+                    return Response({
+                        'message': f'Your Organization ID has been sent to {email}. Please check your email.',
+                        'email': email
+                    })
+                else:
+                    return Response({
+                        'error': 'Failed to send email. Please try again later.'
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
             except Exception as e:
                 logger.error(f"Error sending organization ID email: {e}")
-                # Don't return error to prevent enumeration
+                return Response({
+                    'error': 'Failed to send email. Please try again later.'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            # User exists but has no organization
+            return Response({
+                'error': 'No organization found for this account.'
+            }, status=status.HTTP_400_BAD_REQUEST)
                 
     except User.DoesNotExist:
-        # User doesn't exist, but don't reveal this information
-        pass
-    
-    # Always return the same success message regardless of whether user exists
-    return Response({
-        'message': f'If an account exists with {email}, we have sent the Organization ID to that email address.',
-        'email': email
-    })
+        # User doesn't exist - return error message as requested
+        return Response({
+            'error': 'No account found with this email.'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
