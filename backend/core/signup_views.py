@@ -304,8 +304,10 @@ def send_otp(request):
     ).first()
     
     if existing_otp:
-        # For development: if email service not configured, ensure dev OTP
-        if not settings.SENDGRID_API_KEY:
+        # Check if email service is configured (Django SMTP)
+        email_configured = bool(settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD)
+        
+        if not email_configured:
             # Update existing OTP to use dev code
             if existing_otp.otp_code != "123456":
                 existing_otp.otp_code = "123456"
@@ -319,6 +321,7 @@ def send_otp(request):
             })
         
         # Resend existing OTP
+        print(f"DEBUG: Resending OTP {existing_otp.otp_code} to {email}")
         if send_otp_email(email, existing_otp.otp_code):
             return Response({
                 'message': 'Verification code sent to your email',
@@ -329,8 +332,11 @@ def send_otp(request):
                 'error': 'Failed to send verification email'
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     
+    # Check if email service is configured (Django SMTP)
+    email_configured = bool(settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD)
+    
     # Generate new OTP - use fixed OTP in dev mode
-    if not settings.SENDGRID_API_KEY:
+    if not email_configured:
         otp_code = "123456"  # Fixed OTP for development
     else:
         otp_code = generate_otp()
@@ -345,7 +351,7 @@ def send_otp(request):
     )
     
     # For development: if email service not configured, return dev OTP
-    if not settings.SENDGRID_API_KEY:
+    if not email_configured:
         return Response({
             'message': 'Development mode: Use OTP code 123456',
             'expires_in_minutes': 20,
@@ -354,6 +360,7 @@ def send_otp(request):
         })
     
     # Send OTP email
+    print(f"DEBUG: Sending new OTP {otp_code} to {email}")
     if send_otp_email(email, otp_code):
         return Response({
             'message': 'Verification code sent to your email',
