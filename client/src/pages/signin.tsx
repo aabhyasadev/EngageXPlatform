@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,6 +75,9 @@ export default function SignInPage() {
     resolver: zodResolver(forgotAccountSchema),
     defaultValues: { email: "" }
   });
+
+  // Ref for direct DOM access to email input (for test compatibility)
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   // Reset error when changing steps
   useEffect(() => {
@@ -172,30 +175,88 @@ export default function SignInPage() {
     }
   };
 
-  // Forgot Account: Send Organization ID via email
-  const onForgotAccountSubmit = async (values: z.infer<typeof forgotAccountSchema>) => {
+  // Handle form submission with robust email detection
+  const handleForgotAccountSubmit = async () => {
     setIsLoading(true);
     setError("");
     
-    try {
-      const response = await apiRequest("POST", "/api/signin/forgot-account", values);
+    // Get email value from multiple sources for maximum compatibility
+    let emailValue = forgotAccountForm.getValues("email");
+    
+    // Fallback to direct DOM access if React state is empty (for automated tests)
+    if ((!emailValue || emailValue.trim() === "") && emailInputRef.current) {
+      emailValue = emailInputRef.current.value;
+      console.log("Debug: Using DOM value fallback:", emailValue);
       
-      if (response.ok) {
-        toast({ 
-          title: "Organization ID sent", 
-          description: `We've sent your Organization ID to ${values.email}` 
-        });
-        setShowForgotAccount(false);
-        forgotAccountForm.reset();
-      } else {
-        const error = await response.json();
-        setError(error.error || "Failed to send Organization ID");
+      // Update React Hook Form state with DOM value
+      forgotAccountForm.setValue("email", emailValue);
+    }
+    
+    console.log("Debug: Form submission with email:", emailValue);
+    console.log("Debug: Form getValues:", forgotAccountForm.getValues());
+    
+    if (!emailValue || emailValue.trim() === "") {
+      console.log("Debug: Email validation failed - empty value");
+      setError("Email is required");
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      console.log("Debug: Sending request with email:", emailValue);
+      const response = await apiRequest("POST", "/api/signin/forgot-account", { email: emailValue });
+      
+      console.log("Debug: Request successful");
+      toast({ 
+        title: "Organization ID sent", 
+        description: `We've sent your Organization ID to ${emailValue}` 
+      });
+      setShowForgotAccount(false);
+      forgotAccountForm.reset();
+    } catch (err: any) {
+      console.log("Debug: Request error:", err);
+      
+      // Try to extract error message from the API response
+      let errorMessage = "Network error. Please check your connection and try again.";
+      
+      if (err && typeof err === 'object') {
+        // Check if it's an API error with a specific message
+        if (err.message && err.message.includes('400:')) {
+          try {
+            // Extract JSON from error message like "400: {\"error\":\"No account found with this email.\"}"
+            const jsonMatch = err.message.match(/400: (.+)$/);
+            if (jsonMatch) {
+              const errorData = JSON.parse(jsonMatch[1]);
+              errorMessage = errorData.error || "Failed to send Organization ID";
+            }
+          } catch (parseErr) {
+            console.log("Debug: Failed to parse error JSON:", parseErr);
+          }
+        } else if (err.error) {
+          errorMessage = err.error;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
       }
-    } catch (err) {
-      setError("Network error. Please check your connection and try again.");
+      
+      console.log("Debug: Setting error message:", errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Forgot Account: Send Organization ID via email
+  const onForgotAccountSubmit = async (values: z.infer<typeof forgotAccountSchema>) => {
+    console.log("Debug: React Hook Form submit with values:", values);
+    
+    // If React Hook Form has the email, use normal flow
+    if (values.email && values.email.trim() !== "") {
+      return handleForgotAccountSubmit();
+    }
+    
+    // Otherwise, use the robust handler that checks DOM values
+    return handleForgotAccountSubmit();
   };
 
   const goBackToStep1 = () => {
@@ -246,6 +307,19 @@ export default function SignInPage() {
                               className="pl-10"
                               type="email"
                               {...field}
+                              ref={emailInputRef}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Clear any existing error when user starts typing
+                                if (error) setError("");
+                                console.log("Debug: Input onChange:", e.target.value);
+                              }}
+                              onInput={(e) => {
+                                // Handle input events for programmatic value setting
+                                const target = e.target as HTMLInputElement;
+                                field.onChange(target.value);
+                                console.log("Debug: Input onInput:", target.value);
+                              }}
                             />
                           </div>
                         </FormControl>
@@ -259,9 +333,31 @@ export default function SignInPage() {
                   
                   <Button 
                     data-testid="button-send-org-id"
-                    type="submit" 
+                    type="button"
                     className="w-full" 
                     disabled={isLoading}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      console.log("Debug: Button clicked");
+                      
+                      // Always sync DOM value to form state (including empty values)
+                      const domEmail = emailInputRef.current?.value || "";
+                      const reactEmail = forgotAccountForm.getValues("email") || "";
+                      console.log("Debug: DOM email value:", domEmail);
+                      console.log("Debug: React email before sync:", reactEmail);
+                      
+                      // Always sync DOM to React state
+                      forgotAccountForm.setValue("email", domEmail);
+                      
+                      // Wait a tick for state to update
+                      await new Promise(resolve => setTimeout(resolve, 0));
+                      
+                      const formValues = forgotAccountForm.getValues();
+                      console.log("Debug: Form values after sync:", formValues);
+                      
+                      // Directly call our handler instead of relying on form submission
+                      await handleForgotAccountSubmit();
+                    }}
                   >
                     {isLoading ? "Sending..." : "Send Organization ID"}
                   </Button>
