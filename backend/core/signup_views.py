@@ -534,6 +534,12 @@ def create_account(request):
     try:
         print(f"DEBUG: Starting account creation for {email}")
         print(f"DEBUG: Session data: {signup_data}")
+        
+        # Initialize variables
+        user = None
+        organization = None
+        generated_username = None
+        
         # Handle username generation with race condition protection
         max_retries = 5
         for attempt in range(max_retries):
@@ -580,25 +586,23 @@ def create_account(request):
         
         # Send welcome email
         welcome_email_sent = send_welcome_email(email, first_name, generated_username)
-            
-            # Note: User will need to log in manually after account creation
-            
-            # Clean up session data
-            if 'signup_data' in request.session:
-                del request.session['signup_data']
-            
-            # Clean up verified OTP
-            EmailOTP.objects.filter(email=email, is_verified=True).delete()
-            
-            return Response({
-                'message': f'Welcome to EngageX, {first_name}! Your account has been successfully created.',
-                'username': generated_username,
-                'welcome_email_sent': welcome_email_sent,
-                'user': UserSerializer(user).data,
-                'organization': OrganizationSerializer(organization).data,
-                'trial_ends_at': organization.trial_ends_at.isoformat()
-            }, status=status.HTTP_201_CREATED)
-            
+        
+        # Clean up session data
+        if 'signup_data' in request.session:
+            del request.session['signup_data']
+        
+        # Clean up verified OTP
+        EmailOTP.objects.filter(email=email, is_verified=True).delete()
+        
+        return Response({
+            'message': f'Welcome to EngageX, {first_name}! Your account has been successfully created.',
+            'username': generated_username,
+            'welcome_email_sent': welcome_email_sent,
+            'user': UserSerializer(user).data,
+            'organization': OrganizationSerializer(organization).data,
+            'trial_ends_at': organization.trial_ends_at.isoformat()
+        }, status=status.HTTP_201_CREATED)
+        
     except Exception as e:
         print(f"DEBUG: Account creation failed with error: {str(e)}")
         print(f"DEBUG: Error type: {type(e)}")
