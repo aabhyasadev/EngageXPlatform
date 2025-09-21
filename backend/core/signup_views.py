@@ -44,7 +44,7 @@ def generate_unique_username(first_name):
             return f"{base_username}{str(uuid.uuid4())[:8]}"
 
 
-def send_welcome_email(email, first_name, username):
+def send_welcome_email(email, first_name, username, organization):
     """Send welcome email using Django SMTP"""
     try:
         html_message = f"""
@@ -57,6 +57,7 @@ def send_welcome_email(email, first_name, username):
                 <h3 style="color: #333; margin-top: 0;">Your Account Details:</h3>
                 <p style="margin: 5px 0;"><strong>Username:</strong> {username}</p>
                 <p style="margin: 5px 0;"><strong>Email:</strong> {email}</p>
+                <p style="margin: 5px 0;"><strong>Organization ID:</strong> {organization.id}</p>
             </div>
             <p style="color: #666;">
                 You can now log in to your account and start creating powerful email campaigns. 
@@ -82,6 +83,7 @@ def send_welcome_email(email, first_name, username):
         Your Account Details:
         Username: {username}
         Email: {email}
+        Organization ID: {organization.id}
         
         You can now log in to your account and start creating powerful email campaigns. 
         We've set up a 14-day free trial for you to explore all features.
@@ -592,7 +594,7 @@ def create_account(request):
                     raise
         
         # Send welcome email
-        welcome_email_sent = send_welcome_email(email, first_name, generated_username)
+        welcome_email_sent = send_welcome_email(email, first_name, generated_username, organization)
         
         # Clean up session data
         if 'signup_data' in request.session:
