@@ -33,16 +33,11 @@ const step3Schema = z.object({
     .regex(/^\d{6}$/, "Verification code must contain only digits")
 });
 
-// Forgot account form with enhanced email validation
+// Forgot account form with proper email validation
 const forgotAccountSchema = z.object({
   email: z.string()
     .min(1, "Email is required")
-    .regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Please enter a valid email address")
-    .refine((email) => {
-      // Additional validation to prevent special characters
-      const allowedChars = /^[a-zA-Z0-9._@-]+$/;
-      return allowedChars.test(email);
-    }, "Email contains invalid characters")
+    .email("Please enter a valid email address")
 });
 
 export default function SignInPage() {
@@ -177,14 +172,6 @@ export default function SignInPage() {
     }
   };
 
-  // Email input filter function
-  const handleEmailInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Allow only alphanumeric characters, dots, hyphens, underscores, and @ symbol
-    const allowedChars = /[^a-zA-Z0-9._@-]/g;
-    const filteredValue = e.target.value.replace(allowedChars, '');
-    e.target.value = filteredValue;
-  };
-
   // Forgot Account: Send Organization ID via email
   const onForgotAccountSubmit = async (values: z.infer<typeof forgotAccountSchema>) => {
     setIsLoading(true);
@@ -259,23 +246,12 @@ export default function SignInPage() {
                               className="pl-10"
                               type="email"
                               {...field}
-                              onChange={(e) => {
-                                handleEmailInput(e);
-                                field.onChange(e);
-                              }}
-                              onKeyPress={(e) => {
-                                // Prevent entering invalid characters
-                                const char = String.fromCharCode(e.which);
-                                if (!/[a-zA-Z0-9._@-]/.test(char)) {
-                                  e.preventDefault();
-                                }
-                              }}
                             />
                           </div>
                         </FormControl>
                         <FormMessage />
                         <p className="text-xs text-muted-foreground">
-                          Only letters, numbers, dots (.), hyphens (-), underscores (_), and @ symbol are allowed
+                          Please enter your email address to receive your Organization ID
                         </p>
                       </FormItem>
                     )}
