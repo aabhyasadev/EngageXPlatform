@@ -2,6 +2,13 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+
+
+class DefaultPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Sum
 from django.db import transaction
@@ -199,6 +206,7 @@ class ContactViewSet(BaseOrganizationViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['is_subscribed', 'language']
     search_fields = ['email', 'first_name', 'last_name']
+    pagination_class = DefaultPagination
     
     def create(self, request, *args, **kwargs):
         """Create a new contact with subscription limit check"""

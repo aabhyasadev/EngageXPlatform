@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Contact, ContactGroup } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,13 +41,35 @@ export default function Contacts() {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [showBulkGroupModal, setShowBulkGroupModal] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when searching
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: contacts, isLoading } = useQuery<Contact[]>({
-    queryKey: ["/api/contacts"],
+  const { data: contactsResponse, isLoading } = useQuery<{
+    results: Contact[];
+    count: number;
+    next: string | null;
+    previous: string | null;
+  }>({
+    queryKey: ["/api/contacts", { page: currentPage, page_size: pageSize, search: debouncedSearchTerm }],
   });
+  
+  const contacts = contactsResponse?.results || [];
+  const totalCount = contactsResponse?.count || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups"],
@@ -193,10 +215,8 @@ export default function Contacts() {
     },
   });
 
-  const filteredContacts = contacts?.filter((contact) =>
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Contacts are now filtered server-side, so we use the results directly
+  const filteredContacts = contacts;
 
   const handleViewDetails = (contact: Contact) => {
     setSelectedContact(contact);
@@ -277,7 +297,7 @@ export default function Contacts() {
     try {
       // Build query parameters for export with all current filters
       const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
+      if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
       params.append('format', format);
       // Add any other filters that might be active
       // TODO: Add subscription status and language filters when implemented
@@ -463,7 +483,7 @@ export default function Contacts() {
             <Card>
               <CardContent className="p-4">
                 <div className="text-2xl font-bold text-foreground" data-testid="text-total-contacts">
-                  {contacts?.length || 0}
+                  {totalCount || 0}
                 </div>
                 <p className="text-sm text-muted-foreground">Total Contacts</p>
               </CardContent>
@@ -473,7 +493,7 @@ export default function Contacts() {
                 <div className="text-2xl font-bold text-foreground" data-testid="text-subscribed-contacts">
                   {contacts?.filter((c: any) => c.isSubscribed).length || 0}
                 </div>
-                <p className="text-sm text-muted-foreground">Subscribed</p>
+                <p className="text-sm text-muted-foreground">Subscribed (this page)</p>
               </CardContent>
             </Card>
             <Card>
@@ -481,7 +501,7 @@ export default function Contacts() {
                 <div className="text-2xl font-bold text-foreground" data-testid="text-unsubscribed-contacts">
                   {contacts?.filter((c: any) => !c.isSubscribed).length || 0}
                 </div>
-                <p className="text-sm text-muted-foreground">Unsubscribed</p>
+                <p className="text-sm text-muted-foreground">Unsubscribed (this page)</p>
               </CardContent>
             </Card>
             <Card>
@@ -510,7 +530,8 @@ export default function Contacts() {
             <CardHeader>
               <CardTitle>All Contacts</CardTitle>
               <CardDescription>
-                {filteredContacts.length} of {contacts?.length || 0} contacts
+                Showing {filteredContacts.length} of {totalCount} contacts
+                {debouncedSearchTerm && ` (filtered by "${debouncedSearchTerm}")`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -651,6 +672,54 @@ export default function Contacts() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages} ({totalCount} total contacts)
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  data-testid="button-previous-page"
+                >
+                  Previous
+                </Button>
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    if (pageNum > totalPages) return null;
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        data-testid={`button-page-${pageNum}`}
+                        className="w-8 h-8"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-next-page"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Add Contact Modal */}
           <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
