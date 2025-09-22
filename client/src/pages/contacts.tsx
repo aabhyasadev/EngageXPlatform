@@ -64,7 +64,7 @@ export default function Contacts() {
     next: string | null;
     previous: string | null;
   }>({
-    queryKey: ["/api/contacts", { page: currentPage, page_size: pageSize, search: debouncedSearchTerm }],
+    queryKey: ["/api/contacts/", { page: currentPage, page_size: pageSize, search: debouncedSearchTerm }],
   });
   
   const contacts = contactsResponse?.results || [];
@@ -72,22 +72,17 @@ export default function Contacts() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
-    queryKey: ["/api/contact-groups"],
+    queryKey: ["/api/contact-groups/"],
   });
 
-  // Fetch contact groups for selected contact
-  const { 
-    data: contactGroupMemberships, 
-    isLoading: isLoadingGroupMemberships,
-    isError: isErrorGroupMemberships 
-  } = useQuery<ContactGroup[]>({
-    queryKey: [`/api/contacts/${selectedContact?.id}/groups`],
-    enabled: !!selectedContact?.id,
-  });
+  // Contact group memberships - temporarily disabled as backend endpoint needs implementation
+  const contactGroupMemberships: ContactGroup[] = [];
+  const isLoadingGroupMemberships = false;
+  const isErrorGroupMemberships = false;
 
   const createContactMutation = useMutation({
     mutationFn: async (contactData: any) => {
-      const response = await apiRequest("POST", "/api/contacts", contactData);
+      const response = await apiRequest("POST", "/api/contacts/", contactData);
       return response.json();
     },
     onSuccess: () => {
@@ -95,7 +90,7 @@ export default function Contacts() {
         title: "Success",
         description: "Contact created successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
       setShowAddModal(false);
       setNewContact({
         firstName: "",
@@ -116,7 +111,7 @@ export default function Contacts() {
 
   const updateContactMutation = useMutation({
     mutationFn: async ({ contactId, contactData }: { contactId: string; contactData: any }) => {
-      const response = await apiRequest("PUT", `/api/contacts/${contactId}`, contactData);
+      const response = await apiRequest("PUT", `/api/contacts/${contactId}/`, contactData);
       return response.json();
     },
     onSuccess: () => {
@@ -124,7 +119,7 @@ export default function Contacts() {
         title: "Success",
         description: "Contact updated successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
       setShowEditModal(false);
       setSelectedContact(null);
       setEditContact({
@@ -146,14 +141,14 @@ export default function Contacts() {
 
   const deleteContactMutation = useMutation({
     mutationFn: async (contactId: string) => {
-      await apiRequest("DELETE", `/api/contacts/${contactId}`);
+      await apiRequest("DELETE", `/api/contacts/${contactId}/`);
     },
     onSuccess: () => {
       toast({
         title: "Success",
         description: "Contact deleted successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
     },
     onError: (error) => {
       toast({
@@ -167,7 +162,7 @@ export default function Contacts() {
   const bulkDeleteMutation = useMutation({
     mutationFn: async (contactIds: string[]) => {
       const promises = contactIds.map(id => 
-        apiRequest("DELETE", `/api/contacts/${id}`)
+        apiRequest("DELETE", `/api/contacts/${id}/`)
       );
       await Promise.all(promises);
     },
@@ -176,7 +171,7 @@ export default function Contacts() {
         title: "Success",
         description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} deleted successfully!`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
       clearSelection();
     },
     onError: (error) => {
@@ -191,7 +186,7 @@ export default function Contacts() {
   const bulkGroupAssignmentMutation = useMutation({
     mutationFn: async ({ groupIds, contactIds }: { groupIds: string[]; contactIds: string[] }) => {
       const promises = groupIds.map(groupId => 
-        apiRequest("POST", `/api/contact-groups/${groupId}/add-contacts`, { contact_ids: contactIds })
+        apiRequest("POST", `/api/contact-groups/${groupId}/add_contacts/`, { contact_ids: contactIds })
       );
       await Promise.all(promises);
     },
@@ -200,7 +195,7 @@ export default function Contacts() {
         title: "Success",
         description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} assigned to ${groupIds.length} group${groupIds.length !== 1 ? 's' : ''} successfully!`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
       queryClient.invalidateQueries({ queryKey: ["/api/contact-groups"] });
       setShowBulkGroupModal(false);
       setSelectedGroupIds(new Set());
@@ -303,7 +298,7 @@ export default function Contacts() {
       // TODO: Add subscription status and language filters when implemented
       
       // Create download URL
-      const exportUrl = `/api/contacts/export_csv?${params.toString()}`;
+      const exportUrl = `/api/contacts/export_csv/?${params.toString()}`;
       
       // Use fetch to properly handle errors
       const response = await fetch(exportUrl, {
