@@ -16,8 +16,17 @@ import ContactGroupsManager from "@/components/contacts/contact-groups-manager";
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [newContact, setNewContact] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    language: "en",
+  });
+  const [editContact, setEditContact] = useState({
     firstName: "",
     lastName: "",
     email: "",
@@ -65,6 +74,36 @@ export default function Contacts() {
     },
   });
 
+  const updateContactMutation = useMutation({
+    mutationFn: async ({ contactId, contactData }: { contactId: string; contactData: any }) => {
+      const response = await apiRequest("PUT", `/api/contacts/${contactId}`, contactData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Contact updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      setShowEditModal(false);
+      setSelectedContact(null);
+      setEditContact({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        language: "en",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update contact",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteContactMutation = useMutation({
     mutationFn: async (contactId: string) => {
       await apiRequest("DELETE", `/api/contacts/${contactId}`);
@@ -90,6 +129,18 @@ export default function Contacts() {
     `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
+  const handleEditContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setEditContact({
+      firstName: contact.firstName || "",
+      lastName: contact.lastName || "",
+      email: contact.email,
+      phone: contact.phone || "",
+      language: contact.language || "en",
+    });
+    setShowEditModal(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newContact.email) {
@@ -101,6 +152,25 @@ export default function Contacts() {
       return;
     }
     createContactMutation.mutate(newContact);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedContact?.id) return;
+    
+    if (!editContact.email) {
+      toast({
+        title: "Validation Error",
+        description: "Email is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateContactMutation.mutate({
+      contactId: selectedContact.id,
+      contactData: editContact
+    });
   };
 
   if (isLoading) {
@@ -239,15 +309,25 @@ export default function Contacts() {
                           {new Date(contact.createdAt).toLocaleDateString()}
                         </td>
                         <td className="py-4 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteContactMutation.mutate(contact.id)}
-                            disabled={deleteContactMutation.isPending}
-                            data-testid={`button-delete-contact-${contact.id}`}
-                          >
-                            <i className="fas fa-trash text-destructive"></i>
-                          </Button>
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditContact(contact)}
+                              data-testid={`button-edit-contact-${contact.id}`}
+                            >
+                              <i className="fas fa-edit text-primary"></i>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteContactMutation.mutate(contact.id)}
+                              disabled={deleteContactMutation.isPending}
+                              data-testid={`button-delete-contact-${contact.id}`}
+                            >
+                              <i className="fas fa-trash text-destructive"></i>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -317,6 +397,74 @@ export default function Contacts() {
                   </Button>
                   <Button type="submit" disabled={createContactMutation.isPending} data-testid="button-save-contact">
                     {createContactMutation.isPending ? "Saving..." : "Save Contact"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Contact Modal */}
+          <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Contact</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="editFirstName">First Name</Label>
+                    <Input
+                      id="editFirstName"
+                      value={editContact.firstName}
+                      onChange={(e) => setEditContact({ ...editContact, firstName: e.target.value })}
+                      data-testid="input-edit-first-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editLastName">Last Name</Label>
+                    <Input
+                      id="editLastName"
+                      value={editContact.lastName}
+                      onChange={(e) => setEditContact({ ...editContact, lastName: e.target.value })}
+                      data-testid="input-edit-last-name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="editEmail">Email *</Label>
+                  <Input
+                    id="editEmail"
+                    type="email"
+                    value={editContact.email}
+                    onChange={(e) => setEditContact({ ...editContact, email: e.target.value })}
+                    required
+                    data-testid="input-edit-email"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editPhone">Phone</Label>
+                  <Input
+                    id="editPhone"
+                    value={editContact.phone}
+                    onChange={(e) => setEditContact({ ...editContact, phone: e.target.value })}
+                    data-testid="input-edit-phone"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowEditModal(false)}
+                    data-testid="button-cancel-edit"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={updateContactMutation.isPending} 
+                    data-testid="button-update-contact"
+                  >
+                    {updateContactMutation.isPending ? "Updating..." : "Update Contact"}
                   </Button>
                 </div>
               </form>

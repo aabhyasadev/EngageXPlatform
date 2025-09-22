@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Contact, ContactGroup } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,22 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Users, UserPlus, Edit, Trash2, Plus } from "lucide-react";
-
-interface ContactGroup {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface Contact {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-}
 
 export default function ContactGroupsManager() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -448,7 +433,7 @@ export default function ContactGroupsManager() {
                         className="flex items-center justify-between p-3 border border-border rounded-lg"
                       >
                         <div>
-                          <div className="font-medium">{contact.full_name}</div>
+                          <div className="font-medium">{contact.firstName} {contact.lastName}</div>
                           <div className="text-sm text-muted-foreground">{contact.email}</div>
                         </div>
                         <Button
@@ -481,7 +466,7 @@ export default function ContactGroupsManager() {
                           className="flex items-center justify-between p-2 border border-border rounded"
                         >
                           <div>
-                            <div className="font-medium text-sm">{contact.full_name}</div>
+                            <div className="font-medium text-sm">{contact.firstName} {contact.lastName}</div>
                             <div className="text-xs text-muted-foreground">{contact.email}</div>
                           </div>
                           <Button
