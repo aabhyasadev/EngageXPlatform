@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Eye, Edit, Trash2 } from "lucide-react";
 import ContactImport from "@/components/contacts/contact-import";
 import ContactGroupsManager from "@/components/contacts/contact-groups-manager";
 
@@ -17,6 +18,7 @@ export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [newContact, setNewContact] = useState({
@@ -43,6 +45,16 @@ export default function Contacts() {
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups"],
+  });
+
+  // Fetch contact groups for selected contact
+  const { 
+    data: contactGroupMemberships, 
+    isLoading: isLoadingGroupMemberships,
+    isError: isErrorGroupMemberships 
+  } = useQuery<ContactGroup[]>({
+    queryKey: [`/api/contacts/${selectedContact?.id}/groups`],
+    enabled: !!selectedContact?.id,
   });
 
   const createContactMutation = useMutation({
@@ -128,6 +140,11 @@ export default function Contacts() {
     contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+
+  const handleViewDetails = (contact: Contact) => {
+    setSelectedContact(contact);
+    setShowDetailsModal(true);
+  };
 
   const handleEditContact = (contact: Contact) => {
     setSelectedContact(contact);
@@ -313,6 +330,14 @@ export default function Contacts() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => handleViewDetails(contact)}
+                              data-testid={`button-view-contact-${contact.id}`}
+                            >
+                              <Eye className="w-4 h-4 text-blue-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleEditContact(contact)}
                               data-testid={`button-edit-contact-${contact.id}`}
                             >
@@ -468,6 +493,124 @@ export default function Contacts() {
                   </Button>
                 </div>
               </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Contact Details Modal */}
+          <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Contact Details</DialogTitle>
+              </DialogHeader>
+              {selectedContact && (
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Name</Label>
+                        <p className="text-sm" data-testid="text-contact-details-name">
+                          {selectedContact.firstName} {selectedContact.lastName}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                        <p className="text-sm" data-testid="text-contact-details-email">
+                          {selectedContact.email}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                        <p className="text-sm" data-testid="text-contact-details-phone">
+                          {selectedContact.phone || "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Language</Label>
+                        <p className="text-sm" data-testid="text-contact-details-language">
+                          {selectedContact.language || "English"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                        <Badge 
+                          variant={selectedContact.isSubscribed ? "default" : "secondary"}
+                          data-testid="badge-contact-details-status"
+                        >
+                          {selectedContact.isSubscribed ? "Subscribed" : "Unsubscribed"}
+                        </Badge>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Joined</Label>
+                        <p className="text-sm" data-testid="text-contact-details-joined">
+                          {new Date(selectedContact.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Groups */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Groups</h3>
+                    <div className="space-y-2">
+                      {isLoadingGroupMemberships ? (
+                        <div className="space-y-2" data-testid="loading-contact-groups">
+                          {[...Array(2)].map((_, i) => (
+                            <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
+                          ))}
+                        </div>
+                      ) : isErrorGroupMemberships ? (
+                        <p className="text-sm text-destructive py-4 text-center" data-testid="error-contact-groups">
+                          Failed to load contact groups. Please try again.
+                        </p>
+                      ) : contactGroupMemberships && contactGroupMemberships.length > 0 ? (
+                        contactGroupMemberships.map((group: ContactGroup) => (
+                          <div 
+                            key={group.id} 
+                            className="flex items-center justify-between p-3 border border-border rounded-lg"
+                            data-testid={`group-membership-${group.id}`}
+                          >
+                            <div>
+                              <p className="font-medium">{group.name}</p>
+                              {group.description && (
+                                <p className="text-sm text-muted-foreground">{group.description}</p>
+                              )}
+                            </div>
+                            <Badge variant="outline">Member</Badge>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground py-4 text-center" data-testid="text-contact-no-groups">
+                          This contact is not a member of any groups.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="flex justify-end space-x-2 pt-4 border-t border-border">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        handleEditContact(selectedContact);
+                      }}
+                      data-testid="button-quick-edit"
+                    >
+                      <i className="fas fa-edit mr-2"></i>
+                      Edit Contact
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowDetailsModal(false)}
+                      data-testid="button-close-details"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
 
