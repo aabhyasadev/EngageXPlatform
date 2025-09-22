@@ -61,6 +61,54 @@ class EventType(models.TextChoices):
     SPAM_REPORT = 'spam_report', 'Spam Report'
 
 
+class SubscriptionStatus(models.TextChoices):
+    ACTIVE = 'active', 'Active'
+    PAST_DUE = 'past_due', 'Past Due'
+    CANCELED = 'canceled', 'Canceled'
+    TRIALING = 'trialing', 'Trialing'
+
+
+class BillingCycle(models.TextChoices):
+    MONTHLY = 'monthly', 'Monthly'
+    YEARLY = 'yearly', 'Yearly'
+
+
+class SubscriptionEventType(models.TextChoices):
+    CREATED = 'created', 'Created'
+    UPDATED = 'updated', 'Updated'
+    CANCELED = 'canceled', 'Canceled'
+    RENEWED = 'renewed', 'Renewed'
+    PAYMENT_SUCCEEDED = 'payment_succeeded', 'Payment Succeeded'
+    PAYMENT_FAILED = 'payment_failed', 'Payment Failed'
+    TRIAL_STARTED = 'trial_started', 'Trial Started'
+    TRIAL_ENDED = 'trial_ended', 'Trial Ended'
+    PLAN_CHANGED = 'plan_changed', 'Plan Changed'
+
+
+class NotificationType(models.TextChoices):
+    TRIAL_ENDING = 'trial_ending', 'Trial Ending'
+    TRIAL_ENDED = 'trial_ended', 'Trial Ended'
+    SUBSCRIPTION_RENEWED = 'subscription_renewed', 'Subscription Renewed'
+    SUBSCRIPTION_CANCELED = 'subscription_canceled', 'Subscription Canceled'
+    PAYMENT_FAILED = 'payment_failed', 'Payment Failed'
+    PAYMENT_SUCCEEDED = 'payment_succeeded', 'Payment Succeeded'
+    LIMIT_WARNING = 'limit_warning', 'Limit Warning'
+    LIMIT_REACHED = 'limit_reached', 'Limit Reached'
+
+
+class NotificationChannel(models.TextChoices):
+    EMAIL = 'email', 'Email'
+    IN_APP = 'in_app', 'In-App'
+    WEBHOOK = 'webhook', 'Webhook'
+
+
+class NotificationStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    SENT = 'sent', 'Sent'
+    FAILED = 'failed', 'Failed'
+    DELIVERED = 'delivered', 'Delivered'
+
+
 class Organization(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
@@ -69,12 +117,27 @@ class Organization(models.Model):
         choices=SubscriptionPlan.choices,
         default=SubscriptionPlan.FREE_TRIAL
     )
+    subscription_status = models.CharField(
+        max_length=20,
+        choices=SubscriptionStatus.choices,
+        default=SubscriptionStatus.TRIALING
+    )
+    billing_cycle = models.CharField(
+        max_length=20,
+        choices=BillingCycle.choices,
+        null=True,
+        blank=True
+    )
     trial_ends_at = models.DateTimeField(null=True, blank=True)
     subscription_ends_at = models.DateTimeField(null=True, blank=True)
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    cancel_at_period_end = models.BooleanField(default=False)
     stripe_customer_id = models.CharField(max_length=255, null=True, blank=True)
     stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
+    stripe_price_id = models.CharField(max_length=255, null=True, blank=True)
     contacts_limit = models.IntegerField(default=1000)
     campaigns_limit = models.IntegerField(default=10)
+    emails_per_month_limit = models.IntegerField(default=10000)
     is_subscription_active = models.BooleanField(default=True)
     industry = models.CharField(max_length=100, null=True, blank=True)
     employees_range = models.CharField(max_length=50, null=True, blank=True)
@@ -402,6 +465,151 @@ class AnalyticsEvent(models.Model):
 
 
 # OTP model for email verification during signup
+class PlanFeatures(models.Model):
+    """Model to store plan features and pricing configuration"""
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    plan = models.CharField(
+        max_length=30,
+        choices=SubscriptionPlan.choices,
+        unique=True
+    )
+    price_cents = models.IntegerField()  # Price in cents
+    contacts_limit = models.IntegerField()
+    campaigns_limit = models.IntegerField()
+    emails_per_month = models.IntegerField()
+    # Feature flags
+    has_email_campaigns = models.BooleanField(default=True)
+    has_basic_analytics = models.BooleanField(default=True)
+    has_advanced_analytics = models.BooleanField(default=False)
+    has_ab_testing = models.BooleanField(default=False)
+    has_automation = models.BooleanField(default=False)
+    has_custom_templates = models.BooleanField(default=False)
+    has_white_labeling = models.BooleanField(default=False)
+    has_api_access = models.BooleanField(default=False)
+    has_priority_support = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'plan_features'
+        verbose_name = 'Plan Features'
+        verbose_name_plural = 'Plan Features'
+
+    def __str__(self):
+        return f"{self.plan} - ${self.price_cents/100}"
+
+
+class SubscriptionHistory(models.Model):
+    """Model to track all subscription changes and events"""
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='subscription_history'
+    )
+    plan = models.CharField(
+        max_length=30,
+        choices=SubscriptionPlan.choices
+    )
+    billing_cycle = models.CharField(
+        max_length=20,
+        choices=BillingCycle.choices,
+        null=True,
+        blank=True
+    )
+    event_type = models.CharField(
+        max_length=30,
+        choices=SubscriptionEventType.choices
+    )
+    amount_cents = models.IntegerField(null=True, blank=True)  # Amount in cents for payment events
+    metadata = models.JSONField(null=True, blank=True)  # Store additional event data
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'subscription_history'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['organization', '-created_at']),
+            models.Index(fields=['event_type', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.organization.name} - {self.event_type} - {self.created_at}"
+
+
+class PaymentMethod(models.Model):
+    """Model to store payment method details"""
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='payment_methods'
+    )
+    stripe_payment_method_id = models.CharField(max_length=255, unique=True)
+    last4 = models.CharField(max_length=4)  # Last 4 digits of card
+    brand = models.CharField(max_length=50)  # Card brand (Visa, Mastercard, etc.)
+    exp_month = models.IntegerField()  # Expiry month (1-12)
+    exp_year = models.IntegerField()  # Expiry year
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payment_methods'
+        indexes = [
+            models.Index(fields=['organization', 'is_default']),
+        ]
+
+    def __str__(self):
+        return f"{self.brand} ****{self.last4} - {self.organization.name}"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one default payment method per organization
+        if self.is_default:
+            PaymentMethod.objects.filter(
+                organization=self.organization,
+                is_default=True
+            ).exclude(id=self.id).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
+class SubscriptionNotification(models.Model):
+    """Model to track notifications sent about subscription events"""
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='subscription_notifications'
+    )
+    notification_type = models.CharField(
+        max_length=30,
+        choices=NotificationType.choices
+    )
+    channel = models.CharField(
+        max_length=20,
+        choices=NotificationChannel.choices
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=NotificationStatus.choices,
+        default=NotificationStatus.PENDING
+    )
+    sent_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(null=True, blank=True)  # Store email content, webhook payload, etc.
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'subscription_notifications'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'notification_type', '-created_at']),
+            models.Index(fields=['status', 'channel']),
+        ]
+
+    def __str__(self):
+        return f"{self.organization.name} - {self.notification_type} - {self.status}"
+
+
 class EmailOTP(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=255, validators=[EmailValidator()])
@@ -446,9 +654,35 @@ def activate_trial_on_organization_creation(sender, instance, created, **kwargs)
     """Automatically activate 14-day trial when a new organization is created"""
     if created and not instance.trial_ends_at:
         # Set trial to end 14 days from creation
-        instance.trial_ends_at = instance.created_at + timedelta(days=14)
+        trial_end_date = instance.created_at + timedelta(days=14)
+        instance.trial_ends_at = trial_end_date
+        instance.current_period_end = trial_end_date
         instance.subscription_plan = SubscriptionPlan.FREE_TRIAL
+        instance.subscription_status = SubscriptionStatus.TRIALING
         instance.is_subscription_active = True
         instance.contacts_limit = 1000
         instance.campaigns_limit = 10
-        instance.save(update_fields=['trial_ends_at', 'subscription_plan', 'is_subscription_active', 'contacts_limit', 'campaigns_limit'])
+        instance.emails_per_month_limit = 10000
+        instance.save(update_fields=[
+            'trial_ends_at', 
+            'current_period_end',
+            'subscription_plan', 
+            'subscription_status',
+            'is_subscription_active', 
+            'contacts_limit', 
+            'campaigns_limit',
+            'emails_per_month_limit'
+        ])
+        
+        # Create a subscription history entry for trial activation
+        SubscriptionHistory.objects.create(
+            organization=instance,
+            plan=SubscriptionPlan.FREE_TRIAL,
+            event_type=SubscriptionEventType.TRIAL_STARTED,
+            metadata={
+                'trial_duration_days': 14,
+                'contacts_limit': 1000,
+                'campaigns_limit': 10,
+                'emails_per_month_limit': 10000
+            }
+        )
