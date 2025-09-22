@@ -63,11 +63,7 @@ urlpatterns = [
     path('auth/csrf', get_csrf_token, name='csrf_token'),
     path('dashboard/stats', dashboard_stats, name='dashboard_stats'),
     
-    # Direct API routes for Express proxy (proxy strips /api prefix)
-    path('domains/', DomainViewSet.as_view({'get': 'list', 'post': 'create'}), name='domain-list'),
-    path('domains/<str:pk>/', DomainViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='domain-detail'),
-    path('domains/<str:pk>/verify/', DomainViewSet.as_view({'post': 'verify'}), name='domain-verify'),
-    path('domains/<str:pk>/generate-dns-records/', DomainViewSet.as_view({'post': 'generate_dns_records'}), name='domain-generate-dns'),
+    # Domain routes handled by router.register(r'domains', DomainViewSet)
     
     # Signup flow endpoints (proxy strips /api prefix)
     path('signup/check-email', check_email, name='signup_check_email'),
@@ -93,6 +89,6 @@ urlpatterns = [
     path('subscription/check-access', check_subscription_access, name='check_subscription_access'),
     path('subscription/webhook', stripe_webhook, name='stripe_webhook'),
     
-    # Standard DRF routes
-    path('api/', include(router.urls)),
+    # Standard DRF routes (Express proxy strips /api prefix)
+    path('', include(router.urls)),
 ]

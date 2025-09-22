@@ -135,8 +135,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'core.authentication.SignedHeaderAuthentication',  # Keep for backward compatibility
+        'core.authentication.SignedHeaderAuthentication',  # Express proxy signed headers (primary)
+        'rest_framework.authentication.SessionAuthentication',  # Session auth with CSRF protection (secure)
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -201,23 +201,27 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_SECURE = True  # Use secure cookies for HTTPS
+SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies only in production (HTTPS)
 SESSION_COOKIE_HTTPONLY = True  # Prevent XSS attacks  
-SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-origin requests with credentials
+SESSION_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'  # Allow same-site in dev, cross-origin in prod
 SESSION_COOKIE_NAME = 'sessionid'
 SESSION_COOKIE_DOMAIN = None  # Use default domain
 
-# CSRF settings - Disable CSRF for API endpoints to match Express behavior
+# CSRF settings - Include Replit domains for cross-origin requests
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
+    "https://*.replit.dev",
+    "https://*.replit.app",
+    "https://*.repl.co",
 ]
 
 # Disable CSRF for API endpoints since Express didn't use CSRF protection
 CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_HEADER_name = 'HTTP_X_CSRFTOKEN'
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+
 
 # Authentication bridge configuration
 # Auth bridge secret - required for Express-Django integration
@@ -249,6 +253,11 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_ENABLE_UTC = True
+
+# In development, execute tasks synchronously to avoid Redis dependency
+if DEBUG:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
 
 # Celery Beat Schedule for periodic tasks
 CELERY_BEAT_SCHEDULE = {
@@ -337,10 +346,9 @@ SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0  # 1 year in production only
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Session cookies for cross-origin authentication (frontend to Django API)  
-SESSION_COOKIE_SECURE = True  # Required for SameSite=None
+# NOTE: SESSION_COOKIE_SECURE and SESSION_COOKIE_SAMESITE are set earlier in development-friendly way
 CSRF_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-origin session sharing
-SESSION_COOKIE_HTTPONLY = True  # Security - prevent XSS access
+# NOTE: SESSION_COOKIE_HTTPONLY is set earlier
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 

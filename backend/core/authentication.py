@@ -5,7 +5,7 @@ import time
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from rest_framework.authentication import BaseAuthentication
+from rest_framework.authentication import BaseAuthentication, SessionAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 from .models import Organization
@@ -28,7 +28,11 @@ class SignedHeaderAuthentication(BaseAuthentication):
         
         try:
             # Verify HMAC signature using same secret as Express proxy
-            auth_secret = settings.AUTH_BRIDGE_SECRET
+            auth_secret = getattr(settings, 'AUTH_BRIDGE_SECRET', None)
+            if not auth_secret:
+                # Auth bridge not configured - skip signed header authentication
+                return None
+                
             expected_signature = hmac.new(
                 auth_secret.encode('utf-8'),
                 user_data_header.encode('utf-8'),
@@ -143,3 +147,12 @@ class ReplitAuthBackend(BaseBackend):
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+
+
+class CSRFExemptSessionAuthentication(SessionAuthentication):
+    """
+    Session authentication that bypasses CSRF validation for REST API endpoints.
+    REST APIs typically rely on authentication tokens rather than CSRF protection.
+    """
+    def enforce_csrf(self, request):
+        return  # Skip CSRF check for REST API endpoints

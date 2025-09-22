@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import DomainVerification from "@/components/domains/domain-verification";
 
@@ -17,17 +18,18 @@ export default function Domains() {
   const [newDomain, setNewDomain] = useState("");
 
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: domains, isLoading, error } = useQuery({
-    queryKey: ["/api/domains"],
+    queryKey: ["/api/domains/"],
     retry: 3,
     staleTime: 30000,
   });
 
   const createDomainMutation = useMutation({
     mutationFn: async (domain: string) => {
-      const response = await apiRequest("POST", "/api/domains", { domain });
+      const response = await apiRequest("POST", "/api/domains/", { domain });
       return response.json();
     },
     onSuccess: () => {
@@ -35,7 +37,7 @@ export default function Domains() {
         title: "Success",
         description: "Domain added successfully! Please verify DNS records.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/domains"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/domains/"] });
       setShowAddModal(false);
       setNewDomain("");
     },
@@ -50,7 +52,7 @@ export default function Domains() {
 
   const verifyDomainMutation = useMutation({
     mutationFn: async (domainId: string) => {
-      const response = await apiRequest("POST", `/api/domains/${domainId}/verify`);
+      const response = await apiRequest("POST", `/api/domains/${domainId}/verify/`);
       return response.json();
     },
     onSuccess: () => {
@@ -58,7 +60,7 @@ export default function Domains() {
         title: "Success",
         description: "Domain verified successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/domains"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/domains/"] });
     },
     onError: (error) => {
       toast({
