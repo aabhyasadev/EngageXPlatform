@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import ContactImport from "@/components/contacts/contact-import";
+import ContactGroupsManager from "@/components/contacts/contact-groups-manager";
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -142,176 +144,191 @@ export default function Contacts() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-total-contacts">
-              {contacts?.length || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">Total Contacts</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-subscribed-contacts">
-              {contacts?.filter((c: any) => c.isSubscribed).length || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">Subscribed</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-unsubscribed-contacts">
-              {contacts?.filter((c: any) => !c.isSubscribed).length || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">Unsubscribed</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-contact-groups">
-              {contactGroups?.length || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">Groups</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Tabs */}
+      <Tabs defaultValue="contacts" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="contacts" data-testid="tab-contacts">Contacts</TabsTrigger>
+          <TabsTrigger value="groups" data-testid="tab-groups">Groups</TabsTrigger>
+        </TabsList>
 
-      {/* Search */}
-      <div className="mb-6">
-        <Input
-          placeholder="Search contacts by name or email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-md"
-          data-testid="input-search-contacts"
-        />
-      </div>
-
-      {/* Contacts Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Contacts</CardTitle>
-          <CardDescription>
-            {filteredContacts.length} of {contacts?.length || 0} contacts
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Name</th>
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Email</th>
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Phone</th>
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Status</th>
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Added</th>
-                  <th className="text-right py-3 text-sm font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredContacts.map((contact: any) => (
-                  <tr key={contact.id} className="border-b border-border last:border-0">
-                    <td className="py-4">
-                      <div className="font-medium text-foreground" data-testid={`text-contact-name-${contact.id}`}>
-                        {contact.firstName} {contact.lastName}
-                      </div>
-                    </td>
-                    <td className="py-4 text-foreground">{contact.email}</td>
-                    <td className="py-4 text-foreground">{contact.phone || "-"}</td>
-                    <td className="py-4">
-                      <Badge variant={contact.isSubscribed ? "default" : "secondary"}>
-                        {contact.isSubscribed ? "Subscribed" : "Unsubscribed"}
-                      </Badge>
-                    </td>
-                    <td className="py-4 text-foreground">
-                      {new Date(contact.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteContactMutation.mutate(contact.id)}
-                        disabled={deleteContactMutation.isPending}
-                        data-testid={`button-delete-contact-${contact.id}`}
-                      >
-                        <i className="fas fa-trash text-destructive"></i>
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredContacts.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                      {searchTerm ? "No contacts match your search." : "No contacts yet. Add your first contact to get started!"}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <TabsContent value="contacts" className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-foreground" data-testid="text-total-contacts">
+                  {contacts?.length || 0}
+                </div>
+                <p className="text-sm text-muted-foreground">Total Contacts</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-foreground" data-testid="text-subscribed-contacts">
+                  {contacts?.filter((c: any) => c.isSubscribed).length || 0}
+                </div>
+                <p className="text-sm text-muted-foreground">Subscribed</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-foreground" data-testid="text-unsubscribed-contacts">
+                  {contacts?.filter((c: any) => !c.isSubscribed).length || 0}
+                </div>
+                <p className="text-sm text-muted-foreground">Unsubscribed</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-foreground" data-testid="text-contact-groups">
+                  {contactGroups?.length || 0}
+                </div>
+                <p className="text-sm text-muted-foreground">Groups</p>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Add Contact Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Contact</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={newContact.firstName}
-                  onChange={(e) => setNewContact({ ...newContact, firstName: e.target.value })}
-                  data-testid="input-first-name"
-                />
+          {/* Search */}
+          <div className="mb-6">
+            <Input
+              placeholder="Search contacts by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
+              data-testid="input-search-contacts"
+            />
+          </div>
+
+          {/* Contacts Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Contacts</CardTitle>
+              <CardDescription>
+                {filteredContacts.length} of {contacts?.length || 0} contacts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Name</th>
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Email</th>
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Phone</th>
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Status</th>
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Added</th>
+                      <th className="text-right py-3 text-sm font-medium text-muted-foreground">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredContacts.map((contact: any) => (
+                      <tr key={contact.id} className="border-b border-border last:border-0">
+                        <td className="py-4">
+                          <div className="font-medium text-foreground" data-testid={`text-contact-name-${contact.id}`}>
+                            {contact.firstName} {contact.lastName}
+                          </div>
+                        </td>
+                        <td className="py-4 text-foreground">{contact.email}</td>
+                        <td className="py-4 text-foreground">{contact.phone || "-"}</td>
+                        <td className="py-4">
+                          <Badge variant={contact.isSubscribed ? "default" : "secondary"}>
+                            {contact.isSubscribed ? "Subscribed" : "Unsubscribed"}
+                          </Badge>
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {new Date(contact.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteContactMutation.mutate(contact.id)}
+                            disabled={deleteContactMutation.isPending}
+                            data-testid={`button-delete-contact-${contact.id}`}
+                          >
+                            <i className="fas fa-trash text-destructive"></i>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredContacts.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                          {searchTerm ? "No contacts match your search." : "No contacts yet. Add your first contact to get started!"}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={newContact.lastName}
-                  onChange={(e) => setNewContact({ ...newContact, lastName: e.target.value })}
-                  data-testid="input-last-name"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newContact.email}
-                onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                required
-                data-testid="input-email"
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={newContact.phone}
-                onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                data-testid="input-phone"
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createContactMutation.isPending} data-testid="button-save-contact">
-                {createContactMutation.isPending ? "Saving..." : "Save Contact"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </CardContent>
+          </Card>
+
+          {/* Add Contact Modal */}
+          <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Contact</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={newContact.firstName}
+                      onChange={(e) => setNewContact({ ...newContact, firstName: e.target.value })}
+                      data-testid="input-first-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={newContact.lastName}
+                      onChange={(e) => setNewContact({ ...newContact, lastName: e.target.value })}
+                      data-testid="input-last-name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newContact.email}
+                    onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                    required
+                    data-testid="input-email"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={newContact.phone}
+                    onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                    data-testid="input-phone"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createContactMutation.isPending} data-testid="button-save-contact">
+                    {createContactMutation.isPending ? "Saving..." : "Save Contact"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+        </TabsContent>
+
+        <TabsContent value="groups" className="space-y-6">
+          <ContactGroupsManager />
+        </TabsContent>
+      </Tabs>
 
       {/* Import Modal */}
       <ContactImport open={showImportModal} onOpenChange={setShowImportModal} />
