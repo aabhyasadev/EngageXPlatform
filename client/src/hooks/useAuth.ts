@@ -1,8 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
+// User type based on the API response
+interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  organization?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
 export function useAuth() {
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,

@@ -48,7 +48,7 @@ function Router() {
   }
 
   // Handle authenticated users without organization
-  if (!user?.organizationId) {
+  if (!user?.organization?.id) {
     return (
       <Switch>
         <Route path="/" component={OrganizationSetup} />

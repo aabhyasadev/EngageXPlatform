@@ -52,9 +52,9 @@ urlpatterns = [
     # Test endpoint for Django-frontend connection
     path('api/test', test_connection, name='test_connection'),
     
-    # Express-compatible OIDC authentication routes  
-    path('api/login', oidc_login, name='oidc_login'),
-    path('api/callback', oidc_callback, name='oidc_callback'),
+    # Express-compatible OIDC authentication routes (proxy strips /api prefix)
+    path('login', oidc_login, name='oidc_login'),
+    path('callback', oidc_callback, name='oidc_callback'),
     
     # Express proxy routes (proxy strips /api prefix, so Django receives without /api)
     path('auth/user', auth_user, name='auth_user'),

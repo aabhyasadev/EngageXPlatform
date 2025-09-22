@@ -63,6 +63,9 @@ export const users = pgTable("users", {
   organizationId: varchar("organization_id").references(() => organizations.id),
   role: userRoleEnum("role").default('campaign_manager').notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  mfaEnabled: boolean("mfa_enabled").default(false).notNull(),
+  ssoEnabled: boolean("sso_enabled").default(false).notNull(),
+  loginAttempts: integer("login_attempts").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
