@@ -552,42 +552,35 @@ class PlanFeatures(models.Model):
         return f"{self.plan} - ${self.price_cents/100}"
 
 
-class SubscriptionHistory(models.Model):
-    """Model to track all subscription changes and events"""
+
+class UsageTracking(models.Model):
+    """Model to track monthly usage for organizations"""
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
-        related_name='subscription_history'
+        related_name='usage_tracking'
     )
-    plan = models.CharField(
-        max_length=30,
-        choices=SubscriptionPlan.choices
-    )
-    billing_cycle = models.CharField(
-        max_length=20,
-        choices=BillingCycle.choices,
-        null=True,
-        blank=True
-    )
-    event_type = models.CharField(
-        max_length=30,
-        choices=SubscriptionEventType.choices
-    )
-    amount_cents = models.IntegerField(null=True, blank=True)  # Amount in cents for payment events
-    metadata = models.JSONField(null=True, blank=True)  # Store additional event data
+    month = models.DateField()  # First day of the month
+    emails_sent = models.IntegerField(default=0)
+    campaigns_created = models.IntegerField(default=0)
+    contacts_imported = models.IntegerField(default=0)
+    templates_created = models.IntegerField(default=0)
+    domains_verified = models.IntegerField(default=0)
+    api_calls = models.IntegerField(default=0)
+    ab_tests_created = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
-        db_table = 'subscription_history'
-        ordering = ['-created_at']
+        db_table = 'usage_tracking'
+        unique_together = ['organization', 'month']
         indexes = [
-            models.Index(fields=['organization', '-created_at']),
-            models.Index(fields=['event_type', 'created_at']),
+            models.Index(fields=['organization', 'month']),
         ]
-
+    
     def __str__(self):
-        return f"{self.organization.name} - {self.event_type} - {self.created_at}"
+        return f"{self.organization.name} - {self.month} - {self.emails_sent} emails"
 
 
 class PaymentMethod(models.Model):

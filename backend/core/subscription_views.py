@@ -9,7 +9,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta
-from .models import Organization, SubscriptionPlan, User, SubscriptionHistory, SubscriptionEventType, SubscriptionStatus
+from .models import (
+    Organization, SubscriptionPlan, User, SubscriptionHistory, 
+    SubscriptionEventType, SubscriptionStatus, PlanFeatures, UsageTracking
+)
+from django.db.models import F
+from datetime import datetime
 import json
 import logging
 import hashlib
@@ -964,3 +969,256 @@ def check_subscription_access(request):
         return Response({
             'error': f'Error checking access: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Helper functions for subscription validation and usage tracking
+def check_subscription_active(organization):
+    """Check if organization's subscription is active"""
+    if not organization:
+        return False
+    
+    now = timezone.now()
+    
+    # Check subscription status
+    if organization.subscription_status in [SubscriptionStatus.CANCELED, SubscriptionStatus.PAST_DUE]:
+        return False
+    
+    # Check expiration based on plan type
+    if organization.subscription_plan == SubscriptionPlan.FREE_TRIAL:
+        if organization.trial_ends_at and now > organization.trial_ends_at:
+            return False
+    else:
+        if organization.subscription_ends_at and now > organization.subscription_ends_at:
+            return False
+    
+    return organization.is_subscription_active
+
+
+def check_feature_available(organization, feature_name):
+    """Check if a specific feature is available for the organization's plan"""
+    if not organization:
+        return False
+    
+    # First check if subscription is active
+    if not check_subscription_active(organization):
+        return False
+    
+    try:
+        plan_features = PlanFeatures.objects.get(plan=organization.subscription_plan)
+        return getattr(plan_features, feature_name, False)
+    except PlanFeatures.DoesNotExist:
+        # Default to basic features only
+        basic_features = ['has_email_campaigns', 'has_basic_analytics']
+        return feature_name in basic_features
+
+
+def check_usage_limit(organization, resource_type):
+    """Check if usage limit has been reached for a specific resource type"""
+    if not organization:
+        return {'allowed': False, 'reason': 'No organization'}
+    
+    # Get plan features and limits
+    try:
+        plan_features = PlanFeatures.objects.get(plan=organization.subscription_plan)
+    except PlanFeatures.DoesNotExist:
+        # Use default limits from organization
+        plan_features = None
+    
+    # Get current usage
+    usage = get_current_usage(organization)
+    
+    # Check specific resource limits
+    if resource_type == 'campaigns':
+        limit = plan_features.campaigns_limit if plan_features else organization.campaigns_limit
+        current = organization.campaigns.count()
+        return {
+            'allowed': current < limit,
+            'current': current,
+            'limit': limit,
+            'reason': f'Campaign limit reached ({current}/{limit})' if current >= limit else None
+        }
+    
+    elif resource_type == 'contacts':
+        limit = plan_features.contacts_limit if plan_features else organization.contacts_limit
+        current = organization.contacts.count()
+        return {
+            'allowed': current < limit,
+            'current': current,
+            'limit': limit,
+            'reason': f'Contact limit reached ({current}/{limit})' if current >= limit else None
+        }
+    
+    elif resource_type == 'emails':
+        limit = plan_features.emails_per_month if plan_features else organization.emails_per_month_limit
+        current = usage['emails_sent']
+        return {
+            'allowed': current < limit,
+            'current': current,
+            'limit': limit,
+            'reason': f'Monthly email limit reached ({current}/{limit})' if current >= limit else None
+        }
+    
+    elif resource_type == 'templates':
+        # Premium plans have unlimited custom templates
+        if plan_features and plan_features.has_custom_templates:
+            return {'allowed': True, 'current': None, 'limit': None, 'reason': None}
+        
+        # Basic plans have limited templates
+        limit = 10 if 'basic' in organization.subscription_plan.lower() else 50
+        current = organization.email_templates.count()
+        return {
+            'allowed': current < limit,
+            'current': current,
+            'limit': limit,
+            'reason': f'Template limit reached ({current}/{limit})' if current >= limit else None
+        }
+    
+    elif resource_type == 'domains':
+        # Check if multi-domain is supported
+        if plan_features and plan_features.has_white_labeling:
+            return {'allowed': True, 'current': None, 'limit': None, 'reason': None}
+        
+        # Basic plans support limited domains
+        limit = 1 if 'basic' in organization.subscription_plan.lower() else 3
+        current = organization.domains.count()
+        return {
+            'allowed': current < limit,
+            'current': current,
+            'limit': limit,
+            'reason': f'Domain limit reached ({current}/{limit})' if current >= limit else None
+        }
+    
+    return {'allowed': False, 'reason': f'Unknown resource type: {resource_type}'}
+
+
+def get_current_usage(organization):
+    """Get current month's usage statistics for organization"""
+    if not organization:
+        return {}
+    
+    now = timezone.now()
+    month_start = datetime(now.year, now.month, 1).date()
+    
+    # Get or create usage tracking for current month
+    usage, created = UsageTracking.objects.get_or_create(
+        organization=organization,
+        month=month_start,
+        defaults={
+            'emails_sent': 0,
+            'campaigns_created': 0,
+            'contacts_imported': 0,
+            'templates_created': 0,
+            'domains_verified': 0,
+            'api_calls': 0,
+            'ab_tests_created': 0,
+        }
+    )
+    
+    # Get current counts from database
+    return {
+        'month': month_start.isoformat(),
+        'emails_sent': usage.emails_sent,
+        'campaigns_created': usage.campaigns_created,
+        'contacts_imported': usage.contacts_imported,
+        'templates_created': usage.templates_created,
+        'domains_verified': usage.domains_verified,
+        'api_calls': usage.api_calls,
+        'ab_tests_created': usage.ab_tests_created,
+        # Current totals
+        'total_contacts': organization.contacts.count(),
+        'total_campaigns': organization.campaigns.count(),
+        'total_templates': organization.email_templates.count(),
+        'total_domains': organization.domains.count(),
+    }
+
+
+def update_usage_tracking(organization, resource_type, increment=1):
+    """Update usage tracking for a specific resource"""
+    if not organization:
+        return
+    
+    now = timezone.now()
+    month_start = datetime(now.year, now.month, 1).date()
+    
+    # Get or create usage tracking for current month
+    usage, created = UsageTracking.objects.get_or_create(
+        organization=organization,
+        month=month_start
+    )
+    
+    # Map resource types to fields
+    field_map = {
+        'emails': 'emails_sent',
+        'campaigns': 'campaigns_created',
+        'contacts': 'contacts_imported',
+        'templates': 'templates_created',
+        'domains': 'domains_verified',
+        'api': 'api_calls',
+        'ab_tests': 'ab_tests_created',
+    }
+    
+    if resource_type in field_map:
+        field_name = field_map[resource_type]
+        UsageTracking.objects.filter(
+            organization=organization,
+            month=month_start
+        ).update(**{field_name: F(field_name) + increment})
+
+
+def get_subscription_details(organization):
+    """Get comprehensive subscription details for an organization"""
+    if not organization:
+        return None
+    
+    now = timezone.now()
+    
+    # Check if subscription is active
+    is_active = check_subscription_active(organization)
+    
+    # Calculate days remaining
+    days_remaining = None
+    if organization.subscription_plan == SubscriptionPlan.FREE_TRIAL:
+        if organization.trial_ends_at:
+            days_remaining = (organization.trial_ends_at - now).days
+    else:
+        if organization.subscription_ends_at:
+            days_remaining = (organization.subscription_ends_at - now).days
+    
+    # Get plan features
+    try:
+        plan_features = PlanFeatures.objects.get(plan=organization.subscription_plan)
+        features = {
+            'contacts_limit': plan_features.contacts_limit,
+            'campaigns_limit': plan_features.campaigns_limit,
+            'emails_per_month': plan_features.emails_per_month,
+            'has_advanced_analytics': plan_features.has_advanced_analytics,
+            'has_ab_testing': plan_features.has_ab_testing,
+            'has_api_access': plan_features.has_api_access,
+            'has_automation': plan_features.has_automation,
+            'has_white_labeling': plan_features.has_white_labeling,
+            'has_custom_templates': plan_features.has_custom_templates,
+            'has_priority_support': plan_features.has_priority_support,
+        }
+    except PlanFeatures.DoesNotExist:
+        features = {
+            'contacts_limit': organization.contacts_limit,
+            'campaigns_limit': organization.campaigns_limit,
+            'emails_per_month': organization.emails_per_month_limit,
+        }
+    
+    # Get current usage
+    usage = get_current_usage(organization)
+    
+    return {
+        'plan': organization.subscription_plan,
+        'status': organization.subscription_status,
+        'is_active': is_active,
+        'is_trial': organization.subscription_plan == SubscriptionPlan.FREE_TRIAL,
+        'days_remaining': days_remaining,
+        'trial_ends_at': organization.trial_ends_at.isoformat() if organization.trial_ends_at else None,
+        'subscription_ends_at': organization.subscription_ends_at.isoformat() if organization.subscription_ends_at else None,
+        'features': features,
+        'usage': usage,
+        'billing_cycle': organization.billing_cycle,
+        'cancel_at_period_end': organization.cancel_at_period_end,
+    }

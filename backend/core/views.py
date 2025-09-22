@@ -23,6 +23,11 @@ from .serializers import (
     CampaignSendSerializer
 )
 from .tasks import send_campaign_emails, verify_domain_dns, import_contacts_from_csv
+from .subscription_views import (
+    check_subscription_active, check_feature_available,
+    check_usage_limit, get_current_usage, update_usage_tracking
+)
+from .middleware import requires_active_subscription, requires_plan_feature, track_usage
 
 
 class BaseOrganizationViewSet(viewsets.ModelViewSet):
@@ -84,12 +89,48 @@ class DomainViewSet(BaseOrganizationViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['status']
     search_fields = ['domain']
+    
+    def create(self, request, *args, **kwargs):
+        """Create a new domain with multi-domain check"""
+        if not request.user.organization:
+            return Response({
+                'error': 'No organization found'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check domain limit
+        limit_check = check_usage_limit(request.user.organization, 'domains')
+        if not limit_check['allowed']:
+            # Check if white labeling is available for unlimited domains
+            if not check_feature_available(request.user.organization, 'has_white_labeling'):
+                return Response({
+                    'error': limit_check['reason'],
+                    'code': 'DOMAIN_LIMIT_REACHED',
+                    'current': limit_check['current'],
+                    'limit': limit_check['limit'],
+                    'note': 'Upgrade to Premium for unlimited custom domains',
+                    'upgrade_url': '/subscription/upgrade'
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        return super().create(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
     def verify(self, request, pk=None):
-        """Trigger domain verification"""
+        """Trigger domain verification with subscription check"""
         domain = self.get_object()
+        
+        # Check if subscription is active
+        if not check_subscription_active(request.user.organization):
+            return Response({
+                'error': 'Active subscription required for domain verification',
+                'code': 'SUBSCRIPTION_REQUIRED',
+                'upgrade_url': '/subscription/plans'
+            }, status=status.HTTP_402_PAYMENT_REQUIRED)
+        
         verify_domain_dns.delay(domain.id)
+        
+        # Update usage tracking
+        update_usage_tracking(request.user.organization, 'domains')
+        
         return Response({'message': 'Domain verification started'})
 
     @action(detail=True, methods=['post'])
@@ -158,10 +199,47 @@ class ContactViewSet(BaseOrganizationViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['is_subscribed', 'language']
     search_fields = ['email', 'first_name', 'last_name']
+    
+    def create(self, request, *args, **kwargs):
+        """Create a new contact with subscription limit check"""
+        if not request.user.organization:
+            return Response({
+                'error': 'No organization found'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check contact limit
+        limit_check = check_usage_limit(request.user.organization, 'contacts')
+        if not limit_check['allowed']:
+            return Response({
+                'error': limit_check['reason'],
+                'code': 'CONTACT_LIMIT_REACHED',
+                'current': limit_check['current'],
+                'limit': limit_check['limit'],
+                'upgrade_url': '/subscription/upgrade'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        response = super().create(request, *args, **kwargs)
+        
+        # Update usage tracking
+        if response.status_code == 201:
+            update_usage_tracking(request.user.organization, 'contacts')
+        
+        return response
 
     @action(detail=False, methods=['post'])
     def import_csv(self, request):
-        """Import contacts from CSV file"""
+        """Import contacts from CSV file with subscription limit check"""
+        # Check contact limit before import
+        limit_check = check_usage_limit(request.user.organization, 'contacts')
+        if not limit_check['allowed']:
+            return Response({
+                'error': limit_check['reason'],
+                'code': 'CONTACT_LIMIT_REACHED',
+                'current': limit_check['current'],
+                'limit': limit_check['limit'],
+                'upgrade_url': '/subscription/upgrade'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         serializer = ContactImportSerializer(data=request.data)
         if serializer.is_valid():
             file = serializer.validated_data['file']
@@ -188,6 +266,9 @@ class ContactViewSet(BaseOrganizationViewSet):
                 content,
                 self.request.user.id
             )
+            
+            # Update usage tracking
+            update_usage_tracking(request.user.organization, 'contacts')
             
             return Response({
                 'message': 'Import started',
@@ -220,6 +301,42 @@ class EmailTemplateViewSet(BaseOrganizationViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['category', 'is_default']
     search_fields = ['name', 'subject']
+    
+    def create(self, request, *args, **kwargs):
+        """Create a new template with limit check"""
+        if not request.user.organization:
+            return Response({
+                'error': 'No organization found'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check template limit
+        limit_check = check_usage_limit(request.user.organization, 'templates')
+        if not limit_check['allowed']:
+            return Response({
+                'error': limit_check['reason'],
+                'code': 'TEMPLATE_LIMIT_REACHED',
+                'current': limit_check['current'],
+                'limit': limit_check['limit'],
+                'upgrade_url': '/subscription/upgrade'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check custom templates feature for advanced templates
+        if request.data.get('is_custom', False):
+            if not check_feature_available(request.user.organization, 'has_custom_templates'):
+                return Response({
+                    'error': 'Custom templates are not available in your current plan',
+                    'code': 'FEATURE_NOT_AVAILABLE',
+                    'feature': 'has_custom_templates',
+                    'upgrade_url': '/subscription/upgrade'
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        response = super().create(request, *args, **kwargs)
+        
+        # Update usage tracking if successful
+        if response.status_code == 201:
+            update_usage_tracking(request.user.organization, 'templates')
+        
+        return response
 
     def list(self, request, *args, **kwargs):
         """List templates and seed defaults if none exist"""
@@ -315,6 +432,43 @@ class CampaignViewSet(BaseOrganizationViewSet):
     search_fields = ['name', 'subject']
     ordering_fields = ['created_at', 'sent_at', 'name']
     ordering = ['-created_at']
+    
+    def create(self, request, *args, **kwargs):
+        """Create a new campaign with subscription limit check"""
+        if not request.user.organization:
+            return Response({
+                'error': 'No organization found'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check campaign limit
+        limit_check = check_usage_limit(request.user.organization, 'campaigns')
+        if not limit_check['allowed']:
+            return Response({
+                'error': limit_check['reason'],
+                'code': 'CAMPAIGN_LIMIT_REACHED',
+                'current': limit_check['current'],
+                'limit': limit_check['limit'],
+                'upgrade_url': '/subscription/upgrade'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check A/B testing feature if it's an A/B test campaign
+        if request.data.get('is_ab_test', False):
+            if not check_feature_available(request.user.organization, 'has_ab_testing'):
+                return Response({
+                    'error': 'A/B testing is not available in your current plan',
+                    'code': 'FEATURE_NOT_AVAILABLE',
+                    'feature': 'has_ab_testing',
+                    'upgrade_url': '/subscription/upgrade'
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Create the campaign
+        response = super().create(request, *args, **kwargs)
+        
+        # Update usage tracking if successful
+        if response.status_code == 201:
+            update_usage_tracking(request.user.organization, 'campaigns')
+        
+        return response
 
     def perform_create(self, serializer):
         serializer.save(
@@ -324,8 +478,16 @@ class CampaignViewSet(BaseOrganizationViewSet):
 
     @action(detail=True, methods=['post'])
     def send(self, request, pk=None):
-        """Send campaign emails"""
+        """Send campaign emails with subscription and email limit checks"""
         campaign = self.get_object()
+        
+        # Check subscription is active
+        if not check_subscription_active(request.user.organization):
+            return Response({
+                'error': 'Active subscription required to send campaigns',
+                'code': 'SUBSCRIPTION_REQUIRED',
+                'upgrade_url': '/subscription/plans'
+            }, status=status.HTTP_402_PAYMENT_REQUIRED)
         
         if campaign.status != 'draft':
             return Response(
@@ -353,6 +515,22 @@ class CampaignViewSet(BaseOrganizationViewSet):
                     group_memberships__group_id__in=data['group_ids']
                 ).distinct()
             
+            # Check monthly email limit before sending
+            recipient_count = contacts.count()
+            usage = get_current_usage(request.user.organization)
+            limit_check = check_usage_limit(request.user.organization, 'emails')
+            
+            # Check if sending would exceed limit
+            if usage['emails_sent'] + recipient_count > limit_check.get('limit', 0):
+                return Response({
+                    'error': f'Sending this campaign would exceed your monthly email limit',
+                    'code': 'EMAIL_LIMIT_EXCEEDED',
+                    'current': usage['emails_sent'],
+                    'would_send': recipient_count,
+                    'limit': limit_check.get('limit', 0),
+                    'upgrade_url': '/subscription/upgrade'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
             # Create campaign recipients
             recipients = []
             for contact in contacts:
@@ -373,16 +551,35 @@ class CampaignViewSet(BaseOrganizationViewSet):
             # Start sending emails asynchronously
             send_campaign_emails.delay(campaign.id)
             
+            # Update usage tracking for emails
+            update_usage_tracking(request.user.organization, 'emails', len(recipients))
+            
             return Response({
                 'message': f'Campaign queued for sending to {len(recipients)} recipients',
-                'recipients': len(recipients)
+                'recipients': len(recipients),
+                'usage': {
+                    'emails_sent_before': usage['emails_sent'],
+                    'emails_sent_after': usage['emails_sent'] + len(recipients),
+                    'monthly_limit': limit_check.get('limit', 0)
+                }
             })
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
-        """Duplicate a campaign"""
+        """Duplicate a campaign with limit check"""
+        # Check campaign limit before duplication
+        limit_check = check_usage_limit(request.user.organization, 'campaigns')
+        if not limit_check['allowed']:
+            return Response({
+                'error': limit_check['reason'],
+                'code': 'CAMPAIGN_LIMIT_REACHED',
+                'current': limit_check['current'],
+                'limit': limit_check['limit'],
+                'upgrade_url': '/subscription/upgrade'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         original_campaign = self.get_object()
         
         # Create copy
@@ -400,6 +597,9 @@ class CampaignViewSet(BaseOrganizationViewSet):
         )
         new_campaign.save()
         
+        # Update usage tracking
+        update_usage_tracking(request.user.organization, 'campaigns')
+        
         serializer = self.get_serializer(new_campaign)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -410,6 +610,43 @@ class AnalyticsEventViewSet(BaseOrganizationViewSet):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['event_type', 'campaign']
     ordering = ['-created_at']
+    
+    @action(detail=False, methods=['get'])
+    @requires_plan_feature('has_advanced_analytics')
+    def advanced_reports(self, request):
+        """Get advanced analytics reports - Pro/Premium feature"""
+        # Advanced analytics logic here
+        org = request.user.organization
+        
+        # Get advanced metrics
+        from django.db.models import Avg, Max, Min
+        campaign_stats = Campaign.objects.filter(organization=org).aggregate(
+            avg_open_rate=Avg('open_rate'),
+            avg_click_rate=Avg('click_rate'),
+            max_open_rate=Max('open_rate'),
+            min_open_rate=Min('open_rate')
+        )
+        
+        return Response({
+            'message': 'Advanced analytics available',
+            'reports': campaign_stats
+        })
+    
+    @action(detail=False, methods=['get'])
+    def basic_reports(self, request):
+        """Get basic analytics reports - available to all plans"""
+        # Basic analytics logic here
+        org = request.user.organization
+        
+        # Get basic counts
+        total_sent = Campaign.objects.filter(organization=org).aggregate(
+            total=Sum('total_sent')
+        )['total'] or 0
+        
+        return Response({
+            'message': 'Basic analytics',
+            'total_sent': total_sent
+        })
 
 
 class DashboardViewSet(viewsets.ViewSet):
