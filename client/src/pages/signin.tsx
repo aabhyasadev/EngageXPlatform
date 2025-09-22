@@ -332,25 +332,22 @@ export default function SignInPage() {
                     disabled={isLoading}
                     onClick={async (e) => {
                       e.preventDefault();
-                      console.log("Debug: Button clicked");
                       
                       // Always sync DOM value to form state (including empty values)
                       const domEmail = emailInputRef.current?.value || "";
-                      const reactEmail = forgotAccountForm.getValues("email") || "";
-                      console.log("Debug: DOM email value:", domEmail);
-                      console.log("Debug: React email before sync:", reactEmail);
-                      
-                      // Always sync DOM to React state
                       forgotAccountForm.setValue("email", domEmail);
                       
-                      // Wait a tick for state to update
-                      await new Promise(resolve => setTimeout(resolve, 0));
+                      // Wait for state to settle
+                      await new Promise(resolve => setTimeout(resolve, 50));
                       
-                      const formValues = forgotAccountForm.getValues();
-                      console.log("Debug: Form values after sync:", formValues);
+                      // Trigger form validation manually
+                      const isValid = await forgotAccountForm.trigger("email");
                       
-                      // Directly call our handler instead of relying on form submission
-                      await handleForgotAccountSubmit();
+                      if (isValid) {
+                        // Only submit if validation passes
+                        await handleForgotAccountSubmit();
+                      }
+                      // If validation fails, React Hook Form will automatically show errors
                     }}
                   >
                     {isLoading ? "Sending..." : "Send Organization ID"}
