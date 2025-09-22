@@ -185,9 +185,13 @@ def get_current_subscription(request):
         # Check if trial or subscription expired
         is_expired = False
         if org.subscription_plan == SubscriptionPlan.FREE_TRIAL and org.trial_ends_at:
-            is_expired = timezone.now() > org.trial_ends_at
+            # Ensure timezone-aware comparison
+            trial_ends = org.trial_ends_at if timezone.is_aware(org.trial_ends_at) else timezone.make_aware(org.trial_ends_at)
+            is_expired = timezone.now() > trial_ends
         elif org.subscription_ends_at:
-            is_expired = timezone.now() > org.subscription_ends_at
+            # Ensure timezone-aware comparison
+            subscription_ends = org.subscription_ends_at if timezone.is_aware(org.subscription_ends_at) else timezone.make_aware(org.subscription_ends_at)
+            is_expired = timezone.now() > subscription_ends
         
         return Response({
             'subscription': {

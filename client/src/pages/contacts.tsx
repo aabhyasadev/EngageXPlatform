@@ -58,6 +58,26 @@ export default function Contacts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Transform snake_case from Django API to camelCase for frontend
+  const transformContact = (contact: any): Contact => {
+    console.log("Transforming contact:", contact);
+    const transformed = {
+      id: contact.id,
+      organizationId: contact.organization,
+      email: contact.email,
+      firstName: contact.first_name || '',
+      lastName: contact.last_name || '',
+      phone: contact.phone || '',
+      language: contact.language || 'en',
+      isSubscribed: contact.is_subscribed ?? true,
+      unsubscribedAt: contact.unsubscribed_at,
+      createdAt: contact.created_at,
+      updatedAt: contact.updated_at
+    };
+    console.log("Transformed to:", transformed);
+    return transformed;
+  };
+
   const { data: contactsResponse, isLoading } = useQuery<{
     results: Contact[];
     count: number;
@@ -65,6 +85,15 @@ export default function Contacts() {
     previous: string | null;
   }>({
     queryKey: ["/api/contacts/", { page: currentPage, page_size: pageSize, search: debouncedSearchTerm }],
+    select: (data: any) => {
+      console.log("Raw API response:", data);
+      const transformed = {
+        ...data,
+        results: data.results ? data.results.map(transformContact) : []
+      };
+      console.log("Transformed data:", transformed);
+      return transformed;
+    }
   });
   
   const contacts = contactsResponse?.results || [];
@@ -82,7 +111,16 @@ export default function Contacts() {
 
   const createContactMutation = useMutation({
     mutationFn: async (contactData: any) => {
-      const response = await apiRequest("POST", "/api/contacts/", contactData);
+      // Transform camelCase to snake_case for Django API
+      const apiData = {
+        first_name: contactData.firstName || '',
+        last_name: contactData.lastName || '',
+        email: contactData.email,
+        phone: contactData.phone || '',
+        language: contactData.language || 'en',
+        is_subscribed: contactData.isSubscribed ?? true
+      };
+      const response = await apiRequest("POST", "/api/contacts/", apiData);
       return response.json();
     },
     onSuccess: () => {
@@ -90,7 +128,12 @@ export default function Contacts() {
         title: "Success",
         description: "Contact created successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
+      // Invalidate all contact queries regardless of pagination/search params
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === "/api/contacts/";
+        }
+      });
       setShowAddModal(false);
       setNewContact({
         firstName: "",
@@ -111,7 +154,16 @@ export default function Contacts() {
 
   const updateContactMutation = useMutation({
     mutationFn: async ({ contactId, contactData }: { contactId: string; contactData: any }) => {
-      const response = await apiRequest("PUT", `/api/contacts/${contactId}/`, contactData);
+      // Transform camelCase to snake_case for Django API
+      const apiData = {
+        first_name: contactData.firstName || '',
+        last_name: contactData.lastName || '',
+        email: contactData.email,
+        phone: contactData.phone || '',
+        language: contactData.language || 'en',
+        is_subscribed: contactData.isSubscribed ?? true
+      };
+      const response = await apiRequest("PUT", `/api/contacts/${contactId}/`, apiData);
       return response.json();
     },
     onSuccess: () => {
@@ -119,7 +171,12 @@ export default function Contacts() {
         title: "Success",
         description: "Contact updated successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
+      // Invalidate all contact queries regardless of pagination/search params
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === "/api/contacts/";
+        }
+      });
       setShowEditModal(false);
       setSelectedContact(null);
       setEditContact({
@@ -148,7 +205,12 @@ export default function Contacts() {
         title: "Success",
         description: "Contact deleted successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
+      // Invalidate all contact queries regardless of pagination/search params
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === "/api/contacts/";
+        }
+      });
     },
     onError: (error) => {
       toast({
@@ -171,7 +233,12 @@ export default function Contacts() {
         title: "Success",
         description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} deleted successfully!`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
+      // Invalidate all contact queries regardless of pagination/search params
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === "/api/contacts/";
+        }
+      });
       clearSelection();
     },
     onError: (error) => {
