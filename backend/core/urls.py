@@ -64,12 +64,10 @@ urlpatterns = [
     path('dashboard/stats', dashboard_stats, name='dashboard_stats'),
     
     # Direct API routes for Express proxy (proxy strips /api prefix)
-    path('domains/', include([
-        path('', DomainViewSet.as_view({'get': 'list', 'post': 'create'}), name='domain-list'),
-        path('<str:pk>/', DomainViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='domain-detail'),
-        path('<str:pk>/verify/', DomainViewSet.as_view({'post': 'verify'}), name='domain-verify'),
-        path('<str:pk>/generate-dns-records/', DomainViewSet.as_view({'post': 'generate_dns_records'}), name='domain-generate-dns'),
-    ])),
+    path('domains/', DomainViewSet.as_view({'get': 'list', 'post': 'create'}), name='domain-list'),
+    path('domains/<str:pk>/', DomainViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='domain-detail'),
+    path('domains/<str:pk>/verify/', DomainViewSet.as_view({'post': 'verify'}), name='domain-verify'),
+    path('domains/<str:pk>/generate-dns-records/', DomainViewSet.as_view({'post': 'generate_dns_records'}), name='domain-generate-dns'),
     
     # Signup flow endpoints (proxy strips /api prefix)
     path('signup/check-email', check_email, name='signup_check_email'),
