@@ -827,7 +827,7 @@ export default function Contacts() {
                       <div>
                         <Label className="text-sm font-medium text-muted-foreground">Joined</Label>
                         <p className="text-sm" data-testid="text-contact-details-joined">
-                          {new Date(selectedContact.createdAt).toLocaleDateString()}
+                          {selectedContact.createdAt ? new Date(selectedContact.createdAt).toLocaleDateString() : "Not available"}
                         </p>
                       </div>
                     </div>
