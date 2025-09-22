@@ -11,7 +11,8 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import (
     Organization, SubscriptionPlan, User, SubscriptionHistory, 
-    SubscriptionEventType, SubscriptionStatus, PlanFeatures, UsageTracking
+    SubscriptionEventType, SubscriptionStatus, PlanFeatures, UsageTracking,
+    SubscriptionNotification, NotificationChannel, NotificationType
 )
 from django.db.models import F
 from datetime import datetime
@@ -789,6 +790,11 @@ def stripe_webhook(request):
                 
                 logger.info(f"Subscription updated for org {org.id}")
                 
+                # Send notification if plan changed
+                if new_plan and new_plan != old_plan:
+                    from .notifications import send_subscription_changed_notification
+                    send_subscription_changed_notification(org, old_plan, new_plan)
+                
             except Organization.DoesNotExist:
                 logger.error(f"Organization not found for subscription {subscription_id}")
         
@@ -823,6 +829,10 @@ def stripe_webhook(request):
                 )
                 
                 logger.info(f"Subscription canceled for org {org.id}")
+                
+                # Send cancellation notification
+                from .notifications import send_cancellation_notification
+                send_cancellation_notification(org)
                 
             except Organization.DoesNotExist:
                 logger.error(f"Organization not found for subscription {subscription_id}")
@@ -860,6 +870,14 @@ def stripe_webhook(request):
                     
                     logger.info(f"Payment succeeded for org {org.id}")
                     
+                    # Send payment success notification
+                    from .notifications import send_payment_success_notification
+                    send_payment_success_notification(
+                        organization=org,
+                        amount=Decimal(invoice['amount_paid']) / 100,
+                        invoice_id=invoice['id']
+                    )
+                    
                 except Organization.DoesNotExist:
                     logger.error(f"Organization not found for subscription {subscription_id}")
         
@@ -895,7 +913,13 @@ def stripe_webhook(request):
                     
                     logger.warning(f"Payment failed for org {org.id}")
                     
-                    # TODO: Send payment failure notification email
+                    # Send payment failure notification
+                    from .notifications import send_payment_failed_notification
+                    send_payment_failed_notification(
+                        organization=org,
+                        reason=invoice.get('failure_message', 'Payment could not be processed'),
+                        amount=Decimal(invoice['amount_due']) / 100
+                    )
                     
                 except Organization.DoesNotExist:
                     logger.error(f"Organization not found for subscription {subscription_id}")
@@ -918,7 +942,12 @@ def stripe_webhook(request):
                 
                 logger.info(f"Trial ending soon for org {org.id}")
                 
-                # TODO: Send trial ending notification email
+                # Send trial ending notification
+                from .notifications import send_trial_expiry_reminder
+                trial_end = subscription.get('trial_end')
+                if trial_end:
+                    days_remaining = (datetime.fromtimestamp(trial_end) - datetime.now()).days
+                    send_trial_expiry_reminder(org, days_remaining)
                 
             except Organization.DoesNotExist:
                 logger.error(f"Organization not found for subscription {subscription_id}")
@@ -1222,3 +1251,235 @@ def get_subscription_details(organization):
         'billing_cycle': organization.billing_cycle,
         'cancel_at_period_end': organization.cancel_at_period_end,
     }
+
+
+# Notification API endpoints
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    """Get user's notification history"""
+    try:
+        user = request.user
+        if not user.organization:
+            return Response({
+                'error': 'User not associated with organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get query parameters
+        limit = int(request.GET.get('limit', 50))
+        offset = int(request.GET.get('offset', 0))
+        unread_only = request.GET.get('unread_only', 'false').lower() == 'true'
+        channel = request.GET.get('channel', None)  # 'email', 'in_app', or None for all
+        
+        # Build query
+        query = SubscriptionNotification.objects.filter(
+            organization=user.organization
+        )
+        
+        # Filter by channel if specified
+        if channel:
+            query = query.filter(channel=channel)
+        
+        # Filter by unread if requested
+        if unread_only:
+            query = query.filter(is_read=False)
+        
+        # Get total count before pagination
+        total_count = query.count()
+        unread_count = query.filter(is_read=False).count() if not unread_only else total_count
+        
+        # Apply pagination
+        notifications = query.order_by('-created_at')[offset:offset + limit]
+        
+        # Serialize notifications
+        notifications_data = []
+        for notification in notifications:
+            notifications_data.append({
+                'id': str(notification.id),
+                'type': notification.notification_type,
+                'channel': notification.channel,
+                'status': notification.status,
+                'is_read': notification.is_read,
+                'sent_at': notification.sent_at.isoformat() if notification.sent_at else None,
+                'read_at': notification.read_at.isoformat() if notification.read_at else None,
+                'created_at': notification.created_at.isoformat(),
+                'metadata': notification.metadata or {},
+                'error_message': notification.error_message,
+            })
+        
+        return Response({
+            'notifications': notifications_data,
+            'total_count': total_count,
+            'unread_count': unread_count,
+            'limit': limit,
+            'offset': offset,
+            'has_more': (offset + limit) < total_count
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching notifications: {str(e)}")
+        return Response({
+            'error': f'Error fetching notifications: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_notification_read(request):
+    """Mark notification(s) as read"""
+    try:
+        user = request.user
+        if not user.organization:
+            return Response({
+                'error': 'User not associated with organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        notification_ids = request.data.get('notification_ids', [])
+        mark_all = request.data.get('mark_all', False)
+        
+        if mark_all:
+            # Mark all unread notifications as read
+            notifications = SubscriptionNotification.objects.filter(
+                organization=user.organization,
+                is_read=False
+            )
+            updated_count = notifications.update(
+                is_read=True,
+                read_at=timezone.now()
+            )
+            
+            return Response({
+                'success': True,
+                'updated_count': updated_count,
+                'message': f'Marked {updated_count} notifications as read'
+            })
+        
+        elif notification_ids:
+            # Mark specific notifications as read
+            notifications = SubscriptionNotification.objects.filter(
+                id__in=notification_ids,
+                organization=user.organization,
+                is_read=False
+            )
+            
+            updated_count = 0
+            for notification in notifications:
+                notification.mark_as_read()
+                updated_count += 1
+            
+            return Response({
+                'success': True,
+                'updated_count': updated_count,
+                'message': f'Marked {updated_count} notifications as read'
+            })
+        
+        else:
+            return Response({
+                'error': 'No notification IDs provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    except Exception as e:
+        logger.error(f"Error marking notifications as read: {str(e)}")
+        return Response({
+            'error': f'Error marking notifications as read: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_notification_preferences(request):
+    """Update notification preferences for the organization"""
+    try:
+        user = request.user
+        if not user.organization:
+            return Response({
+                'error': 'User not associated with organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get preferences from request
+        preferences = request.data.get('preferences', {})
+        
+        # Valid preference keys
+        valid_keys = [
+            'email_trial_reminders',
+            'email_payment_notifications',
+            'email_subscription_changes',
+            'email_usage_alerts',
+            'in_app_notifications',
+            'webhook_notifications',
+            'notification_frequency',  # 'immediate', 'daily_digest', 'weekly_digest'
+        ]
+        
+        # Filter and validate preferences
+        filtered_prefs = {k: v for k, v in preferences.items() if k in valid_keys}
+        
+        # Store preferences in organization metadata
+        org = user.organization
+        if not hasattr(org, 'metadata') or org.metadata is None:
+            org.metadata = {}
+        
+        # Update notification preferences
+        if 'notification_preferences' not in org.metadata:
+            org.metadata['notification_preferences'] = {}
+        
+        org.metadata['notification_preferences'].update(filtered_prefs)
+        
+        # Save the organization
+        org.save(update_fields=['metadata', 'updated_at'])
+        
+        # Log the preference update
+        logger.info(f"Updated notification preferences for org {org.id}: {filtered_prefs}")
+        
+        return Response({
+            'success': True,
+            'preferences': org.metadata.get('notification_preferences', {}),
+            'message': 'Notification preferences updated successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating notification preferences: {str(e)}")
+        return Response({
+            'error': f'Error updating notification preferences: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notification_preferences(request):
+    """Get current notification preferences"""
+    try:
+        user = request.user
+        if not user.organization:
+            return Response({
+                'error': 'User not associated with organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        org = user.organization
+        
+        # Default preferences
+        default_prefs = {
+            'email_trial_reminders': True,
+            'email_payment_notifications': True,
+            'email_subscription_changes': True,
+            'email_usage_alerts': True,
+            'in_app_notifications': True,
+            'webhook_notifications': False,
+            'notification_frequency': 'immediate',
+        }
+        
+        # Get stored preferences or use defaults
+        if hasattr(org, 'metadata') and org.metadata:
+            stored_prefs = org.metadata.get('notification_preferences', {})
+            preferences = {**default_prefs, **stored_prefs}
+        else:
+            preferences = default_prefs
+        
+        return Response({
+            'preferences': preferences
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching notification preferences: {str(e)}")
+        return Response({
+            'error': f'Error fetching notification preferences: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -6,7 +6,11 @@ import logging
 import sendgrid
 from sendgrid.helpers.mail import Mail
 from django.conf import settings
-from .models import Domain, Campaign, CampaignRecipient, Contact, AnalyticsEvent
+from .models import (
+    Domain, Campaign, CampaignRecipient, Contact, AnalyticsEvent,
+    Organization, SubscriptionPlan, SubscriptionStatus
+)
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -279,4 +283,212 @@ def import_contacts_from_csv(organization_id, csv_data, user_id):
         
     except (Organization.DoesNotExist, User.DoesNotExist) as e:
         logger.error(f"Import failed: {str(e)}")
+        return {'error': str(e)}
+
+
+# Scheduled tasks for subscription notifications
+@shared_task
+def check_trial_expirations():
+    """Check for expiring trials and send reminders at 7 days and 1 day before expiry"""
+    from .notifications import send_trial_expiry_reminder
+    
+    try:
+        now = timezone.now()
+        
+        # Check for trials expiring in 7 days
+        seven_days_from_now = now + timedelta(days=7)
+        orgs_7_days = Organization.objects.filter(
+            subscription_plan=SubscriptionPlan.FREE_TRIAL,
+            trial_ends_at__date=seven_days_from_now.date(),
+            is_subscription_active=True
+        )
+        
+        for org in orgs_7_days:
+            try:
+                send_trial_expiry_reminder(org, 7)
+                logger.info(f"Sent 7-day trial expiry reminder to org {org.id}")
+            except Exception as e:
+                logger.error(f"Failed to send 7-day reminder to org {org.id}: {str(e)}")
+        
+        # Check for trials expiring tomorrow
+        tomorrow = now + timedelta(days=1)
+        orgs_1_day = Organization.objects.filter(
+            subscription_plan=SubscriptionPlan.FREE_TRIAL,
+            trial_ends_at__date=tomorrow.date(),
+            is_subscription_active=True
+        )
+        
+        for org in orgs_1_day:
+            try:
+                send_trial_expiry_reminder(org, 1)
+                logger.info(f"Sent 1-day trial expiry reminder to org {org.id}")
+            except Exception as e:
+                logger.error(f"Failed to send 1-day reminder to org {org.id}: {str(e)}")
+        
+        # Check for expired trials
+        expired_orgs = Organization.objects.filter(
+            subscription_plan=SubscriptionPlan.FREE_TRIAL,
+            trial_ends_at__lt=now,
+            is_subscription_active=True
+        )
+        
+        for org in expired_orgs:
+            try:
+                # Mark subscription as inactive
+                org.is_subscription_active = False
+                org.subscription_status = SubscriptionStatus.CANCELED
+                org.save()
+                
+                # Send trial ended notification
+                from .notifications import send_cancellation_notification
+                send_cancellation_notification(org)
+                logger.info(f"Marked trial as expired for org {org.id}")
+            except Exception as e:
+                logger.error(f"Failed to process expired trial for org {org.id}: {str(e)}")
+        
+        return {
+            '7_days_reminders': orgs_7_days.count(),
+            '1_day_reminders': orgs_1_day.count(),
+            'expired_trials': expired_orgs.count()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in check_trial_expirations: {str(e)}")
+        return {'error': str(e)}
+
+
+@shared_task
+def check_subscription_expirations():
+    """Check for expiring subscriptions and send reminders at 3 days and 1 day before expiry"""
+    from .notifications import send_subscription_expiry_reminder
+    
+    try:
+        now = timezone.now()
+        
+        # Check for subscriptions expiring in 3 days
+        three_days_from_now = now + timedelta(days=3)
+        orgs_3_days = Organization.objects.filter(
+            subscription_ends_at__date=three_days_from_now.date(),
+            is_subscription_active=True,
+            cancel_at_period_end=True
+        ).exclude(subscription_plan=SubscriptionPlan.FREE_TRIAL)
+        
+        for org in orgs_3_days:
+            try:
+                send_subscription_expiry_reminder(org, 3)
+                logger.info(f"Sent 3-day subscription expiry reminder to org {org.id}")
+            except Exception as e:
+                logger.error(f"Failed to send 3-day reminder to org {org.id}: {str(e)}")
+        
+        # Check for subscriptions expiring tomorrow
+        tomorrow = now + timedelta(days=1)
+        orgs_1_day = Organization.objects.filter(
+            subscription_ends_at__date=tomorrow.date(),
+            is_subscription_active=True,
+            cancel_at_period_end=True
+        ).exclude(subscription_plan=SubscriptionPlan.FREE_TRIAL)
+        
+        for org in orgs_1_day:
+            try:
+                send_subscription_expiry_reminder(org, 1)
+                logger.info(f"Sent 1-day subscription expiry reminder to org {org.id}")
+            except Exception as e:
+                logger.error(f"Failed to send 1-day reminder to org {org.id}: {str(e)}")
+        
+        # Check for expired subscriptions
+        expired_orgs = Organization.objects.filter(
+            subscription_ends_at__lt=now,
+            is_subscription_active=True
+        ).exclude(subscription_plan=SubscriptionPlan.FREE_TRIAL)
+        
+        for org in expired_orgs:
+            try:
+                # Mark subscription as inactive
+                org.is_subscription_active = False
+                org.subscription_status = SubscriptionStatus.CANCELED
+                org.save()
+                logger.info(f"Marked subscription as expired for org {org.id}")
+            except Exception as e:
+                logger.error(f"Failed to process expired subscription for org {org.id}: {str(e)}")
+        
+        return {
+            '3_days_reminders': orgs_3_days.count(),
+            '1_day_reminders': orgs_1_day.count(),
+            'expired_subscriptions': expired_orgs.count()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in check_subscription_expirations: {str(e)}")
+        return {'error': str(e)}
+
+
+@shared_task
+def send_usage_limit_warnings():
+    """Send warnings when organizations are approaching their usage limits"""
+    from .notifications import create_notification
+    from .models import NotificationType, NotificationChannel
+    
+    try:
+        # Check organizations approaching contact limits (90% threshold)
+        orgs = Organization.objects.filter(
+            is_subscription_active=True
+        )
+        
+        warnings_sent = 0
+        
+        for org in orgs:
+            try:
+                # Check contacts limit
+                contact_count = org.contacts.count()
+                contact_limit = org.contacts_limit
+                
+                if contact_limit > 0:
+                    usage_percentage = (contact_count / contact_limit) * 100
+                    
+                    if usage_percentage >= 90 and usage_percentage < 100:
+                        # Send warning notification
+                        create_notification(
+                            organization=org,
+                            notification_type=NotificationType.LIMIT_WARNING,
+                            channel=NotificationChannel.IN_APP,
+                            metadata={
+                                'resource': 'contacts',
+                                'current': contact_count,
+                                'limit': contact_limit,
+                                'percentage': usage_percentage
+                            }
+                        )
+                        warnings_sent += 1
+                        logger.info(f"Sent contact limit warning to org {org.id}")
+                
+                # Check campaigns limit
+                campaign_count = org.campaigns.count()
+                campaign_limit = org.campaigns_limit
+                
+                if campaign_limit > 0:
+                    usage_percentage = (campaign_count / campaign_limit) * 100
+                    
+                    if usage_percentage >= 90 and usage_percentage < 100:
+                        # Send warning notification
+                        create_notification(
+                            organization=org,
+                            notification_type=NotificationType.LIMIT_WARNING,
+                            channel=NotificationChannel.IN_APP,
+                            metadata={
+                                'resource': 'campaigns',
+                                'current': campaign_count,
+                                'limit': campaign_limit,
+                                'percentage': usage_percentage
+                            }
+                        )
+                        warnings_sent += 1
+                        logger.info(f"Sent campaign limit warning to org {org.id}")
+                        
+            except Exception as e:
+                logger.error(f"Failed to check limits for org {org.id}: {str(e)}")
+        
+        return {'warnings_sent': warnings_sent}
+        
+    except Exception as e:
+        logger.error(f"Error in send_usage_limit_warnings: {str(e)}")
         return {'error': str(e)}

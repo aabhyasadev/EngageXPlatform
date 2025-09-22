@@ -30,7 +30,11 @@ from .subscription_views import (
     create_subscription,
     cancel_subscription,
     stripe_webhook,
-    check_subscription_access
+    check_subscription_access,
+    get_notifications,
+    mark_notification_read,
+    update_notification_preferences,
+    get_notification_preferences
 )
 
 def health_check(request):
@@ -96,6 +100,12 @@ urlpatterns = [
     path('subscription/cancel', cancel_subscription, name='cancel_subscription'),
     path('subscription/check-access', check_subscription_access, name='check_subscription_access'),
     path('subscription/webhook', stripe_webhook, name='stripe_webhook'),
+    
+    # Notification endpoints
+    path('subscription/notifications', get_notifications, name='get_notifications'),
+    path('subscription/mark-notification-read', mark_notification_read, name='mark_notification_read'),
+    path('subscription/notification-preferences', update_notification_preferences, name='update_notification_preferences'),
+    path('subscription/get-notification-preferences', get_notification_preferences, name='get_notification_preferences'),
     
     # Standard DRF routes (Express proxy strips /api prefix)
     path('', include(router.urls)),

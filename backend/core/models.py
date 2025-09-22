@@ -143,6 +143,7 @@ class Organization(models.Model):
     industry = models.CharField(max_length=100, null=True, blank=True)
     employees_range = models.CharField(max_length=50, null=True, blank=True)
     contacts_range = models.CharField(max_length=50, null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)  # Store preferences, settings, etc.
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -627,6 +628,13 @@ class SubscriptionNotification(models.Model):
         on_delete=models.CASCADE,
         related_name='subscription_notifications'
     )
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
     notification_type = models.CharField(
         max_length=30,
         choices=NotificationType.choices
@@ -640,9 +648,14 @@ class SubscriptionNotification(models.Model):
         choices=NotificationStatus.choices,
         default=NotificationStatus.PENDING
     )
+    is_read = models.BooleanField(default=False)
     sent_at = models.DateTimeField(null=True, blank=True)
-    metadata = models.JSONField(null=True, blank=True)  # Store email content, webhook payload, etc.
+    read_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(null=True, blank=True)  # Store email content, webhook payload, template info, etc.
+    error_message = models.TextField(null=True, blank=True)
+    delivery_attempts = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'subscription_notifications'
@@ -650,10 +663,19 @@ class SubscriptionNotification(models.Model):
         indexes = [
             models.Index(fields=['organization', 'notification_type', '-created_at']),
             models.Index(fields=['status', 'channel']),
+            models.Index(fields=['user', 'is_read', '-created_at']),
+            models.Index(fields=['organization', 'is_read']),
         ]
 
     def __str__(self):
         return f"{self.organization.name} - {self.notification_type} - {self.status}"
+    
+    def mark_as_read(self):
+        """Mark the notification as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at', 'updated_at'])
 
 
 class EmailOTP(models.Model):

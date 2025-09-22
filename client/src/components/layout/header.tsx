@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export default function Header() {
   const [location] = useLocation();
@@ -40,6 +41,7 @@ export default function Header() {
           <p className="text-sm text-muted-foreground">{getPageDescription()}</p>
         </div>
         <div className="flex items-center space-x-4">
+          <NotificationDropdown />
           {location === "/" && (
             <>
               <Button data-testid="button-header-new-campaign">

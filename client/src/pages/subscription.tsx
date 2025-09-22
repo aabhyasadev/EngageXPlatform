@@ -21,6 +21,14 @@ import PlanCard from '@/components/subscription/PlanCard';
 import BillingHistory from '@/components/subscription/BillingHistory';
 import PaymentMethod from '@/components/subscription/PaymentMethod';
 
+// Format price from cents to currency display
+const formatPrice = (cents: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100);
+};
+
 export default function SubscriptionPage() {
   const { toast } = useToast();
   const [showYearly, setShowYearly] = useState(false);
