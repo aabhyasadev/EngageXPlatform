@@ -73,16 +73,30 @@ export default function SignInPage() {
 
   const forgotAccountForm = useForm({
     resolver: zodResolver(forgotAccountSchema),
-    defaultValues: { email: "" }
+    defaultValues: { email: "" },
+    mode: "onChange" // Enable real-time validation
   });
 
-  // Ref for direct DOM access to email input (for test compatibility)
-  const emailInputRef = useRef<HTMLInputElement>(null);
 
   // Reset error when changing steps
   useEffect(() => {
     setError("");
   }, [currentStep, showForgotAccount]);
+
+  // Reset forgot account form only when opening to ensure fresh user input
+  const [forgotAccountInitialized, setForgotAccountInitialized] = useState(false);
+  
+  useEffect(() => {
+    if (showForgotAccount && !forgotAccountInitialized) {
+      // Clear form completely when first opening forgot account
+      forgotAccountForm.reset({ email: "" });
+      setError("");
+      setForgotAccountInitialized(true);
+    } else if (!showForgotAccount) {
+      // Reset the initialization flag when closing the modal
+      setForgotAccountInitialized(false);
+    }
+  }, [showForgotAccount, forgotAccountForm, forgotAccountInitialized]);
 
   // Pre-fill username if available from recent signup
   useEffect(() => {
@@ -175,88 +189,53 @@ export default function SignInPage() {
     }
   };
 
-  // Handle form submission with robust email detection
-  const handleForgotAccountSubmit = async () => {
+  // Handle forgot account form submission with user input
+  const handleForgotAccountSubmit = async (values: z.infer<typeof forgotAccountSchema>) => {
     setIsLoading(true);
     setError("");
     
-    // Get email value from multiple sources for maximum compatibility
-    let emailValue = forgotAccountForm.getValues("email");
-    
-    // Fallback to direct DOM access if React state is empty (for automated tests)
-    if ((!emailValue || emailValue.trim() === "") && emailInputRef.current) {
-      emailValue = emailInputRef.current.value;
-      console.log("Debug: Using DOM value fallback:", emailValue);
-      
-      // Update React Hook Form state with DOM value
-      forgotAccountForm.setValue("email", emailValue);
-    }
-    
-    console.log("Debug: Form submission with email:", emailValue);
-    console.log("Debug: Form getValues:", forgotAccountForm.getValues());
-    
-    if (!emailValue || emailValue.trim() === "") {
-      console.log("Debug: Email validation failed - empty value");
-      setError("Email is required");
-      setIsLoading(false);
-      return;
-    }
-    
     try {
-      console.log("Debug: Sending request with email:", emailValue);
-      const response = await apiRequest("POST", "/api/signin/forgot-account", { email: emailValue });
+      const response = await apiRequest("POST", "/api/signin/forgot-account", { email: values.email });
       
-      console.log("Debug: Request successful");
-      toast({ 
-        title: "Organization ID sent", 
-        description: `We've sent your Organization ID to ${emailValue}` 
-      });
-      setShowForgotAccount(false);
-      forgotAccountForm.reset();
+      if (response.ok) {
+        toast({ 
+          title: "Organization ID sent", 
+          description: `We've sent your Organization ID to ${values.email}` 
+        });
+        setShowForgotAccount(false);
+        forgotAccountForm.reset();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to send Organization ID");
+      }
     } catch (err: any) {
-      console.log("Debug: Request error:", err);
-      
-      // Try to extract error message from the API response
+      // Extract server error message if available
       let errorMessage = "Network error. Please check your connection and try again.";
       
-      if (err && typeof err === 'object') {
-        // Check if it's an API error with a specific message
-        if (err.message && err.message.includes('400:')) {
+      if (err && err.message) {
+        // Check for API error format like "400: {\"error\":\"message\"}"
+        const apiErrorMatch = err.message.match(/\d+:\s*(.+)$/);
+        if (apiErrorMatch) {
           try {
-            // Extract JSON from error message like "400: {\"error\":\"No account found with this email.\"}"
-            const jsonMatch = err.message.match(/400: (.+)$/);
-            if (jsonMatch) {
-              const errorData = JSON.parse(jsonMatch[1]);
-              errorMessage = errorData.error || "Failed to send Organization ID";
+            const errorData = JSON.parse(apiErrorMatch[1]);
+            if (errorData.error) {
+              errorMessage = errorData.error;
             }
-          } catch (parseErr) {
-            console.log("Debug: Failed to parse error JSON:", parseErr);
+          } catch (parseError) {
+            // If parsing fails, use generic error
           }
-        } else if (err.error) {
-          errorMessage = err.error;
-        } else if (err.message) {
-          errorMessage = err.message;
         }
       }
       
-      console.log("Debug: Setting error message:", errorMessage);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Forgot Account: Send Organization ID via email
+  // Forgot Account: Send Organization ID via email - accepts direct user input
   const onForgotAccountSubmit = async (values: z.infer<typeof forgotAccountSchema>) => {
-    console.log("Debug: React Hook Form submit with values:", values);
-    
-    // If React Hook Form has the email, use normal flow
-    if (values.email && values.email.trim() !== "") {
-      return handleForgotAccountSubmit();
-    }
-    
-    // Otherwise, use the robust handler that checks DOM values
-    return handleForgotAccountSubmit();
+    return handleForgotAccountSubmit(values);
   };
 
   const goBackToStep1 = () => {
@@ -306,15 +285,17 @@ export default function SignInPage() {
                               placeholder="your.email@company.com"
                               className="pl-10"
                               type="email"
-                              {...field}
-                              ref={emailInputRef}
+                              value={field.value || ""}
                               onChange={(e) => {
-                                field.onChange(e);
+                                // Use form setValue directly to ensure state update
+                                forgotAccountForm.setValue("email", e.target.value);
                                 // Clear any existing error when user starts typing
                                 if (error) setError("");
                               }}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
                               disabled={isLoading}
-                              readOnly={false}
                               autoComplete="email"
                             />
                           </div>
@@ -329,28 +310,9 @@ export default function SignInPage() {
                   
                   <Button 
                     data-testid="button-send-org-id"
-                    type="button"
+                    type="submit"
                     className="w-full" 
                     disabled={isLoading}
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      
-                      // Always sync DOM value to form state (including empty values)
-                      const domEmail = emailInputRef.current?.value || "";
-                      forgotAccountForm.setValue("email", domEmail);
-                      
-                      // Wait for state to settle
-                      await new Promise(resolve => setTimeout(resolve, 50));
-                      
-                      // Trigger form validation manually
-                      const isValid = await forgotAccountForm.trigger("email");
-                      
-                      if (isValid) {
-                        // Only submit if validation passes
-                        await handleForgotAccountSubmit();
-                      }
-                      // If validation fails, React Hook Form will automatically show errors
-                    }}
                   >
                     {isLoading ? "Sending..." : "Send Organization ID"}
                   </Button>
