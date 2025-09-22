@@ -63,6 +63,14 @@ urlpatterns = [
     path('auth/csrf', get_csrf_token, name='csrf_token'),
     path('dashboard/stats', dashboard_stats, name='dashboard_stats'),
     
+    # Direct API routes for Express proxy (proxy strips /api prefix)
+    path('domains/', include([
+        path('', DomainViewSet.as_view({'get': 'list', 'post': 'create'}), name='domain-list'),
+        path('<str:pk>/', DomainViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='domain-detail'),
+        path('<str:pk>/verify/', DomainViewSet.as_view({'post': 'verify'}), name='domain-verify'),
+        path('<str:pk>/generate-dns-records/', DomainViewSet.as_view({'post': 'generate_dns_records'}), name='domain-generate-dns'),
+    ])),
+    
     # Signup flow endpoints (proxy strips /api prefix)
     path('signup/check-email', check_email, name='signup_check_email'),
     path('signup/basic-info', basic_info, name='signup_basic_info'),
