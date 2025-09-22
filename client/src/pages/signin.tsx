@@ -306,14 +306,16 @@ export default function SignInPage() {
                               placeholder="your.email@company.com"
                               className="pl-10"
                               type="email"
-                              value={field.value || ""}
-                              name={field.name}
+                              {...field}
                               ref={emailInputRef}
                               onChange={(e) => {
-                                field.onChange(e.target.value);
+                                field.onChange(e);
                                 // Clear any existing error when user starts typing
                                 if (error) setError("");
                               }}
+                              disabled={isLoading}
+                              readOnly={false}
+                              autoComplete="email"
                             />
                           </div>
                         </FormControl>
