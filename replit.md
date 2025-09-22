@@ -40,6 +40,22 @@ Preferred communication style: Simple, everyday language.
 - **Role-based Access**: Admin, campaign manager, analyst, and editor roles
 - **Organization Isolation**: Secure multi-tenant data access patterns
 
+### Subscription & Billing System
+- **Stripe Payment Integration**: Complete payment processing with checkout, billing portal, and webhook handling
+- **4-Tier Subscription Model**: Free Trial (14 days), Basic ($19/mo), Pro ($49/mo), Premium ($99/mo)
+- **Monthly/Yearly Billing**: Flexible billing cycles with automatic discounts for annual plans
+- **Access Control Middleware**: Enforces feature restrictions and usage limits based on subscription tier
+- **Usage Tracking**: Monitors contacts, campaigns, and emails sent against plan limits
+- **Billing History**: Invoice management with PDF downloads and payment method tracking
+- **Webhook Security**: Stripe signature verification with database-backed idempotency
+
+### Notification System
+- **Multi-channel Delivery**: Email (SendGrid) and in-app notifications
+- **Subscription Events**: Trial expiry reminders (7 and 1 day), payment confirmations, plan changes
+- **Usage Alerts**: Automatic warnings when approaching plan limits (90% threshold)
+- **Scheduled Tasks**: Lightweight Python scheduler for automated reminders (no Celery required)
+- **Notification Center**: In-app dropdown with unread badge and mark-as-read functionality
+
 ### Email Infrastructure
 - **SendGrid Integration**: Transactional and bulk email delivery service
 - **Domain Verification**: DNS record validation for sender reputation
