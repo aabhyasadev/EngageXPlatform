@@ -15,13 +15,13 @@ export default function Dashboard() {
   });
 
   const { data: campaigns, isLoading: campaignsLoading, error: campaignsError } = useQuery({
-    queryKey: ["/api/campaigns"],
+    queryKey: ["/api/campaigns/"],
     retry: 3,
     staleTime: 30000,
   });
 
   const { data: domains, error: domainsError } = useQuery({
-    queryKey: ["/api/domains"],
+    queryKey: ["/api/domains/"],
     retry: 3,
     staleTime: 30000,
   });
