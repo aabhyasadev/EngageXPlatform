@@ -71,7 +71,7 @@ class ContactSerializer(serializers.ModelSerializer):
             'phone', 'language', 'is_subscribed', 'unsubscribed_at',
             'created_at', 'updated_at', 'full_name', 'groups'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'organization', 'created_at', 'updated_at']
 
     def get_groups(self, obj):
         groups = ContactGroup.objects.filter(memberships__contact=obj)
