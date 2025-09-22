@@ -135,6 +135,7 @@ class Organization(models.Model):
     stripe_customer_id = models.CharField(max_length=255, null=True, blank=True)
     stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
     stripe_price_id = models.CharField(max_length=255, null=True, blank=True)
+    stripe_payment_method_id = models.CharField(max_length=255, null=True, blank=True)
     contacts_limit = models.IntegerField(default=1000)
     campaigns_limit = models.IntegerField(default=10)
     emails_per_month_limit = models.IntegerField(default=10000)
@@ -150,6 +151,58 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class SubscriptionHistory(models.Model):
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='subscription_history'
+    )
+    event_type = models.CharField(
+        max_length=30,
+        choices=SubscriptionEventType.choices
+    )
+    stripe_event_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    old_plan = models.CharField(
+        max_length=30,
+        choices=SubscriptionPlan.choices,
+        null=True,
+        blank=True
+    )
+    new_plan = models.CharField(
+        max_length=30,
+        choices=SubscriptionPlan.choices,
+        null=True,
+        blank=True
+    )
+    old_status = models.CharField(
+        max_length=20,
+        choices=SubscriptionStatus.choices,
+        null=True,
+        blank=True
+    )
+    new_status = models.CharField(
+        max_length=20,
+        choices=SubscriptionStatus.choices,
+        null=True,
+        blank=True
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    currency = models.CharField(max_length=3, default='USD')
+    payment_method = models.CharField(max_length=50, null=True, blank=True)
+    invoice_id = models.CharField(max_length=255, null=True, blank=True)
+    failure_reason = models.TextField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'subscription_history'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.organization.name} - {self.event_type} - {self.created_at}"
 
 
 class CustomUserManager(BaseUserManager):

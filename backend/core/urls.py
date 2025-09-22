@@ -22,7 +22,11 @@ from .signin_views import (
 )
 from .subscription_views import (
     get_subscription_plans,
+    get_plans_detailed,
     get_current_subscription,
+    create_checkout_session,
+    manage_subscription,
+    create_billing_portal_session,
     create_subscription,
     cancel_subscription,
     stripe_webhook,
@@ -83,7 +87,11 @@ urlpatterns = [
     
     # Subscription management endpoints (proxy strips /api prefix)
     path('subscription/plans', get_subscription_plans, name='subscription_plans'),
+    path('subscription/plans-detailed', get_plans_detailed, name='plans_detailed'),
     path('subscription/current', get_current_subscription, name='current_subscription'),
+    path('subscription/create-checkout-session', create_checkout_session, name='create_checkout_session'),
+    path('subscription/manage', manage_subscription, name='manage_subscription'),
+    path('subscription/billing-portal', create_billing_portal_session, name='create_billing_portal'),
     path('subscription/create', create_subscription, name='create_subscription'),
     path('subscription/cancel', cancel_subscription, name='cancel_subscription'),
     path('subscription/check-access', check_subscription_access, name='check_subscription_access'),
