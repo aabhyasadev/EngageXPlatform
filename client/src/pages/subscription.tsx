@@ -45,10 +45,10 @@ export default function SubscriptionPage() {
     queryKey: ['/api/subscription/current'],
   });
 
-  // Fetch billing history (will create this endpoint later)
+  // Fetch billing history
   const { data: billingHistory, isLoading: billingLoading } = useQuery({
     queryKey: ['/api/subscription/billing-history'],
-    enabled: false, // Disable for now as endpoint doesn't exist
+    enabled: true, // Enable to fetch billing history
   });
 
   // Create checkout session for new subscriptions
@@ -339,7 +339,7 @@ export default function SubscriptionPage() {
           {/* Billing Tab */}
           <TabsContent value="billing" className="space-y-6">
             <BillingHistory
-              payments={billingHistory?.payments}
+              payments={billingHistory?.items}
               isLoading={billingLoading}
               onDownloadInvoice={handleDownloadInvoice}
             />

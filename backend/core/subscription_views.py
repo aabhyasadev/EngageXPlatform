@@ -214,6 +214,126 @@ def get_current_subscription(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_billing_history(request):
+    """Get billing history from both Stripe and local SubscriptionHistory"""
+    try:
+        user = request.user
+        if not user.organization:
+            return Response({
+                'error': 'User not associated with organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        org = user.organization
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 10))
+        
+        billing_items = []
+        
+        # Fetch from Stripe if customer ID exists
+        if org.stripe_customer_id:
+            try:
+                # Fetch invoices from Stripe
+                stripe_invoices = stripe.Invoice.list(
+                    customer=org.stripe_customer_id,
+                    limit=100,  # Get more to ensure we have enough data
+                    expand=['data.payment_intent', 'data.charge']
+                )
+                
+                for invoice in stripe_invoices.data:
+                    payment_method_details = None
+                    if invoice.payment_intent and hasattr(invoice.payment_intent, 'payment_method_details'):
+                        payment_method_details = invoice.payment_intent.payment_method_details
+                    elif invoice.charge and hasattr(invoice.charge, 'payment_method_details'):
+                        payment_method_details = invoice.charge.payment_method_details
+                    
+                    billing_item = {
+                        'id': invoice.id,
+                        'date': datetime.fromtimestamp(invoice.created).isoformat(),
+                        'amount': invoice.amount_paid / 100,  # Convert from cents to dollars
+                        'status': 'succeeded' if invoice.paid else 'failed',
+                        'description': invoice.description or f"{invoice.lines.data[0].description if invoice.lines.data else 'Subscription payment'}",
+                        'invoice_url': invoice.hosted_invoice_url,
+                        'invoice_pdf': invoice.invoice_pdf,
+                        'payment_method': None
+                    }
+                    
+                    # Extract payment method info
+                    if payment_method_details:
+                        if hasattr(payment_method_details, 'card'):
+                            billing_item['payment_method'] = {
+                                'brand': payment_method_details.card.brand,
+                                'last4': payment_method_details.card.last4
+                            }
+                        elif hasattr(payment_method_details, 'type'):
+                            billing_item['payment_method'] = {
+                                'brand': payment_method_details.type,
+                                'last4': '****'
+                            }
+                    
+                    billing_items.append(billing_item)
+                    
+            except Exception as stripe_error:
+                logger.warning(f"Error fetching Stripe invoices: {str(stripe_error)}")
+        
+        # Fetch from local SubscriptionHistory
+        local_history = SubscriptionHistory.objects.filter(
+            organization=org,
+            event_type__in=[
+                SubscriptionEventType.PAYMENT_SUCCEEDED,
+                SubscriptionEventType.PAYMENT_FAILED,
+                SubscriptionEventType.RENEWED
+            ]
+        ).order_by('-created_at')
+        
+        # Add local history items that aren't already in Stripe results
+        stripe_invoice_ids = {item['id'] for item in billing_items}
+        
+        for history_item in local_history:
+            if history_item.invoice_id and history_item.invoice_id not in stripe_invoice_ids:
+                billing_item = {
+                    'id': history_item.invoice_id or str(history_item.id),
+                    'date': history_item.created_at.isoformat(),
+                    'amount': float(history_item.amount) if history_item.amount else 0,
+                    'status': 'succeeded' if history_item.event_type == SubscriptionEventType.PAYMENT_SUCCEEDED else 'failed',
+                    'description': f"{history_item.new_plan.replace('_', ' ').title() if history_item.new_plan else 'Subscription payment'}",
+                    'invoice_url': history_item.invoice_pdf_url,
+                    'invoice_pdf': history_item.invoice_pdf_url,
+                    'payment_method': None
+                }
+                
+                if history_item.payment_method_brand and history_item.payment_method_last4:
+                    billing_item['payment_method'] = {
+                        'brand': history_item.payment_method_brand,
+                        'last4': history_item.payment_method_last4
+                    }
+                
+                billing_items.append(billing_item)
+        
+        # Sort by date (newest first)
+        billing_items.sort(key=lambda x: x['date'], reverse=True)
+        
+        # Apply pagination
+        start = (page - 1) * limit
+        end = start + limit
+        paginated_items = billing_items[start:end]
+        
+        return Response({
+            'items': paginated_items,
+            'total': len(billing_items),
+            'page': page,
+            'limit': limit,
+            'has_more': end < len(billing_items)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error retrieving billing history: {str(e)}")
+        return Response({
+            'error': f'Error retrieving billing history: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_checkout_session(request):
@@ -856,17 +976,34 @@ def stripe_webhook(request):
                     
                     org.save()
                     
-                    # Log subscription history
-                    SubscriptionHistory.objects.create(
+                    # Log subscription history with invoice details
+                    history_entry = SubscriptionHistory.objects.create(
                         organization=org,
                         event_type=SubscriptionEventType.PAYMENT_SUCCEEDED,
                         stripe_event_id=event_id,
                         amount=Decimal(invoice['amount_paid']) / 100,
                         currency=invoice.get('currency', 'USD').upper(),
                         invoice_id=invoice['id'],
+                        invoice_pdf_url=invoice.get('invoice_pdf'),
+                        receipt_number=invoice.get('receipt_number') or invoice.get('number'),
                         payment_method=invoice.get('payment_method_types', ['card'])[0] if invoice.get('payment_method_types') else 'card',
                         metadata=invoice
                     )
+                    
+                    # Try to get payment method details
+                    if invoice.get('payment_intent'):
+                        try:
+                            payment_intent = stripe.PaymentIntent.retrieve(
+                                invoice['payment_intent'], 
+                                expand=['payment_method']
+                            )
+                            if payment_intent.payment_method and hasattr(payment_intent.payment_method, 'card'):
+                                card = payment_intent.payment_method.card
+                                history_entry.payment_method_brand = card.brand
+                                history_entry.payment_method_last4 = card.last4
+                                history_entry.save()
+                        except Exception as e:
+                            logger.warning(f"Could not retrieve payment method details: {str(e)}")
                     
                     logger.info(f"Payment succeeded for org {org.id}")
                     
