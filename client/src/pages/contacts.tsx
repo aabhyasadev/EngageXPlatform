@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Eye, Edit, Trash2 } from "lucide-react";
@@ -35,6 +36,8 @@ export default function Contacts() {
     phone: "",
     language: "en",
   });
+  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -136,6 +139,30 @@ export default function Contacts() {
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (contactIds: string[]) => {
+      const promises = contactIds.map(id => 
+        apiRequest("DELETE", `/api/contacts/${id}`)
+      );
+      await Promise.all(promises);
+    },
+    onSuccess: (_, contactIds) => {
+      toast({
+        title: "Success",
+        description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} deleted successfully!`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      clearSelection();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete contacts",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredContacts = contacts?.filter((contact) =>
     contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -144,6 +171,55 @@ export default function Contacts() {
   const handleViewDetails = (contact: Contact) => {
     setSelectedContact(contact);
     setShowDetailsModal(true);
+  };
+
+  // Bulk selection functions
+  const handleContactSelection = (contactId: string, checked: boolean) => {
+    const newSelection = new Set(selectedContactIds);
+    if (checked) {
+      newSelection.add(contactId);
+    } else {
+      newSelection.delete(contactId);
+    }
+    setSelectedContactIds(newSelection);
+    setShowBulkActions(newSelection.size > 0);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    const newSelection = new Set(selectedContactIds);
+    const filteredIds = filteredContacts.map(contact => contact.id);
+    
+    if (checked) {
+      // Add all filtered contact IDs to selection
+      filteredIds.forEach(id => newSelection.add(id));
+    } else {
+      // Remove all filtered contact IDs from selection
+      filteredIds.forEach(id => newSelection.delete(id));
+    }
+    
+    setSelectedContactIds(newSelection);
+    setShowBulkActions(newSelection.size > 0);
+  };
+
+  const clearSelection = () => {
+    setSelectedContactIds(new Set());
+    setShowBulkActions(false);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedContactIds.size === 0) return;
+    
+    if (window.confirm(`Are you sure you want to delete ${selectedContactIds.size} contact${selectedContactIds.size !== 1 ? 's' : ''}? This action cannot be undone.`)) {
+      bulkDeleteMutation.mutate(Array.from(selectedContactIds));
+    }
+  };
+
+  const handleBulkGroupAssignment = () => {
+    // For now, just show a toast - this will be implemented in task 5
+    toast({
+      title: "Bulk Group Assignment",
+      description: "This feature will be implemented in the next task.",
+    });
   };
 
   const handleEditContact = (contact: Contact) => {
@@ -295,10 +371,66 @@ export default function Contacts() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Bulk Actions Bar */}
+              {showBulkActions && (
+                <div className="mb-4 p-4 border border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <p className="text-sm font-medium text-blue-900 dark:text-blue-100" data-testid="text-bulk-selection-count">
+                        {selectedContactIds.size} contact{selectedContactIds.size !== 1 ? 's' : ''} selected
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearSelection}
+                        data-testid="button-clear-selection"
+                      >
+                        Clear selection
+                      </Button>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        disabled={bulkDeleteMutation.isPending}
+                        className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                        data-testid="button-bulk-delete"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        {bulkDeleteMutation.isPending ? "Deleting..." : "Delete selected"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBulkGroupAssignment}
+                        data-testid="button-bulk-assign-groups"
+                      >
+                        Assign to groups
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground w-8">
+                        <Checkbox
+                          checked={
+                            filteredContacts.length > 0 && filteredContacts.every(contact => selectedContactIds.has(contact.id))
+                              ? true
+                              : filteredContacts.some(contact => selectedContactIds.has(contact.id))
+                              ? "indeterminate"
+                              : false
+                          }
+                          onCheckedChange={handleSelectAll}
+                          data-testid="checkbox-select-all"
+                          aria-label="Select all contacts"
+                        />
+                      </th>
                       <th className="text-left py-3 text-sm font-medium text-muted-foreground">Name</th>
                       <th className="text-left py-3 text-sm font-medium text-muted-foreground">Email</th>
                       <th className="text-left py-3 text-sm font-medium text-muted-foreground">Phone</th>
@@ -310,6 +442,14 @@ export default function Contacts() {
                   <tbody>
                     {filteredContacts.map((contact: any) => (
                       <tr key={contact.id} className="border-b border-border last:border-0">
+                        <td className="py-4">
+                          <Checkbox
+                            checked={selectedContactIds.has(contact.id)}
+                            onCheckedChange={(checked) => handleContactSelection(contact.id, checked)}
+                            data-testid={`checkbox-contact-${contact.id}`}
+                            aria-label={`Select contact ${contact.firstName} ${contact.lastName}`}
+                          />
+                        </td>
                         <td className="py-4">
                           <div className="font-medium text-foreground" data-testid={`text-contact-name-${contact.id}`}>
                             {contact.firstName} {contact.lastName}
