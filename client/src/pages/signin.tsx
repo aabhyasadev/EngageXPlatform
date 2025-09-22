@@ -151,9 +151,9 @@ export default function SignInPage() {
           });
           setCurrentStep(3);
         } else {
-          // Login successful - redirect to dashboard
+          // Login successful - redirect to home
           toast({ title: "Login successful", description: "Welcome back!" });
-          navigate("/dashboard");
+          navigate("/");
         }
       } else {
         const error = await response.json();
@@ -177,7 +177,7 @@ export default function SignInPage() {
       if (response.ok) {
         const data = await response.json();
         toast({ title: "Login successful", description: "Welcome back!" });
-        navigate("/dashboard");
+        navigate("/");
       } else {
         const error = await response.json();
         setError(error.error || "Verification failed");
