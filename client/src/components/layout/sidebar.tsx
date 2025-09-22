@@ -40,18 +40,18 @@ export default function Sidebar() {
       
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => (
-          <Link key={item.name} href={item.href}>
-            <a 
-              className={`flex items-center space-x-3 px-3 py-2 rounded-md font-medium transition-colors ${
-                isActive(item.href)
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-              data-testid={`link-${item.name.toLowerCase()}`}
-            >
-              <i className={`${item.icon} w-4`}></i>
-              <span>{item.name}</span>
-            </a>
+          <Link 
+            key={item.name} 
+            href={item.href}
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md font-medium transition-colors ${
+              isActive(item.href)
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            }`}
+            data-testid={`link-${item.name.toLowerCase()}`}
+          >
+            <i className={`${item.icon} w-4`}></i>
+            <span>{item.name}</span>
           </Link>
         ))}
       </nav>
