@@ -38,6 +38,8 @@ export default function Contacts() {
   });
   const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
+  const [showBulkGroupModal, setShowBulkGroupModal] = useState(false);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -163,6 +165,33 @@ export default function Contacts() {
     },
   });
 
+  const bulkGroupAssignmentMutation = useMutation({
+    mutationFn: async ({ groupIds, contactIds }: { groupIds: string[]; contactIds: string[] }) => {
+      const promises = groupIds.map(groupId => 
+        apiRequest("POST", `/api/contact-groups/${groupId}/add-contacts`, { contact_ids: contactIds })
+      );
+      await Promise.all(promises);
+    },
+    onSuccess: (_, { groupIds, contactIds }) => {
+      toast({
+        title: "Success",
+        description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} assigned to ${groupIds.length} group${groupIds.length !== 1 ? 's' : ''} successfully!`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups"] });
+      setShowBulkGroupModal(false);
+      setSelectedGroupIds(new Set());
+      clearSelection();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign contacts to groups",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredContacts = contacts?.filter((contact) =>
     contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -215,10 +244,26 @@ export default function Contacts() {
   };
 
   const handleBulkGroupAssignment = () => {
-    // For now, just show a toast - this will be implemented in task 5
-    toast({
-      title: "Bulk Group Assignment",
-      description: "This feature will be implemented in the next task.",
+    if (selectedContactIds.size === 0) return;
+    setShowBulkGroupModal(true);
+  };
+
+  const handleGroupSelection = (groupId: string, checked: boolean) => {
+    const newSelection = new Set(selectedGroupIds);
+    if (checked) {
+      newSelection.add(groupId);
+    } else {
+      newSelection.delete(groupId);
+    }
+    setSelectedGroupIds(newSelection);
+  };
+
+  const handleAssignContactsToGroups = () => {
+    if (selectedContactIds.size === 0 || selectedGroupIds.size === 0) return;
+    
+    bulkGroupAssignmentMutation.mutate({
+      groupIds: Array.from(selectedGroupIds),
+      contactIds: Array.from(selectedContactIds)
     });
   };
 
@@ -426,7 +471,7 @@ export default function Contacts() {
                               ? "indeterminate"
                               : false
                           }
-                          onCheckedChange={handleSelectAll}
+                          onCheckedChange={(checked) => handleSelectAll(checked === true)}
                           data-testid="checkbox-select-all"
                           aria-label="Select all contacts"
                         />
@@ -445,7 +490,7 @@ export default function Contacts() {
                         <td className="py-4">
                           <Checkbox
                             checked={selectedContactIds.has(contact.id)}
-                            onCheckedChange={(checked) => handleContactSelection(contact.id, checked)}
+                            onCheckedChange={(checked) => handleContactSelection(contact.id, checked === true)}
                             data-testid={`checkbox-contact-${contact.id}`}
                             aria-label={`Select contact ${contact.firstName} ${contact.lastName}`}
                           />
@@ -751,6 +796,72 @@ export default function Contacts() {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Bulk Group Assignment Modal */}
+          <Dialog open={showBulkGroupModal} onOpenChange={(open) => { setShowBulkGroupModal(open); if (!open) setSelectedGroupIds(new Set()); }}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Assign Contacts to Groups</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Select groups to assign {selectedContactIds.size} contact{selectedContactIds.size !== 1 ? 's' : ''} to:
+                </p>
+                
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {contactGroups && contactGroups.length > 0 ? (
+                    contactGroups.map((group: ContactGroup) => (
+                      <div key={group.id} className="flex items-center space-x-2 p-2 border border-border rounded">
+                        <Checkbox
+                          checked={selectedGroupIds.has(group.id)}
+                          onCheckedChange={(checked) => handleGroupSelection(group.id, checked === true)}
+                          data-testid={`checkbox-bulk-group-${group.id}`}
+                          aria-label={`Assign to ${group.name}`}
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm" data-testid={`text-group-name-${group.id}`}>
+                            {group.name}
+                          </p>
+                          {group.description && (
+                            <p className="text-xs text-muted-foreground" data-testid={`text-group-desc-${group.id}`}>
+                              {group.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4" data-testid="text-no-groups-available">
+                      No groups available. Create groups first to assign contacts.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4 border-t border-border">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowBulkGroupModal(false);
+                      setSelectedGroupIds(new Set());
+                    }}
+                    data-testid="button-cancel-bulk-assign"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleAssignContactsToGroups}
+                    disabled={selectedGroupIds.size === 0 || bulkGroupAssignmentMutation.isPending}
+                    data-testid="button-confirm-bulk-assign"
+                  >
+                    {bulkGroupAssignmentMutation.isPending 
+                      ? "Assigning..." 
+                      : `Assign to ${selectedGroupIds.size} group${selectedGroupIds.size !== 1 ? 's' : ''}`
+                    }
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
 
