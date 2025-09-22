@@ -210,6 +210,39 @@ class SubscriptionHistory(models.Model):
         return f"{self.organization.name} - {self.event_type} - {self.created_at}"
 
 
+class WebhookEventStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    PROCESSING = 'processing', 'Processing'
+    PROCESSED = 'processed', 'Processed'
+    FAILED = 'failed', 'Failed'
+
+
+class ProcessedWebhookEvent(models.Model):
+    """Track processed Stripe webhook events to ensure idempotency"""
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    event_id = models.CharField(max_length=255, unique=True, db_index=True)  # Stripe event ID
+    event_type = models.CharField(max_length=100)  # Stripe event type
+    status = models.CharField(
+        max_length=20,
+        choices=WebhookEventStatus.choices,
+        default=WebhookEventStatus.PENDING
+    )
+    processed_at = models.DateTimeField(auto_now_add=True)
+    error_message = models.TextField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)  # Store additional event data if needed
+    
+    class Meta:
+        db_table = 'processed_webhook_events'
+        indexes = [
+            models.Index(fields=['event_id']),
+            models.Index(fields=['processed_at']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.event_id} - {self.event_type} - {self.status}"
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:

@@ -12,9 +12,11 @@ from datetime import timedelta
 from .models import (
     Organization, SubscriptionPlan, User, SubscriptionHistory, 
     SubscriptionEventType, SubscriptionStatus, PlanFeatures, UsageTracking,
-    SubscriptionNotification, NotificationChannel, NotificationType
+    SubscriptionNotification, NotificationChannel, NotificationType,
+    ProcessedWebhookEvent, WebhookEventStatus
 )
 from django.db.models import F
+from django.db import transaction
 from datetime import datetime
 import json
 import logging
@@ -26,8 +28,7 @@ logger = logging.getLogger(__name__)
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# Store processed webhook events to prevent replay attacks
-processed_webhook_events = set()
+# Webhook events are now tracked in the database using ProcessedWebhookEvent model
 
 # Plan configuration with pricing and features
 PLAN_CONFIG = {
@@ -797,32 +798,84 @@ def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
-    try:
-        # Verify webhook signature
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError as e:
-        logger.error(f"Invalid webhook payload: {str(e)}")
-        return JsonResponse({'error': 'Invalid payload'}, status=400)
-    except stripe.error.SignatureVerificationError as e:
-        logger.error(f"Invalid webhook signature: {str(e)}")
-        return JsonResponse({'error': 'Invalid signature'}, status=400)
+    # Get the webhook secret from settings
+    webhook_secret = settings.STRIPE_WEBHOOK_SECRET
     
-    # Check for duplicate event processing (idempotency)
+    # Handle missing webhook secret gracefully
+    if not webhook_secret:
+        logger.error("STRIPE_WEBHOOK_SECRET not configured - webhook verification disabled")
+        # In production, we should reject the webhook for security
+        if not settings.DEBUG:
+            return JsonResponse(
+                {'error': 'Webhook verification not configured'},
+                status=503  # Service Unavailable
+            )
+        # In debug mode, log warning but allow processing (for development/testing)
+        logger.warning("Processing webhook without signature verification (DEBUG mode)")
+        try:
+            import json
+            event = json.loads(payload.decode('utf-8'))
+        except Exception as e:
+            logger.error(f"Invalid webhook payload: {str(e)}")
+            return JsonResponse({'error': 'Invalid payload'}, status=400)
+    else:
+        # Verify webhook signature
+        try:
+            event = stripe.Webhook.construct_event(
+                payload=payload,
+                sig_header=sig_header,
+                secret=webhook_secret
+            )
+        except ValueError as e:
+            logger.error(f"Invalid webhook payload: {str(e)}")
+            return JsonResponse({'error': 'Invalid payload'}, status=400)
+        except stripe.error.SignatureVerificationError as e:
+            logger.error(f"Invalid webhook signature: {str(e)}")
+            return JsonResponse({'error': 'Invalid signature'}, status=400)
+        except Exception as e:
+            logger.error(f"Unexpected error verifying webhook: {str(e)}")
+            return JsonResponse({'error': 'Verification failed'}, status=400)
+    
+    # Get event ID and type
     event_id = event.get('id')
-    if event_id:
+    event_type = event.get('type')
+    
+    if not event_id:
+        logger.error("Webhook event missing ID")
+        return JsonResponse({'error': 'Event ID required'}, status=400)
+    
+    # Use database-backed idempotency with ProcessedWebhookEvent
+    with transaction.atomic():
         # Check if we've already processed this event
-        if SubscriptionHistory.objects.filter(stripe_event_id=event_id).exists():
-            logger.info(f"Duplicate webhook event {event_id} - skipping")
-            return JsonResponse({'status': 'duplicate'})
+        try:
+            webhook_event = ProcessedWebhookEvent.objects.select_for_update(nowait=True).get(
+                event_id=event_id
+            )
+            # Event already processed
+            logger.info(f"Duplicate webhook event {event_id} (status: {webhook_event.status}) - skipping")
+            return JsonResponse({
+                'status': 'duplicate',
+                'processed_at': webhook_event.processed_at.isoformat()
+            })
+        except ProcessedWebhookEvent.DoesNotExist:
+            # Create new event record with PROCESSING status
+            webhook_event = ProcessedWebhookEvent.objects.create(
+                event_id=event_id,
+                event_type=event_type,
+                status=WebhookEventStatus.PROCESSING,
+                metadata={'raw_event': event}
+            )
+        except Exception as e:
+            # Handle race condition - another process may be processing this event
+            logger.warning(f"Event {event_id} is being processed by another worker")
+            return JsonResponse({'status': 'processing'})
     
     # Process different event types
-    event_type = event['type']
     event_object = event['data']['object']
     
     logger.info(f"Processing webhook event: {event_type} - {event_id}")
     
+    # Wrap all processing in try-except for proper error handling
     try:
         if event_type == 'customer.subscription.created':
             # New subscription created
@@ -1092,10 +1145,21 @@ def stripe_webhook(request):
         else:
             logger.info(f"Unhandled webhook event type: {event_type}")
         
+        # Mark webhook event as successfully processed
+        webhook_event.status = WebhookEventStatus.PROCESSED
+        webhook_event.save()
+        
         return JsonResponse({'status': 'success'})
         
     except Exception as e:
         logger.error(f"Error processing webhook event {event_type}: {str(e)}")
+        
+        # Mark webhook event as failed and store error
+        webhook_event.status = WebhookEventStatus.FAILED
+        webhook_event.error_message = str(e)
+        webhook_event.save()
+        
+        # Return 500 to trigger Stripe retry (if configured)
         return JsonResponse({'error': 'Processing failed'}, status=500)
 
 
