@@ -707,7 +707,8 @@ def activate_trial_on_organization_creation(sender, instance, created, **kwargs)
     """Automatically activate 14-day trial when a new organization is created"""
     if created and not instance.trial_ends_at:
         # Set trial to end 14 days from creation
-        trial_end_date = instance.created_at + timedelta(days=14)
+        from django.utils import timezone
+        trial_end_date = timezone.now() + timedelta(days=14)
         instance.trial_ends_at = trial_end_date
         instance.current_period_end = trial_end_date
         instance.subscription_plan = SubscriptionPlan.FREE_TRIAL

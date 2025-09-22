@@ -3,416 +3,377 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Clock, CreditCard, AlertTriangle } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-
-// Initialize Stripe with properly prefixed environment variables
-const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLIC_KEY || import.meta.env.VITE_TESTING_STRIPE_PUBLIC_KEY!
-);
-
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: number;
-  contacts_limit: number;
-  campaigns_limit: number;
-  features: string[];
-  is_yearly: boolean;
-}
-
-interface CurrentSubscription {
-  plan: string;
-  plan_name: string;
-  is_trial: boolean;
-  trial_ends_at?: string;
-  subscription_ends_at?: string;
-  is_active: boolean;
-  is_expired: boolean;
-  contacts_limit: number;
-  campaigns_limit: number;
-  features: string[];
-}
-
-function PaymentForm({ clientSecret, onSuccess }: { clientSecret: string; onSuccess: () => void }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin + '/subscription?success=true',
-      },
-    });
-
-    if (error) {
-      toast({
-        title: "Payment Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Payment Successful",
-        description: "Your subscription has been activated!",
-      });
-      onSuccess();
-    }
-
-    setIsProcessing(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4" data-testid="payment-form">
-      <PaymentElement />
-      <Button 
-        type="submit" 
-        disabled={!stripe || isProcessing}
-        className="w-full"
-        data-testid="button-complete-payment"
-      >
-        {isProcessing ? 'Processing...' : 'Complete Payment'}
-      </Button>
-    </form>
-  );
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import SubscriptionStatus from '@/components/subscription/SubscriptionStatus';
+import PlanCard from '@/components/subscription/PlanCard';
+import BillingHistory from '@/components/subscription/BillingHistory';
+import PaymentMethod from '@/components/subscription/PaymentMethod';
 
 export default function SubscriptionPage() {
   const { toast } = useToast();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [showYearly, setShowYearly] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [processingAction, setProcessingAction] = useState<string | null>(null);
 
-  // Fetch available subscription plans
+  // Fetch available subscription plans with detailed features
   const { data: plansData, isLoading: plansLoading } = useQuery({
-    queryKey: ['/api/subscription/plans'],
+    queryKey: ['/api/subscription/plans-detailed'],
   });
 
   // Fetch current subscription
-  const { data: currentSubscription, isLoading: subscriptionLoading, refetch: refetchSubscription } = useQuery<{ subscription: CurrentSubscription }>({
+  const { data: currentSubscription, isLoading: subscriptionLoading, refetch: refetchSubscription } = useQuery({
     queryKey: ['/api/subscription/current'],
   });
 
-  // Create subscription mutation
-  const createSubscriptionMutation = useMutation({
+  // Fetch billing history (will create this endpoint later)
+  const { data: billingHistory, isLoading: billingLoading } = useQuery({
+    queryKey: ['/api/subscription/billing-history'],
+    enabled: false, // Disable for now as endpoint doesn't exist
+  });
+
+  // Create checkout session for new subscriptions
+  const createCheckoutMutation = useMutation({
     mutationFn: async (planId: string) => {
-      const response = await apiRequest('POST', '/api/subscription/create', { plan_id: planId });
+      const response = await apiRequest('POST', '/api/subscription/create-checkout-session', { 
+        plan_id: planId,
+        success_url: window.location.href + '?success=true',
+        cancel_url: window.location.href
+      });
       return response.json();
     },
     onSuccess: (data) => {
-      setClientSecret(data.client_secret);
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      }
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create subscription",
+        description: error.message || "Failed to create checkout session",
         variant: "destructive",
       });
+      setProcessingAction(null);
     },
   });
 
-  // Cancel subscription mutation
-  const cancelSubscriptionMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/subscription/cancel');
+  // Manage subscription mutation (upgrade/downgrade/cancel/resume)
+  const manageSubscriptionMutation = useMutation({
+    mutationFn: async ({ action, newPlanId }: { action: string; newPlanId?: string }) => {
+      const response = await apiRequest('POST', '/api/subscription/manage', { 
+        action,
+        new_plan_id: newPlanId,
+        immediate: false
+      });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast({
-        title: "Subscription Canceled",
-        description: "Your subscription will end at the current billing period.",
+        title: "Success",
+        description: data.message || `Subscription ${variables.action} successful`,
       });
       refetchSubscription();
+      setProcessingAction(null);
+      if (variables.action === 'cancel') {
+        setShowCancelDialog(false);
+      }
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to cancel subscription",
+        description: error.message || "Failed to manage subscription",
+        variant: "destructive",
+      });
+      setProcessingAction(null);
+    },
+  });
+
+  // Create billing portal session
+  const createBillingPortalMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/subscription/billing-portal', {
+        return_url: window.location.href
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.portal_url) {
+        window.location.href = data.portal_url;
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open billing portal",
         variant: "destructive",
       });
     },
   });
 
   const handleSelectPlan = (planId: string) => {
-    setSelectedPlan(planId);
-    createSubscriptionMutation.mutate(planId);
-  };
-
-  const handlePaymentSuccess = () => {
-    setClientSecret(null);
-    setSelectedPlan(null);
-    queryClient.invalidateQueries({ queryKey: ['/api/subscription/current'] });
-    toast({
-      title: "Success!",
-      description: "Your subscription has been activated.",
-    });
-  };
-
-  const formatPrice = (price: number, isYearly: boolean) => {
-    if (isYearly) {
-      const monthlyEquivalent = price / 12;
-      return `$${price}/year ($${monthlyEquivalent.toFixed(0)}/month)`;
+    const currentPlan = currentSubscription?.subscription?.plan;
+    
+    if (currentPlan && currentPlan !== 'free_trial') {
+      // Existing subscription - upgrade/downgrade
+      const currentValue = getPlanValue(currentPlan);
+      const newValue = getPlanValue(planId);
+      const action = newValue > currentValue ? 'upgrade' : 'downgrade';
+      
+      setProcessingAction(planId);
+      manageSubscriptionMutation.mutate({ action, newPlanId: planId });
+    } else {
+      // New subscription
+      setProcessingAction(planId);
+      createCheckoutMutation.mutate(planId);
     }
-    return `$${price}/month`;
   };
 
-  const getTimeRemaining = (endDate: string) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diffTime = end.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays <= 0) return 'Expired';
-    if (diffDays === 1) return '1 day remaining';
-    return `${diffDays} days remaining`;
+  const getPlanValue = (planId: string): number => {
+    const planValues: { [key: string]: number } = {
+      'basic_monthly': 1,
+      'basic_yearly': 2,
+      'pro_monthly': 3,
+      'pro_yearly': 4,
+      'premium_monthly': 5,
+      'premium_yearly': 6,
+    };
+    return planValues[planId] || 0;
   };
 
-  const getProgressPercentage = (endDate: string, isYearly = false) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const totalDays = isYearly ? 365 : (currentSubscription?.subscription.is_trial ? 14 : 30);
-    const start = new Date(end.getTime() - (totalDays * 24 * 60 * 60 * 1000));
-    
-    const totalTime = end.getTime() - start.getTime();
-    const remainingTime = end.getTime() - now.getTime();
-    
-    return Math.max(0, Math.min(100, ((totalTime - remainingTime) / totalTime) * 100));
+  const handleCancelSubscription = () => {
+    setProcessingAction('cancel');
+    manageSubscriptionMutation.mutate({ action: 'cancel' });
+    setShowCancelDialog(false);
   };
 
-  if (plansLoading || subscriptionLoading) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                <div className="space-y-2">
-                  {[...Array(4)].map((_, j) => (
-                    <div key={j} className="h-4 bg-gray-200 rounded"></div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const handleResumeSubscription = () => {
+    setProcessingAction('resume');
+    manageSubscriptionMutation.mutate({ action: 'resume' });
+  };
 
-  const plans: SubscriptionPlan[] = plansData?.plans || [];
-  const filteredPlans = plans.filter(plan => plan.is_yearly === showYearly);
+  const handleManagePayment = () => {
+    createBillingPortalMutation.mutate();
+  };
+
+  const handleDownloadInvoice = (invoiceUrl: string) => {
+    window.open(invoiceUrl, '_blank');
+  };
+
+  // Check for success query parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      toast({
+        title: "Payment Successful!",
+        description: "Your subscription has been activated.",
+      });
+      refetchSubscription();
+      // Remove the success parameter from URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  // Get the appropriate plans based on billing toggle
+  const plans = plansData?.plans || [];
+  const filteredPlans = plans.filter((plan: any) => {
+    // Skip free trial plan
+    if (plan.id === 'free_trial') return false;
+    return plan.is_yearly === showYearly;
+  });
+
+  // Group plans by tier for better presentation
+  const basicPlan = filteredPlans.find((p: any) => p.id.includes('basic'));
+  const proPlan = filteredPlans.find((p: any) => p.id.includes('pro'));
+  const premiumPlan = filteredPlans.find((p: any) => p.id.includes('premium'));
+  const orderedPlans = [basicPlan, proPlan, premiumPlan].filter(Boolean);
+
+  const subscription = currentSubscription?.subscription;
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4" data-testid="text-subscription-title">Subscription Plans</h1>
-        <p className="text-gray-600 mb-6">Choose the plan that best fits your email marketing needs</p>
-        
-        {/* Billing Toggle */}
-        <div className="flex items-center justify-center space-x-4 mb-8">
-          <span className={`${!showYearly ? 'font-semibold' : 'text-gray-500'}`}>Monthly</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowYearly(!showYearly)}
-            data-testid="button-billing-toggle"
-          >
-            {showYearly ? 'Switch to Monthly' : 'Switch to Yearly'}
-          </Button>
-          <span className={`${showYearly ? 'font-semibold' : 'text-gray-500'}`}>
-            Yearly <Badge variant="secondary" className="ml-1">Save 17%</Badge>
-          </span>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 px-4 max-w-7xl">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2" data-testid="text-subscription-title">
+            Subscription Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your subscription, billing, and payment methods
+          </p>
         </div>
-      </div>
 
-      {/* Current Subscription Status */}
-      {currentSubscription?.subscription && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5" />
-              Current Subscription
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-semibold" data-testid="text-current-plan">
-                    {currentSubscription.subscription.plan_name}
-                  </h3>
-                  {currentSubscription.subscription.is_trial && (
-                    <Badge variant="outline">Trial</Badge>
-                  )}
-                  {currentSubscription.subscription.is_expired && (
-                    <Badge variant="destructive">Expired</Badge>
-                  )}
-                  {currentSubscription.subscription.is_active && !currentSubscription.subscription.is_expired && (
-                    <Badge variant="secondary">Active</Badge>
-                  )}
-                </div>
-                
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div>Contacts: {currentSubscription.subscription.contacts_limit.toLocaleString()}</div>
-                  <div>Campaigns: {currentSubscription.subscription.campaigns_limit.toLocaleString()}</div>
-                </div>
+        {/* Tabs for different sections */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsTrigger value="plans" data-testid="tab-plans">Plans</TabsTrigger>
+            <TabsTrigger value="billing" data-testid="tab-billing">Billing</TabsTrigger>
+          </TabsList>
 
-                {(currentSubscription.subscription.trial_ends_at || currentSubscription.subscription.subscription_ends_at) && (
-                  <div className="mt-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm font-medium" data-testid="text-time-remaining">
-                        {getTimeRemaining(
-                          currentSubscription.subscription.trial_ends_at || 
-                          currentSubscription.subscription.subscription_ends_at!
-                        )}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={getProgressPercentage(
-                        currentSubscription.subscription.trial_ends_at || 
-                        currentSubscription.subscription.subscription_ends_at!,
-                        !currentSubscription.subscription.is_trial
-                      )} 
-                      className="w-full"
-                    />
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Current Subscription Status */}
+            {subscription && (
+              <SubscriptionStatus
+                subscription={{
+                  ...subscription,
+                  current_period_end: subscription.current_period_end || subscription.subscription_ends_at
+                }}
+                onCancel={() => setShowCancelDialog(true)}
+                onResume={handleResumeSubscription}
+                onManagePayment={handleManagePayment}
+                isProcessing={processingAction === 'cancel' || processingAction === 'resume'}
+              />
+            )}
+
+            {/* Quick Actions */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <PaymentMethod
+                paymentMethod={subscription?.stripe_payment_method_id ? {
+                  brand: 'Visa',
+                  last4: '4242',
+                  exp_month: 12,
+                  exp_year: 2025,
+                  is_default: true
+                } : undefined}
+                onUpdate={handleManagePayment}
+                onAdd={handleManagePayment}
+                isProcessing={createBillingPortalMutation.isPending}
+              />
+
+              {/* Usage Summary */}
+              <div className="bg-card border rounded-lg p-6 space-y-4">
+                <h3 className="font-semibold text-lg">Current Usage</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Contacts</span>
+                    <span className="font-medium" data-testid="text-contacts-usage">
+                      0 / {subscription?.contacts_limit?.toLocaleString() || '1,000'}
+                    </span>
                   </div>
-                )}
-              </div>
-              
-              <div className="flex flex-col justify-center">
-                {!currentSubscription.subscription.is_trial && currentSubscription.subscription.is_active && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => cancelSubscriptionMutation.mutate()}
-                    disabled={cancelSubscriptionMutation.isPending}
-                    data-testid="button-cancel-subscription"
-                  >
-                    {cancelSubscriptionMutation.isPending ? 'Canceling...' : 'Cancel Subscription'}
-                  </Button>
-                )}
-                
-                {(currentSubscription.subscription.is_expired || !currentSubscription.subscription.is_active) && (
-                  <div className="flex items-center gap-2 text-amber-600">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="text-sm">Subscription renewal required</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Campaigns</span>
+                    <span className="font-medium" data-testid="text-campaigns-usage">
+                      0 / {subscription?.campaigns_limit?.toLocaleString() || '10'}
+                    </span>
                   </div>
-                )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Emails Sent (This Month)</span>
+                    <span className="font-medium" data-testid="text-emails-usage">0</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </TabsContent>
 
-      {/* Payment Form */}
-      {clientSecret && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Complete Your Payment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <PaymentForm clientSecret={clientSecret} onSuccess={handlePaymentSuccess} />
-            </Elements>
-          </CardContent>
-        </Card>
-      )}
+          {/* Plans Tab */}
+          <TabsContent value="plans" className="space-y-6">
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-4 py-4">
+              <Label htmlFor="billing-toggle" className={!showYearly ? 'font-semibold' : 'text-muted-foreground'}>
+                Monthly
+              </Label>
+              <Switch
+                id="billing-toggle"
+                checked={showYearly}
+                onCheckedChange={setShowYearly}
+                data-testid="switch-billing-toggle"
+              />
+              <Label htmlFor="billing-toggle" className={showYearly ? 'font-semibold' : 'text-muted-foreground'}>
+                Yearly
+                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                  Save 17%
+                </span>
+              </Label>
+            </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredPlans.map((plan) => {
-          const isCurrentPlan = currentSubscription?.subscription.plan === plan.id;
-          const isPopular = plan.id.includes('pro_');
-          
-          return (
-            <Card 
-              key={plan.id} 
-              className={`relative ${isPopular ? 'border-blue-500 shadow-lg' : ''} ${isCurrentPlan ? 'bg-blue-50' : ''}`}
-              data-testid={`card-plan-${plan.id}`}
-            >
-              {isPopular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-blue-500">Most Popular</Badge>
-                </div>
+            {/* Plans Grid */}
+            <div className="grid gap-6 md:grid-cols-3">
+              {plansLoading ? (
+                // Loading skeleton
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className="h-96 bg-muted rounded-lg animate-pulse" />
+                ))
+              ) : (
+                orderedPlans.map((plan: any) => (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    isCurrentPlan={subscription?.plan === plan.id}
+                    isPopular={plan.id.includes('pro')}
+                    onSelect={handleSelectPlan}
+                    isProcessing={processingAction === plan.id || manageSubscriptionMutation.isPending}
+                    processingPlanId={processingAction}
+                  />
+                ))
               )}
-              
-              {isCurrentPlan && (
-                <div className="absolute -top-3 right-4">
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" />
-                    Current
-                  </Badge>
-                </div>
-              )}
+            </div>
 
-              <CardHeader>
-                <CardTitle data-testid={`text-plan-name-${plan.id}`}>{plan.name}</CardTitle>
-                <CardDescription>
-                  <span className="text-2xl font-bold" data-testid={`text-plan-price-${plan.id}`}>
-                    {formatPrice(plan.price, plan.is_yearly)}
-                  </span>
-                </CardDescription>
-              </CardHeader>
+            {/* Feature Comparison */}
+            <div className="mt-8 text-center">
+              <Button variant="link" className="text-primary">
+                View detailed feature comparison →
+              </Button>
+            </div>
+          </TabsContent>
 
-              <CardContent>
-                <div className="space-y-2 mb-6">
-                  <div className="text-sm">
-                    <strong>{plan.contacts_limit.toLocaleString()}</strong> contacts
-                  </div>
-                  <div className="text-sm">
-                    <strong>{plan.campaigns_limit.toLocaleString()}</strong> campaigns
-                  </div>
-                </div>
+          {/* Billing Tab */}
+          <TabsContent value="billing" className="space-y-6">
+            <BillingHistory
+              payments={billingHistory?.payments}
+              isLoading={billingLoading}
+              onDownloadInvoice={handleDownloadInvoice}
+            />
 
-                <ul className="space-y-2">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
+            <PaymentMethod
+              paymentMethod={subscription?.stripe_payment_method_id ? {
+                brand: 'Visa',
+                last4: '4242',
+                exp_month: 12,
+                exp_year: 2025,
+                is_default: true
+              } : undefined}
+              onUpdate={handleManagePayment}
+              onAdd={handleManagePayment}
+              isProcessing={createBillingPortalMutation.isPending}
+            />
+          </TabsContent>
+        </Tabs>
 
-              <CardFooter>
-                <Button
-                  className="w-full"
-                  variant={isCurrentPlan ? "outline" : "default"}
-                  disabled={isCurrentPlan || createSubscriptionMutation.isPending}
-                  onClick={() => handleSelectPlan(plan.id)}
-                  data-testid={`button-select-${plan.id}`}
-                >
-                  {isCurrentPlan 
-                    ? 'Current Plan' 
-                    : createSubscriptionMutation.isPending && selectedPlan === plan.id
-                    ? 'Processing...'
-                    : 'Select Plan'
-                  }
-                </Button>
-              </CardFooter>
-            </Card>
-          );
-        })}
+        {/* Cancel Subscription Dialog */}
+        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to cancel your subscription? You'll continue to have access until the end of your current billing period.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-cancel-dialog-cancel">
+                Keep Subscription
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleCancelSubscription}
+                className="bg-red-600 hover:bg-red-700"
+                data-testid="button-cancel-dialog-confirm"
+              >
+                Yes, Cancel Subscription
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

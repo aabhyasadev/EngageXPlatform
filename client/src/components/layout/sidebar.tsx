@@ -1,9 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Badge } from "@/components/ui/badge";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { subscription, isTrialUser, daysRemaining } = useSubscription();
 
   const navigation = [
     { name: "Dashboard", href: "/", icon: "fas fa-tachometer-alt" },
@@ -29,11 +32,26 @@ export default function Sidebar() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <i className="fas fa-envelope text-primary-foreground text-sm"></i>
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground">EngageX</h1>
-            <p className="text-xs text-muted-foreground" data-testid="text-organization-name">
-              {user?.organization?.name || "Loading..."}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground" data-testid="text-organization-name">
+                {user?.organization?.name || "Loading..."}
+              </p>
+              {subscription && (
+                <Badge 
+                  variant={isTrialUser ? "secondary" : subscription.is_expired ? "destructive" : "default"}
+                  className="text-xs px-1.5 py-0"
+                  data-testid="badge-subscription-status"
+                >
+                  {isTrialUser 
+                    ? `Trial (${daysRemaining}d)`
+                    : subscription.is_expired 
+                    ? "Expired"
+                    : subscription.plan_name?.replace(' Monthly', '').replace(' Yearly', '')}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
