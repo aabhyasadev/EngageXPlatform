@@ -25,22 +25,6 @@ export default function Domains() {
     staleTime: 30000,
   });
 
-  // Show error state if query failed
-  if (error) {
-    console.error("Domains query error:", error);
-    return (
-      <div className="p-6">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Domains</h2>
-          <p className="text-muted-foreground mb-4">
-            There was an error loading your domains. Please try refreshing the page.
-          </p>
-          <Button onClick={() => window.location.reload()}>Refresh</Button>
-        </div>
-      </div>
-    );
-  }
-
   const createDomainMutation = useMutation({
     mutationFn: async (domain: string) => {
       const response = await apiRequest("POST", "/api/domains", { domain });
@@ -120,6 +104,22 @@ export default function Domains() {
     setSelectedDomain(domain);
     setShowVerificationModal(true);
   };
+
+  // Show error state if query failed
+  if (error) {
+    console.error("Domains query error:", error);
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Domains</h2>
+          <p className="text-muted-foreground mb-4">
+            There was an error loading your domains. Please try refreshing the page.
+          </p>
+          <Button onClick={() => window.location.reload()}>Refresh</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
