@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Edit, Trash2, Download, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ContactImport from "@/components/contacts/contact-import";
 import ContactGroupsManager from "@/components/contacts/contact-groups-manager";
 
@@ -267,6 +268,72 @@ export default function Contacts() {
     });
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportContacts = async (format: 'csv' | 'xlsx' = 'csv') => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
+    try {
+      // Build query parameters for export with all current filters
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      params.append('format', format);
+      // Add any other filters that might be active
+      // TODO: Add subscription status and language filters when implemented
+      
+      // Create download URL
+      const exportUrl = `/api/contacts/export_csv?${params.toString()}`;
+      
+      // Use fetch to properly handle errors
+      const response = await fetch(exportUrl, {
+        method: 'GET',
+        credentials: 'include', // Include session cookies
+      });
+      
+      if (!response.ok) {
+        let errorMessage = "Failed to export contacts";
+        if (response.status === 401) {
+          errorMessage = "You are not authenticated. Please log in and try again.";
+        } else if (response.status === 403) {
+          errorMessage = "You don't have permission to export contacts.";
+        } else if (response.status >= 500) {
+          errorMessage = "Server error occurred. Please try again later.";
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      // Get the blob data
+      const blob = await response.blob();
+      
+      // Create object URL and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `contacts_export.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      const formatName = format.toUpperCase();
+      toast({
+        title: "Export Successful",
+        description: `Your contacts have been exported as ${formatName} successfully.`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "There was an error exporting your contacts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleEditContact = (contact: Contact) => {
     setSelectedContact(contact);
     setEditContact({
@@ -337,6 +404,37 @@ export default function Contacts() {
           </p>
         </div>
         <div className="flex items-center space-x-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                disabled={isExporting}
+                data-testid="button-export-dropdown"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? "Exporting..." : "Export"}
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={() => handleExportContacts('csv')}
+                disabled={isExporting}
+                data-testid="menu-item-export-csv"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleExportContacts('xlsx')}
+                disabled={isExporting}
+                data-testid="menu-item-export-excel"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export as Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button 
             variant="outline" 
             onClick={() => setShowImportModal(true)}
