@@ -10,7 +10,7 @@ export async function startDjangoServer(): Promise<void> {
   return new Promise((resolve, reject) => {
     log("Starting Django backend server...");
     
-    djangoProcess = spawn("python", ["manage.py", "runserver", "127.0.0.1:8001", "--noreload"], {
+    djangoProcess = spawn("python", ["manage.py", "runserver_with_scheduler", "127.0.0.1:8001", "--noreload"], {
       cwd: "backend",
       stdio: ["ignore", "pipe", "pipe"],
     });

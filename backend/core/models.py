@@ -619,6 +619,42 @@ class UsageTracking(models.Model):
     
     def __str__(self):
         return f"{self.organization.name} - {self.month} - {self.emails_sent} emails"
+    
+    @classmethod
+    def get_current_usage(cls, organization):
+        """Get current month's usage for an organization"""
+        from django.utils import timezone
+        from datetime import date
+        
+        current_month = date(timezone.now().year, timezone.now().month, 1)
+        
+        # Get or create usage tracking for current month
+        usage, created = cls.objects.get_or_create(
+            organization=organization,
+            month=current_month,
+            defaults={
+                'emails_sent': 0,
+                'campaigns_created': 0,
+                'contacts_imported': 0,
+            }
+        )
+        
+        # Get actual counts from the database
+        contacts_count = Contact.objects.filter(organization=organization).count()
+        campaigns_sent = Campaign.objects.filter(
+            organization=organization,
+            created_at__month=timezone.now().month,
+            created_at__year=timezone.now().year
+        ).count()
+        
+        return {
+            'emails_sent': usage.emails_sent,
+            'campaigns_sent': campaigns_sent,
+            'contacts_count': contacts_count,
+            'contacts_imported': usage.contacts_imported,
+            'templates_created': usage.templates_created,
+            'domains_verified': usage.domains_verified,
+        }
 
 
 class PaymentMethod(models.Model):

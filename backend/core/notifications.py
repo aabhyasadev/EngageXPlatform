@@ -695,3 +695,199 @@ def send_cancellation_notification(organization):
     except Exception as e:
         logger.error(f"Error sending cancellation notification: {str(e)}")
         return False
+
+
+def send_subscription_expired_notification(organization):
+    """Send notification when subscription has expired"""
+    try:
+        owner = organization.users.filter(role='organizer').first()
+        if not owner:
+            logger.error(f"No owner found for organization {organization.id}")
+            return False
+        
+        metadata = {
+            'plan_name': PLAN_NAMES.get(organization.subscription_plan, 'Unknown'),
+            'expired_date': timezone.now().strftime('%Y-%m-%d'),
+        }
+        
+        notification = create_notification(
+            organization=organization,
+            notification_type=NotificationType.TRIAL_ENDED,  # Reuse trial ended for subscription expiry
+            channel=NotificationChannel.EMAIL,
+            user=owner,
+            metadata=metadata
+        )
+        
+        context = {
+            'organization_name': organization.name,
+            'plan_name': metadata['plan_name'],
+            'action_button': 'Reactivate Subscription',
+            'action_url': f"{settings.FRONTEND_URL}/subscription",
+        }
+        
+        html_content = generate_email_content('trial_ended', context)  # Reuse trial ended template
+        subject = f"Your {metadata['plan_name']} subscription has expired"
+        
+        success, error = send_email_notification(
+            to_email=owner.email,
+            subject=subject,
+            html_content=html_content,
+            metadata=metadata
+        )
+        
+        if success:
+            notification.status = NotificationStatus.SENT
+            notification.sent_at = timezone.now()
+        else:
+            notification.status = NotificationStatus.FAILED
+            notification.error_message = error
+        
+        notification.delivery_attempts += 1
+        notification.save()
+        
+        # In-app notification
+        create_notification(
+            organization=organization,
+            notification_type=NotificationType.TRIAL_ENDED,
+            channel=NotificationChannel.IN_APP,
+            user=owner,
+            metadata=metadata
+        )
+        
+        return success
+        
+    except Exception as e:
+        logger.error(f"Error sending subscription expired notification: {str(e)}")
+        return False
+
+
+def send_usage_limit_warning(organization, warning_details):
+    """Send warning when approaching usage limits"""
+    try:
+        owner = organization.users.filter(role='organizer').first()
+        if not owner:
+            logger.error(f"No owner found for organization {organization.id}")
+            return False
+        
+        # Check if we already sent this warning recently (within last 48 hours)
+        recent_notification = SubscriptionNotification.objects.filter(
+            organization=organization,
+            notification_type=NotificationType.LIMIT_WARNING,
+            created_at__gte=timezone.now() - timedelta(hours=48),
+            metadata__type=warning_details['type'],
+            metadata__percentage__gte=warning_details['percentage'] - 5  # Allow for minor fluctuations
+        ).exists()
+        
+        if recent_notification:
+            logger.info(f"Usage limit warning already sent to {organization.name} for {warning_details['type']}")
+            return True
+        
+        metadata = {
+            'type': warning_details['type'],
+            'current': warning_details['current'],
+            'limit': warning_details['limit'],
+            'percentage': warning_details['percentage'],
+            'plan_name': PLAN_NAMES.get(organization.subscription_plan, 'Unknown'),
+        }
+        
+        notification = create_notification(
+            organization=organization,
+            notification_type=NotificationType.LIMIT_WARNING,
+            channel=NotificationChannel.EMAIL,
+            user=owner,
+            metadata=metadata
+        )
+        
+        # Customize message based on limit type
+        limit_descriptions = {
+            'contacts': 'contacts',
+            'campaigns': 'campaigns sent this month',
+            'emails': 'emails sent this month',
+        }
+        
+        limit_type = limit_descriptions.get(warning_details['type'], warning_details['type'])
+        
+        context = {
+            'organization_name': organization.name,
+            'limit_type': limit_type,
+            'current_usage': warning_details['current'],
+            'limit': warning_details['limit'],
+            'percentage': warning_details['percentage'],
+            'plan_name': metadata['plan_name'],
+            'action_button': 'Upgrade Plan',
+            'action_url': f"{settings.FRONTEND_URL}/subscription",
+        }
+        
+        # Create custom HTML for usage warning
+        html_template = """
+            <h2>Approaching Usage Limit</h2>
+            <p>Hi {organization_name},</p>
+            <p>You're approaching your {plan_name} plan limit for {limit_type}.</p>
+            <p><strong>Current usage: {current_usage} / {limit} ({percentage}%)</strong></p>
+            <p>Consider upgrading your plan to avoid service interruption.</p>
+            <a href="{action_url}" class="button">{action_button}</a>
+        """
+        
+        content_html = html_template.format(**context)
+        full_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }}
+                .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; }}
+                .header {{ background-color: #4F46E5; color: white; padding: 20px; text-align: center; }}
+                .content {{ padding: 30px; }}
+                .button {{ display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                .footer {{ background-color: #f4f4f4; padding: 20px; text-align: center; color: #666; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>EngageX</h1>
+                </div>
+                <div class="content">
+                    {content_html}
+                </div>
+                <div class="footer">
+                    <p>© 2025 EngageX. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        subject = f"Warning: Approaching {limit_type} limit ({warning_details['percentage']}%)"
+        
+        success, error = send_email_notification(
+            to_email=owner.email,
+            subject=subject,
+            html_content=full_html,
+            metadata=metadata
+        )
+        
+        if success:
+            notification.status = NotificationStatus.SENT
+            notification.sent_at = timezone.now()
+        else:
+            notification.status = NotificationStatus.FAILED
+            notification.error_message = error
+        
+        notification.delivery_attempts += 1
+        notification.save()
+        
+        # In-app notification
+        create_notification(
+            organization=organization,
+            notification_type=NotificationType.LIMIT_WARNING,
+            channel=NotificationChannel.IN_APP,
+            user=owner,
+            metadata=metadata
+        )
+        
+        return success
+        
+    except Exception as e:
+        logger.error(f"Error sending usage limit warning: {str(e)}")
+        return False
