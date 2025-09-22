@@ -306,19 +306,13 @@ export default function SignInPage() {
                               placeholder="your.email@company.com"
                               className="pl-10"
                               type="email"
-                              {...field}
+                              value={field.value || ""}
+                              name={field.name}
                               ref={emailInputRef}
                               onChange={(e) => {
-                                field.onChange(e);
+                                field.onChange(e.target.value);
                                 // Clear any existing error when user starts typing
                                 if (error) setError("");
-                                console.log("Debug: Input onChange:", e.target.value);
-                              }}
-                              onInput={(e) => {
-                                // Handle input events for programmatic value setting
-                                const target = e.target as HTMLInputElement;
-                                field.onChange(target.value);
-                                console.log("Debug: Input onInput:", target.value);
                               }}
                             />
                           </div>
