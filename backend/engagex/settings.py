@@ -136,7 +136,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'core.authentication.SignedHeaderAuthentication',  # Express proxy signed headers (primary)
-        'rest_framework.authentication.SessionAuthentication',  # Session auth with CSRF protection (secure)
+        'core.authentication.CSRFExemptSessionAuthentication',  # Session auth without CSRF for API endpoints
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
