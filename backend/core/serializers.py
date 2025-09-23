@@ -204,13 +204,11 @@ class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
         fields = [
-            'id', 'organization', 'stripe_payment_method_id', 'last4', 'brand',
+            'id', 'organization', 'cardholder_name', 'last4', 'brand',
             'exp_month', 'exp_year', 'is_default', 'created_at', 'updated_at'
         ]
-        # SECURITY: All sensitive card data fields are read-only (populated from Stripe only)
         read_only_fields = [
-            'id', 'organization', 'stripe_payment_method_id', 'last4', 'brand',
-            'exp_month', 'exp_year', 'created_at', 'updated_at'
+            'id', 'organization', 'created_at', 'updated_at'
         ]
 
     def validate_exp_month(self, value):
@@ -234,17 +232,41 @@ class CardSerializer(serializers.ModelSerializer):
 
 
 class CardCreateSerializer(serializers.Serializer):
-    """Serializer for creating new cards via Stripe"""
-    stripe_token = serializers.CharField(required=False)
-    stripe_payment_method_id = serializers.CharField(required=False)
+    """Serializer for creating new cards with direct card details"""
+    cardholder_name = serializers.CharField(max_length=255)
+    card_number = serializers.CharField(max_length=19)  # Card number with spaces
+    exp_month = serializers.IntegerField()
+    exp_year = serializers.IntegerField()
+    cvv = serializers.CharField(max_length=4)
     set_as_default = serializers.BooleanField(default=True)
 
-    def validate(self, data):
-        if not data.get('stripe_token') and not data.get('stripe_payment_method_id'):
-            raise serializers.ValidationError(
-                "Either stripe_token or stripe_payment_method_id is required"
-            )
-        return data
+    def validate_card_number(self, value):
+        # Remove spaces and validate card number
+        card_number = value.replace(' ', '')
+        if not card_number.isdigit():
+            raise serializers.ValidationError("Card number must contain only digits")
+        if len(card_number) < 13 or len(card_number) > 19:
+            raise serializers.ValidationError("Card number must be between 13 and 19 digits")
+        return card_number
+
+    def validate_exp_month(self, value):
+        if not 1 <= value <= 12:
+            raise serializers.ValidationError("Expiry month must be between 1 and 12")
+        return value
+
+    def validate_exp_year(self, value):
+        from datetime import datetime
+        current_year = datetime.now().year
+        if value < current_year:
+            raise serializers.ValidationError("Expiry year cannot be in the past")
+        if value > current_year + 20:
+            raise serializers.ValidationError("Expiry year is too far in the future")
+        return value
+
+    def validate_cvv(self, value):
+        if not value.isdigit() or len(value) < 3 or len(value) > 4:
+            raise serializers.ValidationError("CVV must be 3 or 4 digits")
+        return value
 
 
 class CardUpdateSerializer(serializers.Serializer):
