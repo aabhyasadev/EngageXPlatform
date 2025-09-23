@@ -175,7 +175,7 @@ export default function ContactGroupsManager() {
     setSelectedGroup(group);
     setNewGroup({
       name: group.name,
-      description: group.description,
+      description: group.description || "",
     });
     setShowEditModal(true);
   };
