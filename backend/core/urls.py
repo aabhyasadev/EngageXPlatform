@@ -4,7 +4,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     OrganizationViewSet, UserViewSet, DomainViewSet,
     ContactGroupViewSet, ContactViewSet, EmailTemplateViewSet,
-    CampaignViewSet, AnalyticsEventViewSet, DashboardViewSet
+    CampaignViewSet, AnalyticsEventViewSet, DashboardViewSet,
+    PaymentMethodViewSet
 )
 from .auth_views import (
     auth_user, dashboard_stats, replit_auth_login, logout_view, get_csrf_token, test_connection,
@@ -53,6 +54,7 @@ router.register(r'contacts', ContactViewSet)
 router.register(r'templates', EmailTemplateViewSet)
 router.register(r'campaigns', CampaignViewSet)
 router.register(r'analytics/events', AnalyticsEventViewSet)
+router.register(r'payment-methods', PaymentMethodViewSet)
 
 urlpatterns = [
     # Health check for startup verification
