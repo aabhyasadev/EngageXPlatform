@@ -300,7 +300,7 @@ export default function ContactGroupsManager() {
                   <span className="text-sm text-muted-foreground">Contacts</span>
                 </div>
                 <Badge variant="secondary" data-testid={`badge-group-contacts-${group.id}`}>
-                  Loading...
+                  {(group as any).members_count || 0} members
                 </Badge>
               </div>
               <div className="mt-3 flex space-x-2">
