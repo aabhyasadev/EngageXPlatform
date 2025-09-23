@@ -126,8 +126,8 @@ export default function CardsManager({
         <CardContent className="space-y-4">
           {cards.length > 0 ? (
             <>
-              {/* Cards Grid */}
-              <div className="grid gap-4">
+              {/* Cards Grid - Mobile: 1 column, Desktop: 2 columns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cards.map((card) => (
                   <div
                     key={card.id}
@@ -148,59 +148,65 @@ export default function CardsManager({
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        {getCardBrandIcon(card.brand)}
-                        
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-base" data-testid={`card-brand-${card.id}`}>
-                              {card.brand}
-                            </span>
-                            <span className="text-muted-foreground">••••</span>
-                            <span className="font-mono font-medium" data-testid={`card-last4-${card.id}`}>
-                              {card.last4}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span data-testid={`card-expiry-${card.id}`}>
-                              Expires {formatExpiry(card.exp_month, card.exp_year)}
-                            </span>
-                            {card.cardholder_name && (
-                              <span data-testid={`card-holder-${card.id}`}>
-                                {card.cardholder_name}
+                    {/* Mobile-optimized layout */}
+                    <div className="space-y-3">
+                      {/* Card Brand & Number Row */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {getCardBrandIcon(card.brand)}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm md:text-base" data-testid={`card-brand-${card.id}`}>
+                                {card.brand}
                               </span>
-                            )}
+                              <span className="text-muted-foreground">••••</span>
+                              <span className="font-mono font-medium text-sm md:text-base" data-testid={`card-last4-${card.id}`}>
+                                {card.last4}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2">
-                        {!card.is_default && onSetDefault && (
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1">
+                          {!card.is_default && onSetDefault && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onSetDefault(card)}
+                              disabled={isProcessing}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                              data-testid={`button-set-default-${card.id}`}
+                            >
+                              <Star className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                          
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onSetDefault(card)}
+                            onClick={() => handleDeleteClick(card)}
                             disabled={isProcessing}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            data-testid={`button-set-default-${card.id}`}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-8 w-8 p-0"
+                            data-testid={`button-delete-${card.id}`}
                           >
-                            <Star className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
+                        </div>
+                      </div>
+
+                      {/* Card Details Row */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground">
+                          <span data-testid={`card-expiry-${card.id}`}>
+                            Expires {formatExpiry(card.exp_month, card.exp_year)}
+                          </span>
+                        </div>
+                        {card.cardholder_name && (
+                          <div className="text-xs md:text-sm text-muted-foreground truncate" data-testid={`card-holder-${card.id}`}>
+                            {card.cardholder_name}
+                          </div>
                         )}
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(card)}
-                          disabled={isProcessing}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                          data-testid={`button-delete-${card.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                       </div>
                     </div>
                   </div>
