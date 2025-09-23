@@ -25,18 +25,14 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/contacts/import_csv/', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Import failed');
+      try {
+        const response = await apiRequest("POST", "/api/contacts/import_csv/", formData);
+        return response;
+      } catch (error: any) {
+        // Handle both JSON and non-JSON error responses
+        const errorMessage = error.message || error.error || error.detail || "Import failed";
+        throw new Error(errorMessage);
       }
-      
-      return response.json();
     },
     onSuccess: (result) => {
       setImportResult(result);
@@ -99,11 +95,11 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
             <CardContent className="p-4">
               <h3 className="font-semibold mb-2">File Requirements</h3>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• CSV or Excel file (.csv, .xlsx format)</li>
+                <li>• CSV or Excel file (.csv, .xlsx, .xls format)</li>
                 <li>• Required column: email or Email</li>
                 <li>• Optional columns: first_name, last_name, phone, language</li>
                 <li>• Alternative column names: firstName, lastName, First Name, Last Name, Phone</li>
-                <li>• Email addresses will be validated and duplicates will be updated</li>
+                <li>• Import runs in background - contacts appear once processing is complete</li>
               </ul>
             </CardContent>
           </Card>
