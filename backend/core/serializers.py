@@ -230,6 +230,26 @@ class CardSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Last 4 digits must be exactly 4 numeric characters")
         return value
 
+    def update(self, instance, validated_data):
+        """
+        Custom update method to handle setting cards as default.
+        When setting a card as default, all other cards for the same organization
+        should be set to non-default.
+        """
+        # Check if we're updating the is_default field
+        if 'is_default' in validated_data and validated_data['is_default']:
+            # Set all other cards for this organization to non-default
+            Card.objects.filter(
+                organization=instance.organization
+            ).exclude(id=instance.id).update(is_default=False)
+        
+        # Update the instance with the validated data
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
+
 
 class CardCreateSerializer(serializers.Serializer):
     """Serializer for creating new cards with safe card details only (PCI compliant)"""

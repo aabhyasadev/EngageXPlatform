@@ -1,0 +1,3636 @@
+PATCH https://ea19e9b3-14e6-4312-8546-6e57f572ef7f-00-2hnhorhfpx7br.riker.replit.dev/api/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/ 500
+
+Request Data
+
+{"is_default":true}
+
+Request Headers
+
+Content-Type: application/json
+
+Response Headers
+
+access-control-allow-credentials: true
+access-control-allow-origin: https://ea19e9b3-14e6-4312-8546-6e57f572ef7f-00-2hnhorhfpx7br.riker.replit.dev
+content-length: 141359
+content-type: text/html; charset=utf-8
+cross-origin-opener-policy: same-origin
+date: Tue, 23 Sep 2025 13:20:03 GMT
+referrer-policy: same-origin
+replit-cluster: riker
+server: WSGIServer/0.2 CPython/3.11.13
+vary: Cookie, origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-powered-by: Express
+x-robots-tag: none, noindex, noarchive, nofollow, nositelinkssearchbox, noimageindex, none, noindex, noarchive, nofollow, nositelinkssearchbox, noimageindex
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="robots" content="NONE,NOARCHIVE">
+  <title>NotImplementedError
+          at /cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/</title>
+  <style>
+    html * { padding:0; margin:0; }
+    body * { padding:10px 20px; }
+    body * * { padding:0; }
+    body { font-family: sans-serif; background-color:#fff; color:#000; }
+    body > :where(header, main, footer) { border-bottom:1px solid #ddd; }
+    h1 { font-weight:normal; }
+    h2 { margin-bottom:.8em; }
+    h3 { margin:1em 0 .5em 0; }
+    h4 { margin:0 0 .5em 0; font-weight: normal; }
+    code, pre { font-size: 100%; white-space: pre-wrap; word-break: break-word; }
+    summary { cursor: pointer; }
+    table { border:1px solid #ccc; border-collapse: collapse; width:100%; background:white; }
+    tbody td, tbody th { vertical-align:top; padding:2px 3px; }
+    thead th {
+      padding:1px 6px 1px 3px; background:#fefefe; text-align:left;
+      font-weight:normal; font-size: 0.6875rem; border:1px solid #ddd;
+    }
+    tbody th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+    table.vars { margin:5px 10px 2px 40px; width: auto; }
+    table.vars td, table.req td { font-family:monospace; }
+    table td.code { width:100%; }
+    table td.code pre { overflow:hidden; }
+    table.source th { color:#666; }
+    table.source td { font-family:monospace; white-space:pre; border-bottom:1px solid #eee; }
+    ul.traceback { list-style-type:none; color: #222; }
+    ul.traceback li.cause { word-break: break-word; }
+    ul.traceback li.frame { padding-bottom:1em; color:#4f4f4f; }
+    ul.traceback li.user { background-color:#e0e0e0; color:#000 }
+    div.context { padding:10px 0; overflow:hidden; }
+    div.context ol { padding-left:30px; margin:0 10px; list-style-position: inside; }
+    div.context ol li { font-family:monospace; white-space:pre; color:#777; cursor:pointer; padding-left: 2px; }
+    div.context ol li pre { display:inline; }
+    div.context ol.context-line li { color:#464646; background-color:#dfdfdf; padding: 3px 2px; }
+    div.context ol.context-line li span { position:absolute; right:32px; }
+    .user div.context ol.context-line li { background-color:#bbb; color:#000; }
+    .user div.context ol li { color:#666; }
+    div.commands, summary.commands { margin-left: 40px; }
+    div.commands a, summary.commands { color:#555; text-decoration:none; }
+    .user div.commands a { color: black; }
+    #summary { background: #ffc; }
+    #summary h2 { font-weight: normal; color: #666; }
+    #info { padding: 0; }
+    #info > * { padding:10px 20px; }
+    #explanation { background:#eee; }
+    #template, #template-not-exist { background:#f6f6f6; }
+    #template-not-exist ul { margin: 0 0 10px 20px; }
+    #template-not-exist .postmortem-section { margin-bottom: 3px; }
+    #unicode-hint { background:#eee; }
+    #traceback { background:#eee; }
+    #requestinfo { background:#f6f6f6; padding-left:120px; }
+    #summary table { border:none; background:transparent; }
+    #requestinfo h2, #requestinfo h3 { position:relative; margin-left:-100px; }
+    #requestinfo h3 { margin-bottom:-1em; }
+    .error { background: #ffc; }
+    .specific { color:#cc3300; font-weight:bold; }
+    h2 span.commands { font-size: 0.7rem; font-weight:normal; }
+    span.commands a:link {color:#5E5694;}
+    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5rem; margin: 10px 0 10px 0; }
+    .append-bottom { margin-bottom: 10px; }
+    .fname { user-select: all; }
+  </style>
+  
+  <script>
+    function hideAll(elems) {
+      for (var e = 0; e < elems.length; e++) {
+        elems[e].style.display = 'none';
+      }
+    }
+    window.onload = function() {
+      hideAll(document.querySelectorAll('ol.pre-context'));
+      hideAll(document.querySelectorAll('ol.post-context'));
+      hideAll(document.querySelectorAll('div.pastebin'));
+    }
+    function toggle() {
+      for (var i = 0; i < arguments.length; i++) {
+        var e = document.getElementById(arguments[i]);
+        if (e) {
+          e.style.display = e.style.display == 'none' ? 'block': 'none';
+        }
+      }
+      return false;
+    }
+    function switchPastebinFriendly(link) {
+      s1 = "Switch to copy-and-paste view";
+      s2 = "Switch back to interactive view";
+      link.textContent = link.textContent.trim() == s1 ? s2: s1;
+      toggle('browserTraceback', 'pastebinTraceback');
+      return false;
+    }
+  </script>
+  
+</head>
+<body>
+<header id="summary">
+  <h1>NotImplementedError
+       at /cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/</h1>
+  <pre class="exception_value">`update()` must be implemented.</pre>
+  <table class="meta">
+
+    <tr>
+      <th scope="row">Request Method:</th>
+      <td>PATCH</td>
+    </tr>
+    <tr>
+      <th scope="row">Request URL:</th>
+      <td>https://127.0.0.1:8001/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/</td>
+    </tr>
+
+    <tr>
+      <th scope="row">Django Version:</th>
+      <td>5.2.6</td>
+    </tr>
+
+    <tr>
+      <th scope="row">Exception Type:</th>
+      <td>NotImplementedError</td>
+    </tr>
+
+
+    <tr>
+      <th scope="row">Exception Value:</th>
+      <td><pre>`update()` must be implemented.</pre></td>
+    </tr>
+
+
+    <tr>
+      <th scope="row">Exception Location:</th>
+      <td><span class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/serializers.py</span>, line 172, in update</td>
+    </tr>
+
+
+    <tr>
+      <th scope="row">Raised during:</th>
+      <td>core.views.CardViewSet</td>
+    </tr>
+
+    <tr>
+      <th scope="row">Python Executable:</th>
+      <td>/home/runner/workspace/.pythonlibs/bin/python</td>
+    </tr>
+    <tr>
+      <th scope="row">Python Version:</th>
+      <td>3.11.13</td>
+    </tr>
+    <tr>
+      <th scope="row">Python Path:</th>
+      <td><pre><code>[&#x27;/home/runner/workspace/backend&#x27;,
+ &#x27;/home/runner/workspace/backend&#x27;,
+ &#x27;/nix/store/zz7i75jb78idaz0rb1y1i4rzdyxq28vf-sitecustomize/lib/python/site-packages&#x27;,
+ &#x27;/nix/store/yaps09f01jp3fd1405qlr0qz6haf6z03-python3.11-pip-25.0.1/lib/python3.11/site-packages&#x27;,
+ &#x27;/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python311.zip&#x27;,
+ &#x27;/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11&#x27;,
+ &#x27;/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/lib-dynload&#x27;,
+ &#x27;/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages&#x27;,
+ &#x27;/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages&#x27;,
+ &#x27;/nix/store/y0iwy8ma2m45pr23bw4r7lyz69v2b6wf-python3.11-setuptools-80.7.1/lib/python3.11/site-packages&#x27;]</code></pre></td>
+    </tr>
+    <tr>
+      <th scope="row">Server time:</th>
+      <td>Tue, 23 Sep 2025 13:20:03 +0000</td>
+    </tr>
+  </table>
+</header>
+
+<main id="info">
+
+
+
+
+<div id="traceback">
+  <h2>Traceback <span class="commands"><a href="#" role="button" onclick="return switchPastebinFriendly(this);">
+    Switch to copy-and-paste view</a></span>
+  </h2>
+  <div id="browserTraceback">
+    <ul class="traceback">
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/exception.py</code>, line 55, in inner
+          
+
+          
+            <div class="context" id="c139632510867456">
+              
+                <ol start="48" class="pre-context" id="pre139632510867456">
+                
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>        return inner</pre></li>
+                
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>    else:</pre></li>
+                
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>        @wraps(get_response)</pre></li>
+                
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>        def inner(request):</pre></li>
+                
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>            try:</pre></li>
+                
+                </ol>
+              
+              <ol start="55" class="context-line">
+                <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>                response = get_response(request)
+                               ^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='56' class="post-context" id="post139632510867456">
+                  
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>            except Exception as exc:</pre></li>
+                  
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>                response = response_for_exception(request, exc)</pre></li>
+                  
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>            return response</pre></li>
+                  
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre>        return inner</pre></li>
+                  
+                  <li onclick="toggle('pre139632510867456', 'post139632510867456')"><pre></pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632510867456">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>exc</td>
+                    <td class="code"><pre>NotImplementedError(&#x27;`update()` must be implemented.&#x27;)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>get_response</td>
+                    <td class="code"><pre>&lt;bound method BaseHandler._get_response of &lt;django.core.handlers.wsgi.WSGIHandler object at 0x7efec44d8490&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/base.py</code>, line 197, in _get_response
+          
+
+          
+            <div class="context" id="c139632510877632">
+              
+                <ol start="190" class="pre-context" id="pre139632510877632">
+                
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>        if response is None:</pre></li>
+                
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>            wrapped_callback = self.make_view_atomic(callback)</pre></li>
+                
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>            # If it is an asynchronous view, run it in a subthread.</pre></li>
+                
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>            if iscoroutinefunction(wrapped_callback):</pre></li>
+                
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>                wrapped_callback = async_to_sync(wrapped_callback)</pre></li>
+                
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>            try:</pre></li>
+                
+                </ol>
+              
+              <ol start="197" class="context-line">
+                <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>                response = wrapped_callback(request, *callback_args, **callback_kwargs)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='198' class="post-context" id="post139632510877632">
+                  
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>            except Exception as e:</pre></li>
+                  
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>                response = self.process_exception_by_middleware(e, request)</pre></li>
+                  
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>                if response is None:</pre></li>
+                  
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>                    raise</pre></li>
+                  
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632510877632', 'post139632510877632')"><pre>        # Complain if the view returned None (a common error).</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632510877632">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>callback</td>
+                    <td class="code"><pre>&lt;function CardViewSet at 0x7efebb510ae0&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>callback_args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>callback_kwargs</td>
+                    <td class="code"><pre>{&#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>middleware_method</td>
+                    <td class="code"><pre>&lt;bound method CsrfViewMiddleware.process_view of &lt;CsrfViewMiddleware get_response=convert_exception_to_response.&lt;locals&gt;.inner&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>response</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.core.handlers.wsgi.WSGIHandler object at 0x7efec44d8490&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>wrapped_callback</td>
+                    <td class="code"><pre>&lt;function CardViewSet at 0x7efebb510ae0&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/views/decorators/csrf.py</code>, line 65, in _view_wrapper
+          
+
+          
+            <div class="context" id="c139632510862272">
+              
+                <ol start="58" class="pre-context" id="pre139632510862272">
+                
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre>        async def _view_wrapper(request, *args, **kwargs):</pre></li>
+                
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre>            return await view_func(request, *args, **kwargs)</pre></li>
+                
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre>    else:</pre></li>
+                
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre>        def _view_wrapper(request, *args, **kwargs):</pre></li>
+                
+                </ol>
+              
+              <ol start="65" class="context-line">
+                <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre>            return view_func(request, *args, **kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='66' class="post-context" id="post139632510862272">
+                  
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre>    _view_wrapper.csrf_exempt = True</pre></li>
+                  
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632510862272', 'post139632510862272')"><pre>    return wraps(view_func)(_view_wrapper)</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632510862272">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{&#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>view_func</td>
+                    <td class="code"><pre>&lt;function CardViewSet at 0x7efebb510a40&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/viewsets.py</code>, line 125, in view
+          
+
+          
+            <div class="context" id="c139632511028992">
+              
+                <ol start="118" class="pre-context" id="pre139632511028992">
+                
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>                setattr(self, method, handler)</pre></li>
+                
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>            self.request = request</pre></li>
+                
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>            self.args = args</pre></li>
+                
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>            self.kwargs = kwargs</pre></li>
+                
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>            # And continue as usual</pre></li>
+                
+                </ol>
+              
+              <ol start="125" class="context-line">
+                <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>            return self.dispatch(request, *args, **kwargs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='126' class="post-context" id="post139632511028992">
+                  
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>        # take name and docstring from class</pre></li>
+                  
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>        update_wrapper(view, cls, updated=())</pre></li>
+                  
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>        # and possible attributes set by decorators</pre></li>
+                  
+                  <li onclick="toggle('pre139632511028992', 'post139632511028992')"><pre>        # like csrf_exempt from dispatch</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632511028992">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>action</td>
+                    <td class="code"><pre>&#x27;retrieve&#x27;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>actions</td>
+                    <td class="code"><pre>{&#x27;delete&#x27;: &#x27;destroy&#x27;,
+ &#x27;get&#x27;: &#x27;retrieve&#x27;,
+ &#x27;head&#x27;: &#x27;retrieve&#x27;,
+ &#x27;patch&#x27;: &#x27;partial_update&#x27;,
+ &#x27;put&#x27;: &#x27;update&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>cls</td>
+                    <td class="code"><pre>&lt;class &#x27;core.views.CardViewSet&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>handler</td>
+                    <td class="code"><pre>&lt;bound method RetrieveModelMixin.retrieve of &lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>initkwargs</td>
+                    <td class="code"><pre>{&#x27;basename&#x27;: &#x27;card&#x27;, &#x27;detail&#x27;: True, &#x27;suffix&#x27;: &#x27;Instance&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{&#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>method</td>
+                    <td class="code"><pre>&#x27;head&#x27;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py</code>, line 515, in dispatch
+          
+
+          
+            <div class="context" id="c139632492948096">
+              
+                <ol start="508" class="pre-context" id="pre139632492948096">
+                
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>                                  self.http_method_not_allowed)</pre></li>
+                
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>            else:</pre></li>
+                
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>                handler = self.http_method_not_allowed</pre></li>
+                
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>            response = handler(request, *args, **kwargs)</pre></li>
+                
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>        except Exception as exc:</pre></li>
+                
+                </ol>
+              
+              <ol start="515" class="context-line">
+                <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>            response = self.handle_exception(exc)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='516' class="post-context" id="post139632492948096">
+                  
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>        self.response = self.finalize_response(request, response, *args, **kwargs)</pre></li>
+                  
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>        return self.response</pre></li>
+                  
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>    def options(self, request, *args, **kwargs):</pre></li>
+                  
+                  <li onclick="toggle('pre139632492948096', 'post139632492948096')"><pre>        &quot;&quot;&quot;</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632492948096">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>handler</td>
+                    <td class="code"><pre>&lt;bound method UpdateModelMixin.partial_update of &lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{&#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py</code>, line 475, in handle_exception
+          
+
+          
+            <div class="context" id="c139632492941504">
+              
+                <ol start="468" class="pre-context" id="pre139632492941504">
+                
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>        exception_handler = self.get_exception_handler()</pre></li>
+                
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>        context = self.get_exception_handler_context()</pre></li>
+                
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>        response = exception_handler(exc, context)</pre></li>
+                
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>        if response is None:</pre></li>
+                
+                </ol>
+              
+              <ol start="475" class="context-line">
+                <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>            self.raise_uncaught_exception(exc)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='476' class="post-context" id="post139632492941504">
+                  
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>        response.exception = True</pre></li>
+                  
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>        return response</pre></li>
+                  
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>    def raise_uncaught_exception(self, exc):</pre></li>
+                  
+                  <li onclick="toggle('pre139632492941504', 'post139632492941504')"><pre>        if settings.DEBUG:</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632492941504">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>context</td>
+                    <td class="code"><pre>{&#x27;args&#x27;: (),
+ &#x27;kwargs&#x27;: {&#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;},
+ &#x27;request&#x27;: &lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;,
+ &#x27;view&#x27;: &lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>exc</td>
+                    <td class="code"><pre>NotImplementedError(&#x27;`update()` must be implemented.&#x27;)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>exception_handler</td>
+                    <td class="code"><pre>&lt;function exception_handler at 0x7efec294cfe0&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>response</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py</code>, line 486, in raise_uncaught_exception
+          
+
+          
+            <div class="context" id="c139632492689152">
+              
+                <ol start="479" class="pre-context" id="pre139632492689152">
+                
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>    def raise_uncaught_exception(self, exc):</pre></li>
+                
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>        if settings.DEBUG:</pre></li>
+                
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>            request = self.request</pre></li>
+                
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>            renderer_format = getattr(request.accepted_renderer, &#x27;format&#x27;)</pre></li>
+                
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>            use_plaintext_traceback = renderer_format not in (&#x27;html&#x27;, &#x27;api&#x27;, &#x27;admin&#x27;)</pre></li>
+                
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>            request.force_plaintext_errors(use_plaintext_traceback)</pre></li>
+                
+                </ol>
+              
+              <ol start="486" class="context-line">
+                <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>        raise exc
+             ^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='487' class="post-context" id="post139632492689152">
+                  
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>    # Note: Views are made CSRF exempt from within `as_view` as to prevent</pre></li>
+                  
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>    # accidental removal of this exemption in cases where `dispatch` needs to</pre></li>
+                  
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>    # be overridden.</pre></li>
+                  
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>    def dispatch(self, request, *args, **kwargs):</pre></li>
+                  
+                  <li onclick="toggle('pre139632492689152', 'post139632492689152')"><pre>        &quot;&quot;&quot;</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632492689152">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>exc</td>
+                    <td class="code"><pre>NotImplementedError(&#x27;`update()` must be implemented.&#x27;)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>renderer_format</td>
+                    <td class="code"><pre>&#x27;json&#x27;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>use_plaintext_traceback</td>
+                    <td class="code"><pre>True</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py</code>, line 512, in dispatch
+          
+
+          
+            <div class="context" id="c139632492683392">
+              
+                <ol start="505" class="pre-context" id="pre139632492683392">
+                
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>            # Get the appropriate handler method</pre></li>
+                
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>            if request.method.lower() in self.http_method_names:</pre></li>
+                
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>                handler = getattr(self, request.method.lower(),</pre></li>
+                
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>                                  self.http_method_not_allowed)</pre></li>
+                
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>            else:</pre></li>
+                
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>                handler = self.http_method_not_allowed</pre></li>
+                
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre></pre></li>
+                
+                </ol>
+              
+              <ol start="512" class="context-line">
+                <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>            response = handler(request, *args, **kwargs)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='513' class="post-context" id="post139632492683392">
+                  
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>        except Exception as exc:</pre></li>
+                  
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>            response = self.handle_exception(exc)</pre></li>
+                  
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>        self.response = self.finalize_response(request, response, *args, **kwargs)</pre></li>
+                  
+                  <li onclick="toggle('pre139632492683392', 'post139632492683392')"><pre>        return self.response</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632492683392">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>handler</td>
+                    <td class="code"><pre>&lt;bound method UpdateModelMixin.partial_update of &lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{&#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/mixins.py</code>, line 82, in partial_update
+          
+
+          
+            <div class="context" id="c139632511381120">
+              
+                <ol start="75" class="pre-context" id="pre139632511381120">
+                
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>        return Response(serializer.data)</pre></li>
+                
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>    def perform_update(self, serializer):</pre></li>
+                
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>        serializer.save()</pre></li>
+                
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>    def partial_update(self, request, *args, **kwargs):</pre></li>
+                
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>        kwargs[&#x27;partial&#x27;] = True</pre></li>
+                
+                </ol>
+              
+              <ol start="82" class="context-line">
+                <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>        return self.update(request, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='83' class="post-context" id="post139632511381120">
+                  
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>class DestroyModelMixin:</pre></li>
+                  
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>    &quot;&quot;&quot;</pre></li>
+                  
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>    Destroy a model instance.</pre></li>
+                  
+                  <li onclick="toggle('pre139632511381120', 'post139632511381120')"><pre>    &quot;&quot;&quot;</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632511381120">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{&#x27;partial&#x27;: True, &#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/mixins.py</code>, line 68, in update
+          
+
+          
+            <div class="context" id="c139632511022208">
+              
+                <ol start="61" class="pre-context" id="pre139632511022208">
+                
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>    Update a model instance.</pre></li>
+                
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>    &quot;&quot;&quot;</pre></li>
+                
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>    def update(self, request, *args, **kwargs):</pre></li>
+                
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>        partial = kwargs.pop(&#x27;partial&#x27;, False)</pre></li>
+                
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>        instance = self.get_object()</pre></li>
+                
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>        serializer = self.get_serializer(instance, data=request.data, partial=partial)</pre></li>
+                
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>        serializer.is_valid(raise_exception=True)</pre></li>
+                
+                </ol>
+              
+              <ol start="68" class="context-line">
+                <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>        self.perform_update(serializer)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='69' class="post-context" id="post139632511022208">
+                  
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>        if getattr(instance, &#x27;_prefetched_objects_cache&#x27;, None):</pre></li>
+                  
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>            # If &#x27;prefetch_related&#x27; has been applied to a queryset, we need to</pre></li>
+                  
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>            # forcibly invalidate the prefetch cache on the instance.</pre></li>
+                  
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre>            instance._prefetched_objects_cache = {}</pre></li>
+                  
+                  <li onclick="toggle('pre139632511022208', 'post139632511022208')"><pre></pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632511022208">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>instance</td>
+                    <td class="code"><pre>&lt;Card: Mastercard ****4444 - Abhishek Dubey&#x27;s Organization&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{&#x27;pk&#x27;: &#x27;a26a062d-e84a-41a3-9f87-4eb4885dad8f&#x27;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>partial</td>
+                    <td class="code"><pre>True</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>serializer</td>
+                    <td class="code"><pre>CardUpdateSerializer(&lt;Card: Mastercard ****4444 - Abhishek Dubey&#x27;s Organization&gt;, context={&#x27;request&#x27;: &lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;, &#x27;format&#x27;: None, &#x27;view&#x27;: &lt;core.views.CardViewSet object&gt;}, data={&#x27;is_default&#x27;: True}, partial=True):
+    is_default = BooleanField(required=False)</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/mixins.py</code>, line 78, in perform_update
+          
+
+          
+            <div class="context" id="c139632510707392">
+              
+                <ol start="71" class="pre-context" id="pre139632510707392">
+                
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>            # If &#x27;prefetch_related&#x27; has been applied to a queryset, we need to</pre></li>
+                
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>            # forcibly invalidate the prefetch cache on the instance.</pre></li>
+                
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>            instance._prefetched_objects_cache = {}</pre></li>
+                
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>        return Response(serializer.data)</pre></li>
+                
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>    def perform_update(self, serializer):</pre></li>
+                
+                </ol>
+              
+              <ol start="78" class="context-line">
+                <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>        serializer.save()
+            ^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='79' class="post-context" id="post139632510707392">
+                  
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>    def partial_update(self, request, *args, **kwargs):</pre></li>
+                  
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>        kwargs[&#x27;partial&#x27;] = True</pre></li>
+                  
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre>        return self.update(request, *args, **kwargs)</pre></li>
+                  
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632510707392', 'post139632510707392')"><pre></pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632510707392">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;core.views.CardViewSet object at 0x7efeb921bb90&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>serializer</td>
+                    <td class="code"><pre>CardUpdateSerializer(&lt;Card: Mastercard ****4444 - Abhishek Dubey&#x27;s Organization&gt;, context={&#x27;request&#x27;: &lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;, &#x27;format&#x27;: None, &#x27;view&#x27;: &lt;core.views.CardViewSet object&gt;}, data={&#x27;is_default&#x27;: True}, partial=True):
+    is_default = BooleanField(required=False)</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/serializers.py</code>, line 205, in save
+          
+
+          
+            <div class="context" id="c139632510700480">
+              
+                <ol start="198" class="pre-context" id="pre139632510700480">
+                
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>            &quot;If you need to access data before committing to the database then &quot;</pre></li>
+                
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>            &quot;inspect &#x27;serializer.validated_data&#x27; instead. &quot;</pre></li>
+                
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>        )</pre></li>
+                
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>        validated_data = {**self.validated_data, **kwargs}</pre></li>
+                
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>        if self.instance is not None:</pre></li>
+                
+                </ol>
+              
+              <ol start="205" class="context-line">
+                <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>            self.instance = self.update(self.instance, validated_data)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='206' class="post-context" id="post139632510700480">
+                  
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>            assert self.instance is not None, (</pre></li>
+                  
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>                &#x27;`update()` did not return an object instance.&#x27;</pre></li>
+                  
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>            )</pre></li>
+                  
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>        else:</pre></li>
+                  
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>            self.instance = self.create(validated_data)</pre></li>
+                  
+                  <li onclick="toggle('pre139632510700480', 'post139632510700480')"><pre>            assert self.instance is not None, (</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632510700480">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>CardUpdateSerializer(&lt;Card: Mastercard ****4444 - Abhishek Dubey&#x27;s Organization&gt;, context={&#x27;request&#x27;: &lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;, &#x27;format&#x27;: None, &#x27;view&#x27;: &lt;core.views.CardViewSet object&gt;}, data={&#x27;is_default&#x27;: True}, partial=True):
+    is_default = BooleanField(required=False)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>validated_data</td>
+                    <td class="code"><pre>{&#x27;is_default&#x27;: True}</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/serializers.py</code>, line 172, in update
+          
+
+          
+            <div class="context" id="c139632529179008">
+              
+                <ol start="165" class="pre-context" id="pre139632529179008">
+                
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>    def to_internal_value(self, data):</pre></li>
+                
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>        raise NotImplementedError(&#x27;`to_internal_value()` must be implemented.&#x27;)</pre></li>
+                
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>    def to_representation(self, instance):</pre></li>
+                
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>        raise NotImplementedError(&#x27;`to_representation()` must be implemented.&#x27;)</pre></li>
+                
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>    def update(self, instance, validated_data):</pre></li>
+                
+                </ol>
+              
+              <ol start="172" class="context-line">
+                <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>        raise NotImplementedError(&#x27;`update()` must be implemented.&#x27;)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='173' class="post-context" id="post139632529179008">
+                  
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>    def create(self, validated_data):</pre></li>
+                  
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>        raise NotImplementedError(&#x27;`create()` must be implemented.&#x27;)</pre></li>
+                  
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>    def save(self, **kwargs):</pre></li>
+                  
+                  <li onclick="toggle('pre139632529179008', 'post139632529179008')"><pre>        assert hasattr(self, &#x27;_errors&#x27;), (</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v139632529179008">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>instance</td>
+                    <td class="code"><pre>&lt;Card: Mastercard ****4444 - Abhishek Dubey&#x27;s Organization&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>CardUpdateSerializer(&lt;Card: Mastercard ****4444 - Abhishek Dubey&#x27;s Organization&gt;, context={&#x27;request&#x27;: &lt;rest_framework.request.Request: PATCH &#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;&gt;, &#x27;format&#x27;: None, &#x27;view&#x27;: &lt;core.views.CardViewSet object&gt;}, data={&#x27;is_default&#x27;: True}, partial=True):
+    is_default = BooleanField(required=False)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>validated_data</td>
+                    <td class="code"><pre>{&#x27;is_default&#x27;: True}</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+    </ul>
+  </div>
+
+  <form action="https://dpaste.com/" name="pasteform" id="pasteform" method="post">
+  <div id="pastebinTraceback" class="pastebin">
+    <input type="hidden" name="language" value="PythonConsole">
+    <input type="hidden" name="title"
+      value="NotImplementedError at /cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/">
+    <input type="hidden" name="source" value="Django Dpaste Agent">
+    <input type="hidden" name="poster" value="Django">
+    <textarea name="content" id="traceback_area" cols="140" rows="25">
+Environment:
+
+
+Request Method: PATCH
+Request URL: https://127.0.0.1:8001/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/
+
+Django Version: 5.2.6
+Python Version: 3.11.13
+Installed Applications:
+[&#x27;django.contrib.admin&#x27;,
+ &#x27;django.contrib.auth&#x27;,
+ &#x27;django.contrib.contenttypes&#x27;,
+ &#x27;django.contrib.sessions&#x27;,
+ &#x27;django.contrib.messages&#x27;,
+ &#x27;django.contrib.staticfiles&#x27;,
+ &#x27;rest_framework&#x27;,
+ &#x27;corsheaders&#x27;,
+ &#x27;django_filters&#x27;,
+ &#x27;core&#x27;]
+Installed Middleware:
+[&#x27;corsheaders.middleware.CorsMiddleware&#x27;,
+ &#x27;whitenoise.middleware.WhiteNoiseMiddleware&#x27;,
+ &#x27;django.middleware.security.SecurityMiddleware&#x27;,
+ &#x27;django.contrib.sessions.middleware.SessionMiddleware&#x27;,
+ &#x27;django.middleware.common.CommonMiddleware&#x27;,
+ &#x27;django.middleware.csrf.CsrfViewMiddleware&#x27;,
+ &#x27;django.contrib.auth.middleware.AuthenticationMiddleware&#x27;,
+ &#x27;core.middleware.SubscriptionAccessMiddleware&#x27;,
+ &#x27;core.middleware.FeatureLimitMiddleware&#x27;,
+ &#x27;django.contrib.messages.middleware.MessageMiddleware&#x27;,
+ &#x27;django.middleware.clickjacking.XFrameOptionsMiddleware&#x27;]
+
+
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+    ^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/mixins.py", line 82, in partial_update
+    return self.update(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/mixins.py", line 68, in update
+    self.perform_update(serializer)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/mixins.py", line 78, in perform_update
+    serializer.save()
+    ^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/serializers.py", line 205, in save
+    self.instance = self.update(self.instance, validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/rest_framework/serializers.py", line 172, in update
+    raise NotImplementedError(&#x27;`update()` must be implemented.&#x27;)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Exception Type: NotImplementedError at /cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/
+Exception Value: `update()` must be implemented.
+</textarea>
+  <br><br>
+  <input type="submit" value="Share this traceback on a public website">
+  </div>
+</form>
+
+</div>
+
+
+<div id="requestinfo">
+  <h2>Request information</h2>
+
+
+  
+    <h3 id="user-info">USER</h3>
+    <p>abhishek.dubey@aabhyasa.com</p>
+  
+
+  <h3 id="get-info">GET</h3>
+  
+    <p>No GET data</p>
+  
+
+  <h3 id="post-info">POST</h3>
+  
+    <p>No POST data</p>
+  
+
+  <h3 id="files-info">FILES</h3>
+  
+    <p>No FILES data</p>
+  
+
+  <h3 id="cookie-info">COOKIES</h3>
+  
+    <table class="req">
+      <thead>
+        <tr>
+          <th scope="col">Variable</th>
+          <th scope="col">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr>
+            <td>connect.sid</td>
+            <td class="code"><pre>&#x27;s%3AZpuUUa654I6PR4zWFuHOkkcz1iO8B5NQ.T8ey75dbjZZlOL%2F%2Fys%2Bw%2BgZQTuivIiHjBqzCdj2Gw8Y&#x27;</pre></td>
+          </tr>
+        
+          <tr>
+            <td>csrftoken</td>
+            <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+          </tr>
+        
+          <tr>
+            <td>sessionid</td>
+            <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+          </tr>
+        
+      </tbody>
+    </table>
+  
+
+  <h3 id="meta-info">META</h3>
+  <table class="req">
+    <thead>
+      <tr>
+        <th scope="col">Variable</th>
+        <th scope="col">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td>CFLAGS</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>COLOR</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>COLORTERM</td>
+          <td class="code"><pre>&#x27;truecolor&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CONNECTORS_HOSTNAME</td>
+          <td class="code"><pre>&#x27;connectors.replit.com&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CONTENT_LENGTH</td>
+          <td class="code"><pre>&#x27;19&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CONTENT_TYPE</td>
+          <td class="code"><pre>&#x27;application/json&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE</td>
+          <td class="code"><pre>&#x27;DcjgiKAcVNF9O2sflRSbSZRmrIpDgGwo&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATABASE_URL</td>
+          <td class="code"><pre>&#x27;postgresql://neondb_owner:npg_0wrBRUgodWN8@ep-dry-night-afoo58ff.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_OBJECT_STORAGE_BUCKET_ID</td>
+          <td class="code"><pre>&#x27;replit-objstore-0c831b15-a995-4055-b6a4-337672fbefc3&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DISPLAY</td>
+          <td class="code"><pre>&#x27;:0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DJANGO_SETTINGS_MODULE</td>
+          <td class="code"><pre>&#x27;engagex.settings&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DOCKER_CONFIG</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.config/docker&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EDITOR</td>
+          <td class="code"><pre>&#x27;vi&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST_PASSWORD</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST_USER</td>
+          <td class="code"><pre>&#x27;userlogintrack@gmail.com&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>GATEWAY_INTERFACE</td>
+          <td class="code"><pre>&#x27;CGI/1.1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>GIT_ASKPASS</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>GIT_EDITOR</td>
+          <td class="code"><pre>&#x27;replit-git-editor&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>GI_TYPELIB_PATH</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>GLIBC_TUNABLES</td>
+          <td class="code"><pre>&#x27;glibc.rtld.optional_static_tls=10000&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HOME</td>
+          <td class="code"><pre>&#x27;/home/runner&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HOSTNAME</td>
+          <td class="code"><pre>&#x27;e4df66f35297&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_ACCEPT</td>
+          <td class="code"><pre>&#x27;*/*&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_ACCEPT_ENCODING</td>
+          <td class="code"><pre>&#x27;gzip, deflate, br, zstd&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_ACCEPT_LANGUAGE</td>
+          <td class="code"><pre>&#x27;en-US,en;q=0.9&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_CONNECTION</td>
+          <td class="code"><pre>&#x27;close&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_COOKIE</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_HOST</td>
+          <td class="code"><pre>&#x27;127.0.0.1:8001&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_ORIGIN</td>
+          <td class="code"><pre>&#x27;https://ea19e9b3-14e6-4312-8546-6e57f572ef7f-00-2hnhorhfpx7br.riker.replit.dev&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_REFERER</td>
+          <td class="code"><pre>&#x27;https://ea19e9b3-14e6-4312-8546-6e57f572ef7f-00-2hnhorhfpx7br.riker.replit.dev/subscription&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_SEC_CH_UA</td>
+          <td class="code"><pre>&#x27;&quot;Chromium&quot;;v=&quot;140&quot;, &quot;Not=A?Brand&quot;;v=&quot;24&quot;, &quot;Google Chrome&quot;;v=&quot;140&quot;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_SEC_CH_UA_MOBILE</td>
+          <td class="code"><pre>&#x27;?0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_SEC_CH_UA_PLATFORM</td>
+          <td class="code"><pre>&#x27;&quot;Windows&quot;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_SEC_FETCH_DEST</td>
+          <td class="code"><pre>&#x27;empty&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_SEC_FETCH_MODE</td>
+          <td class="code"><pre>&#x27;cors&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_SEC_FETCH_SITE</td>
+          <td class="code"><pre>&#x27;same-origin&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_SEC_FETCH_STORAGE_ACCESS</td>
+          <td class="code"><pre>&#x27;active&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_USER_AGENT</td>
+          <td class="code"><pre>(&#x27;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like &#x27;
+ &#x27;Gecko) Chrome/140.0.0.0 Safari/537.36&#x27;)</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_FORWARDED_FOR</td>
+          <td class="code"><pre>&#x27;1.22.180.243, 10.81.2.89&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_FORWARDED_PROTO</td>
+          <td class="code"><pre>&#x27;https&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_REPLIT_USER_BIO</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_REPLIT_USER_ID</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_REPLIT_USER_NAME</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_REPLIT_USER_PROFILE_IMAGE</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_REPLIT_USER_ROLES</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_REPLIT_USER_TEAMS</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_X_REPLIT_USER_URL</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>INIT_CWD</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANG</td>
+          <td class="code"><pre>&#x27;en_US.UTF-8&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LDFLAGS</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LD_AUDIT</td>
+          <td class="code"><pre>&#x27;/nix/store/6y0zqxaf220r36b74hwsq9m2b2av3lw7-replit_rtld_loader-1/rtld_loader.so&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LIBGL_DRIVERS_PATH</td>
+          <td class="code"><pre>&#x27;/nix/store/cpwib3zazj49fm0y04y53w4xkbqsgrgm-mesa-25.0.7/lib/dri&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOCALE_ARCHIVE</td>
+          <td class="code"><pre>&#x27;/usr/lib/locale/locale-archive&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LS_COLORS</td>
+          <td class="code"><pre>&#x27;rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.7z=01;31:*.ace=01;31:*.alz=01;31:*.apk=01;31:*.arc=01;31:*.arj=01;31:*.bz=01;31:*.bz2=01;31:*.cab=01;31:*.cpio=01;31:*.crate=01;31:*.deb=01;31:*.drpm=01;31:*.dwm=01;31:*.dz=01;31:*.ear=01;31:*.egg=01;31:*.esd=01;31:*.gz=01;31:*.jar=01;31:*.lha=01;31:*.lrz=01;31:*.lz=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.lzo=01;31:*.pyz=01;31:*.rar=01;31:*.rpm=01;31:*.rz=01;31:*.sar=01;31:*.swm=01;31:*.t7z=01;31:*.tar=01;31:*.taz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tgz=01;31:*.tlz=01;31:*.txz=01;31:*.tz=01;31:*.tzo=01;31:*.tzst=01;31:*.udeb=01;31:*.war=01;31:*.whl=01;31:*.wim=01;31:*.xz=01;31:*.z=01;31:*.zip=01;31:*.zoo=01;31:*.zst=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.jxl=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NIXPKGS_ALLOW_UNFREE</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NIX_CFLAGS_COMPILE</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NIX_LDFLAGS</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NIX_PATH</td>
+          <td class="code"><pre>&#x27;nixpkgs=/home/runner/.nix-defexpr/channels/nixpkgs-stable-24_05:/home/runner/.nix-defexpr/channels&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NIX_PROFILES</td>
+          <td class="code"><pre>&#x27;/nix/var/nix/profiles/default /home/runner/.nix-profile&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NODE</td>
+          <td class="code"><pre>&#x27;/nix/store/lz7iav1hd92jbv44zf2rdd7b2mj23536-nodejs-20.19.3/bin/node&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NODE_ENV</td>
+          <td class="code"><pre>&#x27;development&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PATH</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/node_modules/.bin:/home/runner/node_modules/.bin:/home/node_modules/.bin:/node_modules/.bin:/nix/store/lz7iav1hd92jbv44zf2rdd7b2mj23536-nodejs-20.19.3/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/home/runner/workspace/.pythonlibs/bin:/nix/store/2lcqw1d28vklbk8ikiwad28iq2smwndv-python-wrapped-0.1.0/bin:/nix/store/2qx6jrl9h5hwpsry3ilbiihgmrnrvp50-pip-wrapper/bin:/nix/store/mx06wb8qp5z14na666bwnm1f2mxxwzj0-poetry-wrapper/bin:/nix/store/w4ml96z06nzljipl8hjlfvwg4pkxknyx-uv-0.5.11/bin:/nix/store/djy8g4cghlw19fmy6zblim1waxkr7mf2-npx/bin:/home/runner/workspace/.config/npm/node_global/bin:/home/runner/workspace/node_modules/.bin:/nix/store/8y4ls7z2sfxbq6ch3yp45l28p29qswvx-nodejs-20.19.3-wrapped/bin:/nix/store/nj22dzxzzx4m80lfa91fzqh8k9lvwigw-bun-1.2.16/bin:/nix/store/pciji08qkvcg3191yykpfipdcbbic9k5-pnpm-10.12.4/bin:/nix/store/6mzbvyzh4dfgfab6lciclji7awp9w3c4-yarn-1.22.22/bin:/nix/store/gvg9vrp821nmnyf9pxig6pss1sjywd5w-prettier-3.5.3/bin:/nix/store/w7ldv9b1vc48a235g7ib2kjyqlrzfv0s-postgresql-16.9/bin:/nix/store/byhjpy1h2f8whz3w4m3h6hkxg43hp3x5-pid1/bin:/nix/store/8jcjfqna30sw0dymana7i9frjlv2w86v-replit-runtime-path/bin:/home/runner/.nix-profile/bin:/home/runner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PATH_INFO</td>
+          <td class="code"><pre>&#x27;/cards/a26a062d-e84a-41a3-9f87-4eb4885dad8f/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PGDATABASE</td>
+          <td class="code"><pre>&#x27;neondb&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PGHOST</td>
+          <td class="code"><pre>&#x27;ep-dry-night-afoo58ff.c-2.us-west-2.aws.neon.tech&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PGPASSWORD</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PGPORT</td>
+          <td class="code"><pre>&#x27;5432&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PGUSER</td>
+          <td class="code"><pre>&#x27;neondb_owner&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PKG_CONFIG_PATH</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PKG_CONFIG_PATH_FOR_TARGET</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_CACHE_DIR</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.cache/pypoetry&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_CONFIG_DIR</td>
+          <td class="code"><pre>&#x27;/nix/store/1fwfg40xn15b68lfai5hp18rn0hv6im1-poetry-config&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_DOWNLOAD_WITH_CURL</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_INSTALLER_MODERN_INSTALLATION</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_PIP_FROM_PATH</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_PIP_NO_ISOLATE</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_PIP_NO_PREFIX</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_PIP_USE_PIP_CACHE</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_USE_USER_SITE</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>POETRY_VIRTUALENVS_CREATE</td>
+          <td class="code"><pre>&#x27;0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PORT</td>
+          <td class="code"><pre>&#x27;5000&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PRIVATE_OBJECT_DIR</td>
+          <td class="code"><pre>&#x27;/replit-objstore-0c831b15-a995-4055-b6a4-337672fbefc3/.private&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PROMPT_DIRTRIM</td>
+          <td class="code"><pre>&#x27;2&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PUBLIC_OBJECT_SEARCH_PATHS</td>
+          <td class="code"><pre>&#x27;/replit-objstore-0c831b15-a995-4055-b6a4-337672fbefc3/public&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PWD</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PYTHONPATH</td>
+          <td class="code"><pre>&#x27;/nix/store/zz7i75jb78idaz0rb1y1i4rzdyxq28vf-sitecustomize/lib/python/site-packages:/nix/store/yaps09f01jp3fd1405qlr0qz6haf6z03-python3.11-pip-25.0.1/lib/python3.11/site-packages&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PYTHONUSERBASE</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.pythonlibs&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>QUERY_STRING</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REMOTE_ADDR</td>
+          <td class="code"><pre>&#x27;127.0.0.1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REMOTE_HOST</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_BASHRC</td>
+          <td class="code"><pre>&#x27;/nix/store/vgmsjrn5bbcdwgqxy27njrq6n8scc2nc-replit-bashrc/bashrc&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_CLI</td>
+          <td class="code"><pre>&#x27;/nix/store/8rz64vxfly488m3j1k3hvvjq60x5dyqv-pid1-0.0.1/bin/replit&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_CLUSTER</td>
+          <td class="code"><pre>&#x27;riker&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_CONNECTORS_HOSTNAME</td>
+          <td class="code"><pre>&#x27;connectors.replit.com&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_CONTAINER</td>
+          <td class="code"><pre>&#x27;gcr.io/marine-cycle-160323/repl-base:97433c06ca04972a1619dedd971cb3a93f4a5087&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_DB_URL</td>
+          <td class="code"><pre>&#x27;https://kv.replit.com/v0/eyJhbGciOiJIUzUxMiIsImlzcyI6ImNvbm1hbiIsImtpZCI6InByb2Q6MSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb25tYW4iLCJleHAiOjE3NTg3MjQ4MDMsImlhdCI6MTc1ODYxMzIwMywiZGF0YWJhc2VfaWQiOiJlYTE5ZTliMy0xNGU2LTQzMTItODU0Ni02ZTU3ZjU3MmVmN2YifQ.Jh5OsN3I0QLVQh277R2S8tTcXv-grToehDaYKZRfasZDNvTXOfmRi1pdoSR4oDCEsRDXmsoD4Bl26TY3Yw_AfA&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_DEV_DOMAIN</td>
+          <td class="code"><pre>&#x27;ea19e9b3-14e6-4312-8546-6e57f572ef7f-00-2hnhorhfpx7br.riker.replit.dev&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_DOMAINS</td>
+          <td class="code"><pre>&#x27;ea19e9b3-14e6-4312-8546-6e57f572ef7f-00-2hnhorhfpx7br.riker.replit.dev&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_ENVIRONMENT</td>
+          <td class="code"><pre>&#x27;production&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_HELIUM_ENABLED</td>
+          <td class="code"><pre>&#x27;true&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_LD_AUDIT</td>
+          <td class="code"><pre>&#x27;/nix/store/6y0zqxaf220r36b74hwsq9m2b2av3lw7-replit_rtld_loader-1/rtld_loader.so&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_LD_LIBRARY_PATH</td>
+          <td class="code"><pre>&#x27;/nix/store/gcg4y75zva03306ddxbv88s3xzyxmm90-cpplibs/lib:/nix/store/abch1r0gnbpikbp9n4x6mm8dwqwfrib6-zlib-1.3.1/lib:/nix/store/syzi2bpl8j599spgvs20xjkjzcw758as-glib-2.84.3/lib:/nix/store/pahwl2rq51dmwrn8czks27yy3sa3byg9-libX11-1.8.12/lib:/nix/store/844cgxkyzi1nrilvamxr08gs9l278gx9-libXext-1.3.6/lib:/nix/store/1ar5dnd5hqiyaxi6whj52vkd2bf0h7n8-libXinerama-1.1.5/lib:/nix/store/zgpm3jjfsfs1ljdzm1xjq502mkvxck3m-libXcursor-1.2.3/lib:/nix/store/yp7hylmnidn1mr91xsdn2dj5glhqmk7a-libXrandr-1.5.4/lib:/nix/store/474ia8w6cpw6vmhbsvbf5zx7bx5md4bv-libXi-1.8.2/lib:/nix/store/jf8lpgskxdh2v9jciy0ghqyf7lbggrxn-libXxf86vm-1.1.6/lib&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_MODE</td>
+          <td class="code"><pre>&#x27;workflow&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_NIX_CHANNEL</td>
+          <td class="code"><pre>&#x27;stable-24_05&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_PID1_FLAG_PREEVALED_SYSPKGS</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_PID1_VERSION</td>
+          <td class="code"><pre>&#x27;0.0.0-8b46411&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_PID2</td>
+          <td class="code"><pre>&#x27;true&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_PYTHONPATH</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages:/nix/store/y0iwy8ma2m45pr23bw4r7lyz69v2b6wf-python3.11-setuptools-80.7.1/lib/python3.11/site-packages&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_PYTHON_LD_LIBRARY_PATH</td>
+          <td class="code"><pre>&#x27;/nix/store/gcg4y75zva03306ddxbv88s3xzyxmm90-cpplibs/lib:/nix/store/abch1r0gnbpikbp9n4x6mm8dwqwfrib6-zlib-1.3.1/lib:/nix/store/syzi2bpl8j599spgvs20xjkjzcw758as-glib-2.84.3/lib:/nix/store/pahwl2rq51dmwrn8czks27yy3sa3byg9-libX11-1.8.12/lib:/nix/store/844cgxkyzi1nrilvamxr08gs9l278gx9-libXext-1.3.6/lib:/nix/store/1ar5dnd5hqiyaxi6whj52vkd2bf0h7n8-libXinerama-1.1.5/lib:/nix/store/zgpm3jjfsfs1ljdzm1xjq502mkvxck3m-libXcursor-1.2.3/lib:/nix/store/yp7hylmnidn1mr91xsdn2dj5glhqmk7a-libXrandr-1.5.4/lib:/nix/store/474ia8w6cpw6vmhbsvbf5zx7bx5md4bv-libXi-1.8.2/lib:/nix/store/jf8lpgskxdh2v9jciy0ghqyf7lbggrxn-libXxf86vm-1.1.6/lib&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_RIPPKGS_INDICES</td>
+          <td class="code"><pre>&#x27;/nix/store/sic31kz2lvpf4v5wlaldrla7ivz4v2j2-rippkgs-indices&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_RTLD_LOADER</td>
+          <td class="code"><pre>&#x27;1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPLIT_SUBCLUSTER</td>
+          <td class="code"><pre>&#x27;paid&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_HOME</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_ID</td>
+          <td class="code"><pre>&#x27;ea19e9b3-14e6-4312-8546-6e57f572ef7f&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_IDENTITY</td>
+          <td class="code"><pre>&#x27;v2.public.Q2lSbFlURTVaVGxpTXkweE5HVTJMVFF6TVRJdE9EVTBOaTAyWlRVM1pqVTNNbVZtTjJZU0QyRmlhR2x6YUdWclpIVmlaWGsyTnhvUFJXNW5ZV2RsV0ZCc1lYUm1iM0p0SWlSbFlURTVaVGxpTXkweE5HVTJMVFF6TVRJdE9EVTBOaTAyWlRVM1pqVTNNbVZtTjJZNGxxcmhGbklLQ2dadmNYVnJialFRQWxvTkNnVnlhV3RsY2hJRWNHRnBaQT09c5R1b0xtWKDsRVJ36RSwNT0fZoLa4nZ0-PGH7zyP0HaSBQ2CPj0vP36IsvLlVqC47OEHJNFhCSRsLtsB5Y71CA.R0FFaUJtTnZibTFoYmhLckNIWXlMbkIxWW14cFl5NVJNbVF6VTFob1MwMHdjRFJhTVd4U1RESktUV1JUT1VKVFZrNUZVVmR3VlU1VWJIbFNNRXB2VVRCb01WUjZZelJSVjJoMlVUQmtRbFpYUmt0YU1qbHlWMnhrUm1WRk9WaFdWRlphWVdzeE1GUldVbE5pUlRWd1RVUkNUbVZyVmpWVVJsSnVUVlUxUlZkWVVrOWlWbFY0VkdwS1drMVZOVFpUYlhoaFlXMVNkRkl5YUVaVk1GRjVVbTFzYUZJeWVEWlpWV1JYWTJ4d1NWWnRiR0ZYUjNONVZHNW9kbEpyT1V0WldFVXdWV3hzYUZKRlZrcFRNRTV1VjI1YWFsZEdXbmxaYlhCU1ZWVkdiMkl3YUVwYU1WbzFXVlprTUdKSFRtOWlNR1JNV2pGS00xZFdaSE5oTUd4eFZtNUtUbUZVVmpOYVJtUkxZekpHV0ZSWVZteFNNRFZ0V1RGV1YxTnRVbFpoUld4b1ZsUkNOVlJHV2tOU01VWTJWR3RzVUZJeFNtaFZWbFpQVFRBeGMxSnNiRmhpYTBwV1ZHdGFUMWRHU25WU2FrcFhWMGRTUzFkV1VtOVNNazR6VUZRd2IwOTBVbE5wVDNOSVRqTXpTa3R6UWpOalF6QmpaMnRZYjFJM01rUkZkMFZNUm1sellUQnhUMU5HYUMxUlRXSnlORFpOUWtRMFkwUkVVR3RMUTJSclIyeGpVMmhFVm01d2FGUjVVbGRLU1U5VVJ6VnJTQzVTTUVaR1lWVktkRlJ1V21saVZFWnZXVzFvVFZsclJuVlhXR3hOWW10SmVGZFhNVFJqUm13MVRsWktUbUpXU1RKV1ZFWnJUVWRXZEZOc1dsUmlia0pYVm0weE5GVXhVbkpWYlVaT1ZtNUNWMVV5ZEU5V1JscFpZVVZXVm1WclNuSlZha0V4VTFaR2NsTnNXazVTYkhCVFZtMXdUMWxYVWxkaU0yaFRZbGRvVTFacVNtOWtWbFpZWkVkMGFXSkZOVmhaYTFaUFZtMUtWV0pGVmxaaGEwcElXa2Q0YzFac1NuVlNiRXBYVmxoQ1NsWXljRU5qTVdSelVteG9hRk5HY0ZOVVZXUlRVVEZhUjFwRlpGSmlWVnBKVjJ0VmVGVXdNWFJWYTNSWFRWWmFWRlZVU2twa01WSnlZVVpLVjJFeGNIWldWbHByWWpKS2MxUnVTbWxUUlZwWVdXMTBkMVF4YkZkVmJHUk9UVmhDU0ZkclZqQmhhekZ5VjJ4c1YxSnRhRmhXUkVaaFpFZFdTV05HWkZkaVZrcEpWa1pTUzFReVRYbFRhbHBXWVhwc1dGUlhlRXRpTVZsNVRWUlNWRTFyV2tkVVZsWnJWa2RLUmxkc1dscFdla1V3VjFaYWMwNXNSbFZTYlhCcFVsaENObFpFUmxkWlYwVjVVMnhzVmxaRldsZFphMXBoWTJ4d1NHVkZXbXhTYmtKR1ZqSXhkMkZIUlhoalJ6bFhZV3RhVkZWNlJrNWxSbHB6VTJ4R1YxSkZTak5XTW5SaFYyMU9kR05GTVZCWFJUUjZXa1ZXV2s1V2NFVlNXRkpwWWxSV1VWUXdaR0ZWYlVwWVlVUktWRkpXY0hoV2ExWnlaRWRTUldGRmNHbGlWbkJSVjBSSmVGWlZNWFJaZWxKcVYwaENSbFZyWkZaT1JscEZZa1pTYUUxV1NqWlhiWGh2WWxkV2NtSjZRbGhXVlRFMlYyMXpkMlZzWkZaT1dFcFVWa2RTV1ZkWGEzZE9Wa3B5VlcwNVQyRlVSa3hVYWtrMVVrVjRjMU5ZWkZOaE1YQnZWbXhXZDAxR1draE9WMFpvVmpCd1ZsVnRNRFZYYlVwWVZXcEtWbUZyY0ZCVk1WcFBaRlprZEZKc1RsTmxiV2N3&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_IDENTITY_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_IMAGE</td>
+          <td class="code"><pre>&#x27;gcr.io/marine-cycle-160323/nix:bf8590a3e2f0a8b70b7ca175eeed9074dffbfca9&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_LANGUAGE</td>
+          <td class="code"><pre>&#x27;nix&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_ORG_ID</td>
+          <td class="code"><pre>&#x27;oqukn4&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_ORG_TYPE</td>
+          <td class="code"><pre>&#x27;TEAM&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_OWNER</td>
+          <td class="code"><pre>&#x27;abhishekdubey67&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_OWNER_ID</td>
+          <td class="code"><pre>&#x27;47731990&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_PUBKEYS</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REPL_SLUG</td>
+          <td class="code"><pre>&#x27;workspace&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REQUEST_METHOD</td>
+          <td class="code"><pre>&#x27;PATCH&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SCRIPT_NAME</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_NAME</td>
+          <td class="code"><pre>&#x27;localhost&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_PORT</td>
+          <td class="code"><pre>&#x27;8001&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_PROTOCOL</td>
+          <td class="code"><pre>&#x27;HTTP/1.1&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_SOFTWARE</td>
+          <td class="code"><pre>&#x27;WSGIServer/0.2&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_SECRET</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SHLVL</td>
+          <td class="code"><pre>&#x27;0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_SECRET_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TERM</td>
+          <td class="code"><pre>&#x27;xterm-256color&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TESTING_STRIPE_SECRET_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TESTING_VITE_STRIPE_PUBLIC_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TZ</td>
+          <td class="code"><pre>&#x27;UTC&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USER</td>
+          <td class="code"><pre>&#x27;runner&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>UV_PROJECT_ENVIRONMENT</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.pythonlibs&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>UV_PYTHON_DOWNLOADS</td>
+          <td class="code"><pre>&#x27;never&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>UV_PYTHON_PREFERENCE</td>
+          <td class="code"><pre>&#x27;only-system&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>VITE_STRIPE_PUBLIC_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>XDG_CACHE_HOME</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.cache&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>XDG_CONFIG_HOME</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.config&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>XDG_DATA_DIRS</td>
+          <td class="code"><pre>&#x27;/nix/store/8jcjfqna30sw0dymana7i9frjlv2w86v-replit-runtime-path/share&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>XDG_DATA_HOME</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.local/share&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>__EGL_VENDOR_LIBRARY_FILENAMES</td>
+          <td class="code"><pre>&#x27;/nix/store/cpwib3zazj49fm0y04y53w4xkbqsgrgm-mesa-25.0.7/share/glvnd/egl_vendor.d/50_mesa.json&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_command</td>
+          <td class="code"><pre>&#x27;run-script&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_cache</td>
+          <td class="code"><pre>&#x27;/home/runner/.npm&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_global_prefix</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.config/npm/node_global&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_globalconfig</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.config/npm/node_global/etc/npmrc&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_init_module</td>
+          <td class="code"><pre>&#x27;/home/runner/.npm-init.js&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_local_prefix</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_node_gyp</td>
+          <td class="code"><pre>&#x27;/nix/store/lz7iav1hd92jbv44zf2rdd7b2mj23536-nodejs-20.19.3/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_noproxy</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_npm_version</td>
+          <td class="code"><pre>&#x27;10.8.2&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_prefix</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/.config/npm/node_global&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_user_agent</td>
+          <td class="code"><pre>&#x27;npm/10.8.2 node/v20.19.3 linux x64 workspaces/false&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_config_userconfig</td>
+          <td class="code"><pre>&#x27;/home/runner/.npmrc&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_execpath</td>
+          <td class="code"><pre>&#x27;/nix/store/lz7iav1hd92jbv44zf2rdd7b2mj23536-nodejs-20.19.3/lib/node_modules/npm/bin/npm-cli.js&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_lifecycle_event</td>
+          <td class="code"><pre>&#x27;dev&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_lifecycle_script</td>
+          <td class="code"><pre>&#x27;NODE_ENV=development tsx server/index.ts&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_node_execpath</td>
+          <td class="code"><pre>&#x27;/nix/store/lz7iav1hd92jbv44zf2rdd7b2mj23536-nodejs-20.19.3/bin/node&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_package_json</td>
+          <td class="code"><pre>&#x27;/home/runner/workspace/package.json&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_package_name</td>
+          <td class="code"><pre>&#x27;rest-express&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>npm_package_version</td>
+          <td class="code"><pre>&#x27;1.0.0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.errors</td>
+          <td class="code"><pre>&lt;_io.TextIOWrapper name=&#x27;&lt;stderr&gt;&#x27; mode=&#x27;w&#x27; encoding=&#x27;utf-8&#x27;&gt;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.file_wrapper</td>
+          <td class="code"><pre>&lt;class &#x27;wsgiref.util.FileWrapper&#x27;&gt;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.input</td>
+          <td class="code"><pre>&lt;django.core.handlers.wsgi.LimitedStream object at 0x7efeba3bdba0&gt;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.multiprocess</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.multithread</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.run_once</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.url_scheme</td>
+          <td class="code"><pre>&#x27;http&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.version</td>
+          <td class="code"><pre>(1, 0)</pre></td>
+        </tr>
+      
+    </tbody>
+  </table>
+
+
+  <h3 id="settings-info">Settings</h3>
+  <h4>Using settings module <code>engagex.settings</code></h4>
+  <table class="req">
+    <thead>
+      <tr>
+        <th scope="col">Setting</th>
+        <th scope="col">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td>ABSOLUTE_URL_OVERRIDES</td>
+          <td class="code"><pre>{}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ADMINS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ALLOWED_HOSTS</td>
+          <td class="code"><pre>[&#x27;localhost&#x27;, &#x27;127.0.0.1&#x27;, &#x27;0.0.0.0&#x27;, &#x27;.replit.dev&#x27;, &#x27;.replit.app&#x27;, &#x27;.repl.co&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>APPEND_SLASH</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTHENTICATION_BACKENDS</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_BRIDGE_SECRET</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_PASSWORD_VALIDATORS</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_USER_MODEL</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>BASE_DIR</td>
+          <td class="code"><pre>PosixPath(&#x27;/home/runner/workspace/backend&#x27;)</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHES</td>
+          <td class="code"><pre>{&#x27;default&#x27;: {&#x27;BACKEND&#x27;: &#x27;django.core.cache.backends.dummy.DummyCache&#x27;}}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHE_MIDDLEWARE_ALIAS</td>
+          <td class="code"><pre>&#x27;default&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHE_MIDDLEWARE_KEY_PREFIX</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHE_MIDDLEWARE_SECONDS</td>
+          <td class="code"><pre>600</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_ACCEPT_CONTENT</td>
+          <td class="code"><pre>[&#x27;json&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_BEAT_SCHEDULE</td>
+          <td class="code"><pre>{&#x27;process-analytics&#x27;: {&#x27;schedule&#x27;: 600.0,
+                       &#x27;task&#x27;: &#x27;core.tasks.process_analytics_task&#x27;},
+ &#x27;verify-domains&#x27;: {&#x27;schedule&#x27;: 300.0,
+                    &#x27;task&#x27;: &#x27;core.tasks.verify_domains_task&#x27;}}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_BROKER_URL</td>
+          <td class="code"><pre>&#x27;redis://localhost:6379/0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_ENABLE_UTC</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_RESULT_BACKEND</td>
+          <td class="code"><pre>&#x27;redis://localhost:6379/0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_RESULT_SERIALIZER</td>
+          <td class="code"><pre>&#x27;json&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_TASK_ALWAYS_EAGER</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_TASK_EAGER_PROPAGATES</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_TASK_SERIALIZER</td>
+          <td class="code"><pre>&#x27;json&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CELERY_TIMEZONE</td>
+          <td class="code"><pre>&#x27;UTC&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CORS_ALLOWED_HEADERS</td>
+          <td class="code"><pre>[&#x27;accept&#x27;,
+ &#x27;accept-encoding&#x27;,
+ &#x27;authorization&#x27;,
+ &#x27;content-type&#x27;,
+ &#x27;dnt&#x27;,
+ &#x27;origin&#x27;,
+ &#x27;user-agent&#x27;,
+ &#x27;x-csrftoken&#x27;,
+ &#x27;x-requested-with&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CORS_ALLOWED_ORIGINS</td>
+          <td class="code"><pre>[&#x27;http://localhost:3000&#x27;,
+ &#x27;http://127.0.0.1:3000&#x27;,
+ &#x27;http://localhost:5000&#x27;,
+ &#x27;http://127.0.0.1:5000&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CORS_ALLOWED_ORIGIN_REGEXES</td>
+          <td class="code"><pre>[&#x27;^https://.*\\.replit\\.dev$&#x27;, &#x27;^https://.*\\.replit\\.app$&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CORS_ALLOW_ALL_ORIGINS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CORS_ALLOW_CREDENTIALS</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_AGE</td>
+          <td class="code"><pre>31449600</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_DOMAIN</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_HTTPONLY</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_NAME</td>
+          <td class="code"><pre>&#x27;csrftoken&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_PATH</td>
+          <td class="code"><pre>&#x27;/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_SAMESITE</td>
+          <td class="code"><pre>&#x27;Lax&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_SECURE</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_FAILURE_VIEW</td>
+          <td class="code"><pre>&#x27;django.views.csrf.csrf_failure&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_HEADER_NAME</td>
+          <td class="code"><pre>&#x27;HTTP_X_CSRFTOKEN&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_TRUSTED_ORIGINS</td>
+          <td class="code"><pre>[&#x27;http://localhost:3000&#x27;,
+ &#x27;http://127.0.0.1:3000&#x27;,
+ &#x27;http://localhost:5000&#x27;,
+ &#x27;http://127.0.0.1:5000&#x27;,
+ &#x27;https://*.replit.dev&#x27;,
+ &#x27;https://*.replit.app&#x27;,
+ &#x27;https://*.repl.co&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_USE_SESSIONS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATABASES</td>
+          <td class="code"><pre>{&#x27;default&#x27;: {&#x27;ATOMIC_REQUESTS&#x27;: False,
+             &#x27;AUTOCOMMIT&#x27;: True,
+             &#x27;CONN_HEALTH_CHECKS&#x27;: False,
+             &#x27;CONN_MAX_AGE&#x27;: 0,
+             &#x27;ENGINE&#x27;: &#x27;django.db.backends.postgresql&#x27;,
+             &#x27;HOST&#x27;: &#x27;ep-dry-night-afoo58ff.c-2.us-west-2.aws.neon.tech&#x27;,
+             &#x27;NAME&#x27;: &#x27;neondb&#x27;,
+             &#x27;OPTIONS&#x27;: {&#x27;sslmode&#x27;: &#x27;require&#x27;},
+             &#x27;PASSWORD&#x27;: &#x27;********************&#x27;,
+             &#x27;PORT&#x27;: &#x27;5432&#x27;,
+             &#x27;TEST&#x27;: {&#x27;CHARSET&#x27;: None,
+                      &#x27;COLLATION&#x27;: None,
+                      &#x27;MIGRATE&#x27;: True,
+                      &#x27;MIRROR&#x27;: None,
+                      &#x27;NAME&#x27;: None},
+             &#x27;TIME_ZONE&#x27;: None,
+             &#x27;USER&#x27;: &#x27;neondb_owner&#x27;}}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATABASE_ROUTERS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATA_UPLOAD_MAX_MEMORY_SIZE</td>
+          <td class="code"><pre>2621440</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATA_UPLOAD_MAX_NUMBER_FIELDS</td>
+          <td class="code"><pre>1000</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATA_UPLOAD_MAX_NUMBER_FILES</td>
+          <td class="code"><pre>100</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATETIME_FORMAT</td>
+          <td class="code"><pre>&#x27;N j, Y, P&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATETIME_INPUT_FORMATS</td>
+          <td class="code"><pre>[&#x27;%Y-%m-%d %H:%M:%S&#x27;,
+ &#x27;%Y-%m-%d %H:%M:%S.%f&#x27;,
+ &#x27;%Y-%m-%d %H:%M&#x27;,
+ &#x27;%m/%d/%Y %H:%M:%S&#x27;,
+ &#x27;%m/%d/%Y %H:%M:%S.%f&#x27;,
+ &#x27;%m/%d/%Y %H:%M&#x27;,
+ &#x27;%m/%d/%y %H:%M:%S&#x27;,
+ &#x27;%m/%d/%y %H:%M:%S.%f&#x27;,
+ &#x27;%m/%d/%y %H:%M&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATE_FORMAT</td>
+          <td class="code"><pre>&#x27;N j, Y&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATE_INPUT_FORMATS</td>
+          <td class="code"><pre>[&#x27;%Y-%m-%d&#x27;,
+ &#x27;%m/%d/%Y&#x27;,
+ &#x27;%m/%d/%y&#x27;,
+ &#x27;%b %d %Y&#x27;,
+ &#x27;%b %d, %Y&#x27;,
+ &#x27;%d %b %Y&#x27;,
+ &#x27;%d %b, %Y&#x27;,
+ &#x27;%B %d %Y&#x27;,
+ &#x27;%B %d, %Y&#x27;,
+ &#x27;%d %B %Y&#x27;,
+ &#x27;%d %B, %Y&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEBUG</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEBUG_PROPAGATE_EXCEPTIONS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DECIMAL_SEPARATOR</td>
+          <td class="code"><pre>&#x27;.&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_AUTO_FIELD</td>
+          <td class="code"><pre>&#x27;django.db.models.BigAutoField&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_CHARSET</td>
+          <td class="code"><pre>&#x27;utf-8&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_EXCEPTION_REPORTER</td>
+          <td class="code"><pre>&#x27;django.views.debug.ExceptionReporter&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_EXCEPTION_REPORTER_FILTER</td>
+          <td class="code"><pre>&#x27;django.views.debug.SafeExceptionReporterFilter&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_FROM_EMAIL</td>
+          <td class="code"><pre>&#x27;EngageX &lt;userlogintrack@gmail.com&gt;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_INDEX_TABLESPACE</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_TABLESPACE</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DISALLOWED_USER_AGENTS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DJANGO_APPS</td>
+          <td class="code"><pre>[&#x27;django.contrib.admin&#x27;,
+ &#x27;django.contrib.auth&#x27;,
+ &#x27;django.contrib.contenttypes&#x27;,
+ &#x27;django.contrib.sessions&#x27;,
+ &#x27;django.contrib.messages&#x27;,
+ &#x27;django.contrib.staticfiles&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_BACKEND</td>
+          <td class="code"><pre>&#x27;django.core.mail.backends.smtp.EmailBackend&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST</td>
+          <td class="code"><pre>&#x27;smtp.gmail.com&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST_PASSWORD</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST_USER</td>
+          <td class="code"><pre>&#x27;userlogintrack@gmail.com&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_PORT</td>
+          <td class="code"><pre>587</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_SSL_CERTFILE</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_SSL_KEYFILE</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_SUBJECT_PREFIX</td>
+          <td class="code"><pre>&#x27;[Django] &#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_TIMEOUT</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_USE_LOCALTIME</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_USE_SSL</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_USE_TLS</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_DIRECTORY_PERMISSIONS</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_HANDLERS</td>
+          <td class="code"><pre>[&#x27;django.core.files.uploadhandler.MemoryFileUploadHandler&#x27;,
+ &#x27;django.core.files.uploadhandler.TemporaryFileUploadHandler&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_MAX_MEMORY_SIZE</td>
+          <td class="code"><pre>2621440</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_PERMISSIONS</td>
+          <td class="code"><pre>420</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_TEMP_DIR</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FIRST_DAY_OF_WEEK</td>
+          <td class="code"><pre>0</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FIXTURE_DIRS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FORCE_SCRIPT_NAME</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FORMAT_MODULE_PATH</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FORMS_URLFIELD_ASSUME_HTTPS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FORM_RENDERER</td>
+          <td class="code"><pre>&#x27;django.forms.renderers.DjangoTemplates&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>IGNORABLE_404_URLS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>INSTALLED_APPS</td>
+          <td class="code"><pre>[&#x27;django.contrib.admin&#x27;,
+ &#x27;django.contrib.auth&#x27;,
+ &#x27;django.contrib.contenttypes&#x27;,
+ &#x27;django.contrib.sessions&#x27;,
+ &#x27;django.contrib.messages&#x27;,
+ &#x27;django.contrib.staticfiles&#x27;,
+ &#x27;rest_framework&#x27;,
+ &#x27;corsheaders&#x27;,
+ &#x27;django_filters&#x27;,
+ &#x27;core&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>INTERNAL_IPS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGES</td>
+          <td class="code"><pre>[(&#x27;af&#x27;, &#x27;Afrikaans&#x27;),
+ (&#x27;ar&#x27;, &#x27;Arabic&#x27;),
+ (&#x27;ar-dz&#x27;, &#x27;Algerian Arabic&#x27;),
+ (&#x27;ast&#x27;, &#x27;Asturian&#x27;),
+ (&#x27;az&#x27;, &#x27;Azerbaijani&#x27;),
+ (&#x27;bg&#x27;, &#x27;Bulgarian&#x27;),
+ (&#x27;be&#x27;, &#x27;Belarusian&#x27;),
+ (&#x27;bn&#x27;, &#x27;Bengali&#x27;),
+ (&#x27;br&#x27;, &#x27;Breton&#x27;),
+ (&#x27;bs&#x27;, &#x27;Bosnian&#x27;),
+ (&#x27;ca&#x27;, &#x27;Catalan&#x27;),
+ (&#x27;ckb&#x27;, &#x27;Central Kurdish (Sorani)&#x27;),
+ (&#x27;cs&#x27;, &#x27;Czech&#x27;),
+ (&#x27;cy&#x27;, &#x27;Welsh&#x27;),
+ (&#x27;da&#x27;, &#x27;Danish&#x27;),
+ (&#x27;de&#x27;, &#x27;German&#x27;),
+ (&#x27;dsb&#x27;, &#x27;Lower Sorbian&#x27;),
+ (&#x27;el&#x27;, &#x27;Greek&#x27;),
+ (&#x27;en&#x27;, &#x27;English&#x27;),
+ (&#x27;en-au&#x27;, &#x27;Australian English&#x27;),
+ (&#x27;en-gb&#x27;, &#x27;British English&#x27;),
+ (&#x27;eo&#x27;, &#x27;Esperanto&#x27;),
+ (&#x27;es&#x27;, &#x27;Spanish&#x27;),
+ (&#x27;es-ar&#x27;, &#x27;Argentinian Spanish&#x27;),
+ (&#x27;es-co&#x27;, &#x27;Colombian Spanish&#x27;),
+ (&#x27;es-mx&#x27;, &#x27;Mexican Spanish&#x27;),
+ (&#x27;es-ni&#x27;, &#x27;Nicaraguan Spanish&#x27;),
+ (&#x27;es-ve&#x27;, &#x27;Venezuelan Spanish&#x27;),
+ (&#x27;et&#x27;, &#x27;Estonian&#x27;),
+ (&#x27;eu&#x27;, &#x27;Basque&#x27;),
+ (&#x27;fa&#x27;, &#x27;Persian&#x27;),
+ (&#x27;fi&#x27;, &#x27;Finnish&#x27;),
+ (&#x27;fr&#x27;, &#x27;French&#x27;),
+ (&#x27;fy&#x27;, &#x27;Frisian&#x27;),
+ (&#x27;ga&#x27;, &#x27;Irish&#x27;),
+ (&#x27;gd&#x27;, &#x27;Scottish Gaelic&#x27;),
+ (&#x27;gl&#x27;, &#x27;Galician&#x27;),
+ (&#x27;he&#x27;, &#x27;Hebrew&#x27;),
+ (&#x27;hi&#x27;, &#x27;Hindi&#x27;),
+ (&#x27;hr&#x27;, &#x27;Croatian&#x27;),
+ (&#x27;hsb&#x27;, &#x27;Upper Sorbian&#x27;),
+ (&#x27;hu&#x27;, &#x27;Hungarian&#x27;),
+ (&#x27;hy&#x27;, &#x27;Armenian&#x27;),
+ (&#x27;ia&#x27;, &#x27;Interlingua&#x27;),
+ (&#x27;id&#x27;, &#x27;Indonesian&#x27;),
+ (&#x27;ig&#x27;, &#x27;Igbo&#x27;),
+ (&#x27;io&#x27;, &#x27;Ido&#x27;),
+ (&#x27;is&#x27;, &#x27;Icelandic&#x27;),
+ (&#x27;it&#x27;, &#x27;Italian&#x27;),
+ (&#x27;ja&#x27;, &#x27;Japanese&#x27;),
+ (&#x27;ka&#x27;, &#x27;Georgian&#x27;),
+ (&#x27;kab&#x27;, &#x27;Kabyle&#x27;),
+ (&#x27;kk&#x27;, &#x27;Kazakh&#x27;),
+ (&#x27;km&#x27;, &#x27;Khmer&#x27;),
+ (&#x27;kn&#x27;, &#x27;Kannada&#x27;),
+ (&#x27;ko&#x27;, &#x27;Korean&#x27;),
+ (&#x27;ky&#x27;, &#x27;Kyrgyz&#x27;),
+ (&#x27;lb&#x27;, &#x27;Luxembourgish&#x27;),
+ (&#x27;lt&#x27;, &#x27;Lithuanian&#x27;),
+ (&#x27;lv&#x27;, &#x27;Latvian&#x27;),
+ (&#x27;mk&#x27;, &#x27;Macedonian&#x27;),
+ (&#x27;ml&#x27;, &#x27;Malayalam&#x27;),
+ (&#x27;mn&#x27;, &#x27;Mongolian&#x27;),
+ (&#x27;mr&#x27;, &#x27;Marathi&#x27;),
+ (&#x27;ms&#x27;, &#x27;Malay&#x27;),
+ (&#x27;my&#x27;, &#x27;Burmese&#x27;),
+ (&#x27;nb&#x27;, &#x27;Norwegian Bokmål&#x27;),
+ (&#x27;ne&#x27;, &#x27;Nepali&#x27;),
+ (&#x27;nl&#x27;, &#x27;Dutch&#x27;),
+ (&#x27;nn&#x27;, &#x27;Norwegian Nynorsk&#x27;),
+ (&#x27;os&#x27;, &#x27;Ossetic&#x27;),
+ (&#x27;pa&#x27;, &#x27;Punjabi&#x27;),
+ (&#x27;pl&#x27;, &#x27;Polish&#x27;),
+ (&#x27;pt&#x27;, &#x27;Portuguese&#x27;),
+ (&#x27;pt-br&#x27;, &#x27;Brazilian Portuguese&#x27;),
+ (&#x27;ro&#x27;, &#x27;Romanian&#x27;),
+ (&#x27;ru&#x27;, &#x27;Russian&#x27;),
+ (&#x27;sk&#x27;, &#x27;Slovak&#x27;),
+ (&#x27;sl&#x27;, &#x27;Slovenian&#x27;),
+ (&#x27;sq&#x27;, &#x27;Albanian&#x27;),
+ (&#x27;sr&#x27;, &#x27;Serbian&#x27;),
+ (&#x27;sr-latn&#x27;, &#x27;Serbian Latin&#x27;),
+ (&#x27;sv&#x27;, &#x27;Swedish&#x27;),
+ (&#x27;sw&#x27;, &#x27;Swahili&#x27;),
+ (&#x27;ta&#x27;, &#x27;Tamil&#x27;),
+ (&#x27;te&#x27;, &#x27;Telugu&#x27;),
+ (&#x27;tg&#x27;, &#x27;Tajik&#x27;),
+ (&#x27;th&#x27;, &#x27;Thai&#x27;),
+ (&#x27;tk&#x27;, &#x27;Turkmen&#x27;),
+ (&#x27;tr&#x27;, &#x27;Turkish&#x27;),
+ (&#x27;tt&#x27;, &#x27;Tatar&#x27;),
+ (&#x27;udm&#x27;, &#x27;Udmurt&#x27;),
+ (&#x27;ug&#x27;, &#x27;Uyghur&#x27;),
+ (&#x27;uk&#x27;, &#x27;Ukrainian&#x27;),
+ (&#x27;ur&#x27;, &#x27;Urdu&#x27;),
+ (&#x27;uz&#x27;, &#x27;Uzbek&#x27;),
+ (&#x27;vi&#x27;, &#x27;Vietnamese&#x27;),
+ (&#x27;zh-hans&#x27;, &#x27;Simplified Chinese&#x27;),
+ (&#x27;zh-hant&#x27;, &#x27;Traditional Chinese&#x27;)]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGES_BIDI</td>
+          <td class="code"><pre>[&#x27;he&#x27;, &#x27;ar&#x27;, &#x27;ar-dz&#x27;, &#x27;ckb&#x27;, &#x27;fa&#x27;, &#x27;ug&#x27;, &#x27;ur&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_CODE</td>
+          <td class="code"><pre>&#x27;en-us&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_AGE</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_DOMAIN</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_HTTPONLY</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_NAME</td>
+          <td class="code"><pre>&#x27;django_language&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_PATH</td>
+          <td class="code"><pre>&#x27;/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_SAMESITE</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_SECURE</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOCALE_PATHS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOCAL_APPS</td>
+          <td class="code"><pre>[&#x27;core&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGGING</td>
+          <td class="code"><pre>{&#x27;disable_existing_loggers&#x27;: False,
+ &#x27;formatters&#x27;: {&#x27;simple&#x27;: {&#x27;format&#x27;: &#x27;{levelname} {message}&#x27;, &#x27;style&#x27;: &#x27;{&#x27;},
+                &#x27;verbose&#x27;: {&#x27;format&#x27;: &#x27;{levelname} {asctime} {module} &#x27;
+                                      &#x27;{process:d} {thread:d} {message}&#x27;,
+                            &#x27;style&#x27;: &#x27;{&#x27;}},
+ &#x27;handlers&#x27;: {&#x27;console&#x27;: {&#x27;class&#x27;: &#x27;logging.StreamHandler&#x27;,
+                          &#x27;formatter&#x27;: &#x27;simple&#x27;},
+              &#x27;file&#x27;: {&#x27;class&#x27;: &#x27;logging.FileHandler&#x27;,
+                       &#x27;filename&#x27;: PosixPath(&#x27;/home/runner/workspace/backend/logs/django.log&#x27;),
+                       &#x27;formatter&#x27;: &#x27;verbose&#x27;}},
+ &#x27;loggers&#x27;: {&#x27;core&#x27;: {&#x27;handlers&#x27;: [&#x27;console&#x27;, &#x27;file&#x27;],
+                      &#x27;level&#x27;: &#x27;DEBUG&#x27;,
+                      &#x27;propagate&#x27;: False},
+             &#x27;django&#x27;: {&#x27;handlers&#x27;: [&#x27;console&#x27;],
+                        &#x27;level&#x27;: &#x27;INFO&#x27;,
+                        &#x27;propagate&#x27;: False}},
+ &#x27;root&#x27;: {&#x27;handlers&#x27;: [&#x27;console&#x27;], &#x27;level&#x27;: &#x27;INFO&#x27;},
+ &#x27;version&#x27;: 1}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGGING_CONFIG</td>
+          <td class="code"><pre>&#x27;logging.config.dictConfig&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGIN_REDIRECT_URL</td>
+          <td class="code"><pre>&#x27;/accounts/profile/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGIN_URL</td>
+          <td class="code"><pre>&#x27;/accounts/login/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGOUT_REDIRECT_URL</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MANAGERS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MEDIA_ROOT</td>
+          <td class="code"><pre>PosixPath(&#x27;/home/runner/workspace/backend/mediafiles&#x27;)</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MEDIA_URL</td>
+          <td class="code"><pre>&#x27;/media/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MESSAGE_STORAGE</td>
+          <td class="code"><pre>&#x27;django.contrib.messages.storage.fallback.FallbackStorage&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MIDDLEWARE</td>
+          <td class="code"><pre>[&#x27;corsheaders.middleware.CorsMiddleware&#x27;,
+ &#x27;whitenoise.middleware.WhiteNoiseMiddleware&#x27;,
+ &#x27;django.middleware.security.SecurityMiddleware&#x27;,
+ &#x27;django.contrib.sessions.middleware.SessionMiddleware&#x27;,
+ &#x27;django.middleware.common.CommonMiddleware&#x27;,
+ &#x27;django.middleware.csrf.CsrfViewMiddleware&#x27;,
+ &#x27;django.contrib.auth.middleware.AuthenticationMiddleware&#x27;,
+ &#x27;core.middleware.SubscriptionAccessMiddleware&#x27;,
+ &#x27;core.middleware.FeatureLimitMiddleware&#x27;,
+ &#x27;django.contrib.messages.middleware.MessageMiddleware&#x27;,
+ &#x27;django.middleware.clickjacking.XFrameOptionsMiddleware&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MIGRATION_MODULES</td>
+          <td class="code"><pre>{}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MONTH_DAY_FORMAT</td>
+          <td class="code"><pre>&#x27;F j&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NUMBER_GROUPING</td>
+          <td class="code"><pre>0</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PASSWORD_HASHERS</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PASSWORD_RESET_TIMEOUT</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PREPEND_WWW</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REDIS_URL</td>
+          <td class="code"><pre>&#x27;redis://localhost:6379/0&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REST_FRAMEWORK</td>
+          <td class="code"><pre>{&#x27;DEFAULT_AUTHENTICATION_CLASSES&#x27;: &#x27;********************&#x27;,
+ &#x27;DEFAULT_FILTER_BACKENDS&#x27;: [&#x27;django_filters.rest_framework.DjangoFilterBackend&#x27;,
+                             &#x27;rest_framework.filters.SearchFilter&#x27;,
+                             &#x27;rest_framework.filters.OrderingFilter&#x27;],
+ &#x27;DEFAULT_PAGINATION_CLASS&#x27;: None,
+ &#x27;DEFAULT_PARSER_CLASSES&#x27;: [&#x27;rest_framework.parsers.JSONParser&#x27;,
+                            &#x27;rest_framework.parsers.FormParser&#x27;,
+                            &#x27;rest_framework.parsers.MultiPartParser&#x27;],
+ &#x27;DEFAULT_PERMISSION_CLASSES&#x27;: [&#x27;rest_framework.permissions.IsAuthenticated&#x27;],
+ &#x27;DEFAULT_RENDERER_CLASSES&#x27;: [&#x27;rest_framework.renderers.JSONRenderer&#x27;]}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ROOT_URLCONF</td>
+          <td class="code"><pre>&#x27;engagex.urls&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECRET_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECRET_KEY_FALLBACKS</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_BROWSER_XSS_FILTER</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_CONTENT_TYPE_NOSNIFF</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_CROSS_ORIGIN_OPENER_POLICY</td>
+          <td class="code"><pre>&#x27;same-origin&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_HSTS_INCLUDE_SUBDOMAINS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_HSTS_PRELOAD</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_HSTS_SECONDS</td>
+          <td class="code"><pre>0</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_PROXY_SSL_HEADER</td>
+          <td class="code"><pre>(&#x27;HTTP_X_FORWARDED_PROTO&#x27;, &#x27;https&#x27;)</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_REDIRECT_EXEMPT</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_REFERRER_POLICY</td>
+          <td class="code"><pre>&#x27;same-origin&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_SSL_HOST</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_SSL_REDIRECT</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SENDGRID_API_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_EMAIL</td>
+          <td class="code"><pre>&#x27;root@localhost&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_CACHE_ALIAS</td>
+          <td class="code"><pre>&#x27;default&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_AGE</td>
+          <td class="code"><pre>86400</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_DOMAIN</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_HTTPONLY</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_NAME</td>
+          <td class="code"><pre>&#x27;sessionid&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_PATH</td>
+          <td class="code"><pre>&#x27;/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_SAMESITE</td>
+          <td class="code"><pre>&#x27;Lax&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_SECURE</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_ENGINE</td>
+          <td class="code"><pre>&#x27;django.contrib.sessions.backends.db&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_EXPIRE_AT_BROWSER_CLOSE</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_FILE_PATH</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_SAVE_EVERY_REQUEST</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_SERIALIZER</td>
+          <td class="code"><pre>&#x27;django.contrib.sessions.serializers.JSONSerializer&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SETTINGS_MODULE</td>
+          <td class="code"><pre>&#x27;engagex.settings&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SHORT_DATETIME_FORMAT</td>
+          <td class="code"><pre>&#x27;m/d/Y P&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SHORT_DATE_FORMAT</td>
+          <td class="code"><pre>&#x27;m/d/Y&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SIGNING_BACKEND</td>
+          <td class="code"><pre>&#x27;django.core.signing.TimestampSigner&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SILENCED_SYSTEM_CHECKS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATICFILES_DIRS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATICFILES_FINDERS</td>
+          <td class="code"><pre>[&#x27;django.contrib.staticfiles.finders.FileSystemFinder&#x27;,
+ &#x27;django.contrib.staticfiles.finders.AppDirectoriesFinder&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATICFILES_STORAGE</td>
+          <td class="code"><pre>&#x27;whitenoise.storage.CompressedManifestStaticFilesStorage&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATIC_ROOT</td>
+          <td class="code"><pre>PosixPath(&#x27;/home/runner/workspace/backend/staticfiles&#x27;)</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATIC_URL</td>
+          <td class="code"><pre>&#x27;/static/&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STORAGES</td>
+          <td class="code"><pre>{&#x27;default&#x27;: {&#x27;BACKEND&#x27;: &#x27;django.core.files.storage.FileSystemStorage&#x27;},
+ &#x27;staticfiles&#x27;: {&#x27;BACKEND&#x27;: &#x27;django.contrib.staticfiles.storage.StaticFilesStorage&#x27;}}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_PRICE_BASIC_MONTHLY</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_PRICE_BASIC_YEARLY</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_PRICE_PREMIUM_MONTHLY</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_PRICE_PREMIUM_YEARLY</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_PRICE_PRO_MONTHLY</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_PRICE_PRO_YEARLY</td>
+          <td class="code"><pre>&#x27;&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_SECRET_KEY</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STRIPE_WEBHOOK_SECRET</td>
+          <td class="code"><pre>&#x27;********************&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEMPLATES</td>
+          <td class="code"><pre>[{&#x27;APP_DIRS&#x27;: True,
+  &#x27;BACKEND&#x27;: &#x27;django.template.backends.django.DjangoTemplates&#x27;,
+  &#x27;DIRS&#x27;: [],
+  &#x27;OPTIONS&#x27;: {&#x27;context_processors&#x27;: [&#x27;django.template.context_processors.request&#x27;,
+                                     &#x27;django.contrib.auth.context_processors.auth&#x27;,
+                                     &#x27;django.contrib.messages.context_processors.messages&#x27;]}}]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEST_NON_SERIALIZED_APPS</td>
+          <td class="code"><pre>[]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEST_RUNNER</td>
+          <td class="code"><pre>&#x27;django.test.runner.DiscoverRunner&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>THIRD_PARTY_APPS</td>
+          <td class="code"><pre>[&#x27;rest_framework&#x27;, &#x27;corsheaders&#x27;, &#x27;django_filters&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>THOUSAND_SEPARATOR</td>
+          <td class="code"><pre>&#x27;,&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TIME_FORMAT</td>
+          <td class="code"><pre>&#x27;P&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TIME_INPUT_FORMATS</td>
+          <td class="code"><pre>[&#x27;%H:%M:%S&#x27;, &#x27;%H:%M:%S.%f&#x27;, &#x27;%H:%M&#x27;]</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TIME_ZONE</td>
+          <td class="code"><pre>&#x27;UTC&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_I18N</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_THOUSAND_SEPARATOR</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_TZ</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_X_FORWARDED_HOST</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_X_FORWARDED_PORT</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>WSGI_APPLICATION</td>
+          <td class="code"><pre>&#x27;engagex.wsgi.application&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>X_FRAME_OPTIONS</td>
+          <td class="code"><pre>&#x27;DENY&#x27;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>YEAR_MONTH_FORMAT</td>
+          <td class="code"><pre>&#x27;F Y&#x27;</pre></td>
+        </tr>
+      
+    </tbody>
+  </table>
+
+</div>
+</main>
+
+
+  <footer id="explanation">
+    <p>
+      You’re seeing this error because you have <code>DEBUG = True</code> in your
+      Django settings file. Change that to <code>False</code>, and Django will
+      display a standard page generated by the handler for this status code.
+    </p>
+  </footer>
+
+</body>
+</html>
+
