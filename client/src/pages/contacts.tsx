@@ -41,6 +41,8 @@ export default function Contacts() {
   const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [showBulkGroupModal, setShowBulkGroupModal] = useState(false);
+  const [showBulkSubscribeModal, setShowBulkSubscribeModal] = useState(false);
+  const [showBulkUnsubscribeModal, setShowBulkUnsubscribeModal] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
@@ -409,18 +411,22 @@ export default function Contacts() {
 
   const handleBulkSubscribe = () => {
     if (selectedContactIds.size === 0) return;
-    
-    if (window.confirm(`Are you sure you want to subscribe ${selectedContactIds.size} contact${selectedContactIds.size !== 1 ? 's' : ''}?`)) {
-      bulkSubscribeMutation.mutate(Array.from(selectedContactIds));
-    }
+    setShowBulkSubscribeModal(true);
   };
 
   const handleBulkUnsubscribe = () => {
     if (selectedContactIds.size === 0) return;
-    
-    if (window.confirm(`Are you sure you want to unsubscribe ${selectedContactIds.size} contact${selectedContactIds.size !== 1 ? 's' : ''}?`)) {
-      bulkUnsubscribeMutation.mutate(Array.from(selectedContactIds));
-    }
+    setShowBulkUnsubscribeModal(true);
+  };
+
+  const confirmBulkSubscribe = () => {
+    bulkSubscribeMutation.mutate(Array.from(selectedContactIds));
+    setShowBulkSubscribeModal(false);
+  };
+
+  const confirmBulkUnsubscribe = () => {
+    bulkUnsubscribeMutation.mutate(Array.from(selectedContactIds));
+    setShowBulkUnsubscribeModal(false);
   };
 
   const handleGroupSelection = (groupId: string, checked: boolean) => {
@@ -1246,6 +1252,82 @@ export default function Contacts() {
                     {bulkGroupAssignmentMutation.isPending 
                       ? "Assigning..." 
                       : `Assign to ${selectedGroupIds.size} group${selectedGroupIds.size !== 1 ? 's' : ''}`
+                    }
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Bulk Subscribe Confirmation Modal */}
+          <Dialog open={showBulkSubscribeModal} onOpenChange={setShowBulkSubscribeModal}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Confirm Subscription</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to subscribe {selectedContactIds.size} contact{selectedContactIds.size !== 1 ? 's' : ''}?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This action will mark the selected contacts as subscribed to your email campaigns.
+                </p>
+                
+                <div className="flex justify-end space-x-2 pt-4 border-t border-border">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowBulkSubscribeModal(false)}
+                    data-testid="button-cancel-bulk-subscribe"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={confirmBulkSubscribe}
+                    disabled={bulkSubscribeMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    data-testid="button-confirm-bulk-subscribe"
+                  >
+                    {bulkSubscribeMutation.isPending 
+                      ? "Subscribing..." 
+                      : `Subscribe ${selectedContactIds.size} contact${selectedContactIds.size !== 1 ? 's' : ''}`
+                    }
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Bulk Unsubscribe Confirmation Modal */}
+          <Dialog open={showBulkUnsubscribeModal} onOpenChange={setShowBulkUnsubscribeModal}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Confirm Unsubscription</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to unsubscribe {selectedContactIds.size} contact{selectedContactIds.size !== 1 ? 's' : ''}?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This action will remove the selected contacts from your email campaigns. They will no longer receive marketing emails.
+                </p>
+                
+                <div className="flex justify-end space-x-2 pt-4 border-t border-border">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowBulkUnsubscribeModal(false)}
+                    data-testid="button-cancel-bulk-unsubscribe"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={confirmBulkUnsubscribe}
+                    disabled={bulkUnsubscribeMutation.isPending}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    data-testid="button-confirm-bulk-unsubscribe"
+                  >
+                    {bulkUnsubscribeMutation.isPending 
+                      ? "Unsubscribing..." 
+                      : `Unsubscribe ${selectedContactIds.size} contact${selectedContactIds.size !== 1 ? 's' : ''}`
                     }
                   </Button>
                 </div>
