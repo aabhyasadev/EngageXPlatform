@@ -234,8 +234,38 @@ def import_contacts_from_csv(organization_id, csv_data, user_id):
         organization = Organization.objects.get(id=organization_id)
         user = User.objects.get(id=user_id)
         
-        # Parse CSV data
-        csv_reader = csv.DictReader(io.StringIO(csv_data))
+        # Parse CSV data with flexible column handling
+        csv_input = io.StringIO(csv_data)
+        
+        # Try to detect if the CSV has headers
+        sample = csv_input.read(1024)
+        csv_input.seek(0)
+        sniffer = csv.Sniffer()
+        has_header = sniffer.has_header(sample)
+        
+        if has_header:
+            csv_reader = csv.DictReader(csv_input)
+            # Get the actual headers from the CSV
+            headers = csv_reader.fieldnames or []
+            
+            # Create a mapping of common column variations to our expected fields
+            header_mapping = {}
+            for header in headers:
+                header_lower = header.lower().strip()
+                if any(x in header_lower for x in ['email', 'e-mail', 'mail']):
+                    header_mapping['email'] = header
+                elif any(x in header_lower for x in ['first', 'fname', 'given']):
+                    header_mapping['first_name'] = header
+                elif any(x in header_lower for x in ['last', 'lname', 'surname', 'family']):
+                    header_mapping['last_name'] = header
+                elif any(x in header_lower for x in ['phone', 'tel', 'mobile', 'cell']):
+                    header_mapping['phone'] = header
+                elif any(x in header_lower for x in ['lang', 'language']):
+                    header_mapping['language'] = header
+        else:
+            # No headers - assume standard order: first_name, last_name, email, phone
+            csv_reader = csv.reader(csv_input)
+            header_mapping = {'positional': True}
         
         created_count = 0
         updated_count = 0
@@ -243,7 +273,24 @@ def import_contacts_from_csv(organization_id, csv_data, user_id):
         
         for row in csv_reader:
             try:
-                email = row.get('email', '').strip().lower()
+                if header_mapping.get('positional'):
+                    # Handle CSV without headers (positional columns)
+                    if len(row) < 3:  # Need at least first_name, last_name, email
+                        error_count += 1
+                        continue
+                    email = row[2].strip().lower() if len(row) > 2 else ''
+                    first_name = row[0].strip() if len(row) > 0 else ''
+                    last_name = row[1].strip() if len(row) > 1 else ''
+                    phone = row[3].strip() if len(row) > 3 else ''
+                    language = row[4].strip() if len(row) > 4 else 'en'
+                else:
+                    # Handle CSV with headers
+                    email = row.get(header_mapping.get('email', ''), '').strip().lower()
+                    first_name = row.get(header_mapping.get('first_name', ''), '').strip()
+                    last_name = row.get(header_mapping.get('last_name', ''), '').strip()
+                    phone = row.get(header_mapping.get('phone', ''), '').strip()
+                    language = row.get(header_mapping.get('language', ''), 'en').strip() or 'en'
+                
                 if not email:
                     error_count += 1
                     continue
@@ -252,10 +299,10 @@ def import_contacts_from_csv(organization_id, csv_data, user_id):
                     organization=organization,
                     email=email,
                     defaults={
-                        'first_name': row.get('first_name', '').strip(),
-                        'last_name': row.get('last_name', '').strip(),
-                        'phone': row.get('phone', '').strip(),
-                        'language': row.get('language', 'en').strip(),
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'phone': phone,
+                        'language': language,
                     }
                 )
                 
@@ -263,10 +310,10 @@ def import_contacts_from_csv(organization_id, csv_data, user_id):
                     created_count += 1
                 else:
                     # Update existing contact
-                    contact.first_name = row.get('first_name', contact.first_name)
-                    contact.last_name = row.get('last_name', contact.last_name)
-                    contact.phone = row.get('phone', contact.phone)
-                    contact.language = row.get('language', contact.language)
+                    contact.first_name = first_name or contact.first_name
+                    contact.last_name = last_name or contact.last_name
+                    contact.phone = phone or contact.phone
+                    contact.language = language or contact.language
                     contact.save()
                     updated_count += 1
                     
