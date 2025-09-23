@@ -8,8 +8,7 @@ from .views import (
     PaymentMethodViewSet
 )
 from .auth_views import (
-    auth_user, dashboard_stats, replit_auth_login, logout_view, get_csrf_token, test_connection,
-    oidc_login, oidc_callback
+    auth_user, dashboard_stats, logout_view, get_csrf_token, test_connection
 )
 from .signup_views import (
     check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account
@@ -63,13 +62,11 @@ urlpatterns = [
     # Test endpoint for Django-frontend connection
     path('api/test', test_connection, name='test_connection'),
     
-    # Express-compatible OIDC authentication routes (proxy strips /api prefix)
-    path('login', oidc_login, name='oidc_login'),
-    path('callback', oidc_callback, name='oidc_callback'),
+    # Replit OIDC authentication routes removed
     
     # Express proxy routes (proxy strips /api prefix, so Django receives without /api)
     path('auth/user', auth_user, name='auth_user'),
-    path('auth/login', replit_auth_login, name='replit_auth_login'),
+    # Replit auth login route removed
     path('auth/logout', logout_view, name='logout'),
     path('auth/csrf', get_csrf_token, name='csrf_token'),
     path('dashboard/stats', dashboard_stats, name='dashboard_stats'),
