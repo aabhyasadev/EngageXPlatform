@@ -16,6 +16,7 @@ export default function ContactGroupsManager() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<ContactGroup | null>(null);
   const [newGroup, setNewGroup] = useState({
     name: "",
@@ -201,9 +202,16 @@ export default function ContactGroupsManager() {
     setShowContactsModal(true);
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    if (confirm("Are you sure you want to delete this contact group? This action cannot be undone.")) {
-      deleteGroupMutation.mutate(groupId);
+  const handleDeleteGroup = (group: ContactGroup) => {
+    setSelectedGroup(group);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteGroup = () => {
+    if (selectedGroup) {
+      deleteGroupMutation.mutate(selectedGroup.id);
+      setShowDeleteModal(false);
+      setSelectedGroup(null);
     }
   };
 
@@ -277,7 +285,7 @@ export default function ContactGroupsManager() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteGroup(group.id)}
+                    onClick={() => handleDeleteGroup(group)}
                     data-testid={`button-delete-group-${group.id}`}
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
@@ -488,6 +496,44 @@ export default function ContactGroupsManager() {
                 )}
               </>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Group Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Contact Group</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete the contact group "{selectedGroup?.name}"? 
+            </p>
+            <p className="text-sm text-muted-foreground">
+              This action cannot be undone. All contacts will be removed from this group.
+            </p>
+            
+            <div className="flex justify-end space-x-2 pt-4 border-t border-border">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteModal(false)}
+                data-testid="button-cancel-delete-group"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={confirmDeleteGroup}
+                disabled={deleteGroupMutation.isPending}
+                variant="destructive"
+                data-testid="button-confirm-delete-group"
+              >
+                {deleteGroupMutation.isPending 
+                  ? "Deleting..." 
+                  : "Delete Group"
+                }
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
