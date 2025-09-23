@@ -1,9 +1,9 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card as UICard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Plus, Edit2, Shield } from 'lucide-react';
 
-interface PaymentMethod {
+interface PaymentCard {
   id: string;
   brand: string;
   last4: string;
@@ -15,21 +15,23 @@ interface PaymentMethod {
   updated_at: string;
 }
 
-interface PaymentMethodProps {
-  paymentMethod?: PaymentMethod;
-  onUpdate: (paymentMethod: PaymentMethod) => void;
+interface CardProps {
+  card?: PaymentCard;
+  onUpdate: (card: PaymentCard) => void;
   onAdd: () => void;
-  onDelete?: (paymentMethod: PaymentMethod) => void;
+  onDelete?: (card: PaymentCard) => void;
+  onManageBilling?: (card: PaymentCard) => void;
   isProcessing?: boolean;
 }
 
-export default function PaymentMethod({
-  paymentMethod,
+export default function Card({
+  card,
   onUpdate,
   onAdd,
   onDelete,
+  onManageBilling,
   isProcessing
-}: PaymentMethodProps) {
+}: CardProps) {
   const getCardBrandIcon = (brand: string) => {
     const brandLower = brand.toLowerCase();
     if (brandLower.includes('visa')) {
@@ -62,19 +64,19 @@ export default function PaymentMethod({
     return `${monthStr}/${yearStr}`;
   };
 
-  // Show empty state if no payment method
-  const hasPaymentMethod = paymentMethod !== undefined;
+  // Show empty state if no card
+  const hasCard = card !== undefined;
 
   return (
-    <Card data-testid="card-payment-method">
+    <UICard data-testid="card-card">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="w-5 h-5" />
-              Payment Method
+              Card
             </CardTitle>
-            <CardDescription>Manage your payment method for subscriptions</CardDescription>
+            <CardDescription>Manage your card for subscriptions</CardDescription>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Shield className="w-4 h-4" />
@@ -83,22 +85,22 @@ export default function PaymentMethod({
         </div>
       </CardHeader>
       <CardContent>
-        {hasPaymentMethod && paymentMethod ? (
+        {hasCard && card ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
               <div className="flex items-center gap-4">
-                {getCardBrandIcon(paymentMethod.brand)}
+                {getCardBrandIcon(card.brand)}
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-medium" data-testid="text-card-details">
-                      {paymentMethod.brand} ending in {paymentMethod.last4}
+                      {card.brand} ending in {card.last4}
                     </p>
-                    {paymentMethod.is_default && (
+                    {card.is_default && (
                       <Badge variant="secondary" className="text-xs">Default</Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground" data-testid="text-card-expiry">
-                    Expires {formatExpiry(paymentMethod.exp_month, paymentMethod.exp_year)}
+                    Expires {formatExpiry(card.exp_month, card.exp_year)}
                   </p>
                 </div>
               </div>
@@ -106,9 +108,9 @@ export default function PaymentMethod({
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => onUpdate(paymentMethod)}
+                  onClick={() => onUpdate(card)}
                   disabled={isProcessing}
-                  data-testid="button-update-payment"
+                  data-testid="button-update-card"
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit
@@ -117,9 +119,9 @@ export default function PaymentMethod({
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => onDelete(paymentMethod)}
+                    onClick={() => onDelete(card)}
                     disabled={isProcessing}
-                    data-testid="button-delete-payment"
+                    data-testid="button-delete-card"
                   >
                     Remove
                   </Button>
@@ -134,7 +136,7 @@ export default function PaymentMethod({
                 onClick={onAdd}
                 disabled={isProcessing}
                 className="w-full"
-                data-testid="button-add-payment"
+                data-testid="button-add-card"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add New Card
@@ -142,7 +144,7 @@ export default function PaymentMethod({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onUpdate(paymentMethod)}
+                onClick={() => onManageBilling?.(card)}
                 disabled={isProcessing}
                 className="w-full"
                 data-testid="button-manage-billing"
@@ -162,17 +164,17 @@ export default function PaymentMethod({
         ) : (
           <div className="text-center py-8">
             <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="font-medium mb-1">No payment method on file</p>
+            <p className="font-medium mb-1">No card on file</p>
             <p className="text-sm text-muted-foreground mb-4">
-              Add a payment method to start your subscription
+              Add a card to start your subscription
             </p>
-            <Button onClick={onAdd} disabled={isProcessing} data-testid="button-add-first-payment">
+            <Button onClick={onAdd} disabled={isProcessing} data-testid="button-add-first-card">
               <Plus className="w-4 h-4 mr-2" />
-              Add Payment Method
+              Add Card
             </Button>
           </div>
         )}
       </CardContent>
-    </Card>
+    </UICard>
   );
 }

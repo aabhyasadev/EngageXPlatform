@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from .models import (
     Organization, User, Domain, ContactGroup, Contact, 
     ContactGroupMembership, EmailTemplate, Campaign, 
-    CampaignRecipient, AnalyticsEvent, PaymentMethod
+    CampaignRecipient, AnalyticsEvent, Card
 )
 
 User = get_user_model()
@@ -200,9 +200,9 @@ class CampaignSendSerializer(serializers.Serializer):
         return data
 
 
-class PaymentMethodSerializer(serializers.ModelSerializer):
+class CardSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PaymentMethod
+        model = Card
         fields = [
             'id', 'organization', 'stripe_payment_method_id', 'last4', 'brand',
             'exp_month', 'exp_year', 'is_default', 'created_at', 'updated_at'
@@ -233,8 +233,8 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
         return value
 
 
-class PaymentMethodCreateSerializer(serializers.Serializer):
-    """Serializer for creating new payment methods via Stripe"""
+class CardCreateSerializer(serializers.Serializer):
+    """Serializer for creating new cards via Stripe"""
     stripe_token = serializers.CharField(required=False)
     stripe_payment_method_id = serializers.CharField(required=False)
     set_as_default = serializers.BooleanField(default=True)
@@ -247,8 +247,8 @@ class PaymentMethodCreateSerializer(serializers.Serializer):
         return data
 
 
-class PaymentMethodUpdateSerializer(serializers.Serializer):
-    """Serializer for updating payment method properties (SECURITY: only safe fields)"""
+class CardUpdateSerializer(serializers.Serializer):
+    """Serializer for updating card properties (SECURITY: only safe fields)"""
     is_default = serializers.BooleanField(required=False)
     # SECURITY: Removed exp_month and exp_year - these must come from Stripe only
     # Client cannot modify sensitive card data

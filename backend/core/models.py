@@ -657,13 +657,13 @@ class UsageTracking(models.Model):
         }
 
 
-class PaymentMethod(models.Model):
-    """Model to store payment method details"""
+class Card(models.Model):
+    """Model to store card details"""
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
-        related_name='payment_methods'
+        related_name='cards'
     )
     stripe_payment_method_id = models.CharField(max_length=255, unique=True)
     last4 = models.CharField(max_length=4)  # Last 4 digits of card
@@ -675,7 +675,7 @@ class PaymentMethod(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'payment_methods'
+        db_table = 'cards'
         indexes = [
             models.Index(fields=['organization', 'is_default']),
         ]
@@ -684,9 +684,9 @@ class PaymentMethod(models.Model):
         return f"{self.brand} ****{self.last4} - {self.organization.name}"
 
     def save(self, *args, **kwargs):
-        # Ensure only one default payment method per organization
+        # Ensure only one default card per organization
         if self.is_default:
-            PaymentMethod.objects.filter(
+            Card.objects.filter(
                 organization=self.organization,
                 is_default=True
             ).exclude(id=self.id).update(is_default=False)

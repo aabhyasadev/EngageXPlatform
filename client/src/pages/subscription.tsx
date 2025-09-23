@@ -19,8 +19,8 @@ import {
 import SubscriptionStatus from '@/components/subscription/SubscriptionStatus';
 import PlanCard from '@/components/subscription/PlanCard';
 import BillingHistory from '@/components/subscription/BillingHistory';
-import PaymentMethod from '@/components/subscription/PaymentMethod';
-import AddPaymentMethodModal from '@/components/subscription/AddPaymentMethodModal';
+import Card from '@/components/subscription/Card';
+import AddCardModal from '@/components/subscription/AddCardModal';
 
 // Format price from cents to currency display
 const formatPrice = (cents: number): string => {
@@ -34,7 +34,7 @@ export default function SubscriptionPage() {
   const { toast } = useToast();
   const [showYearly, setShowYearly] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
   const [processingAction, setProcessingAction] = useState<string | null>(null);
 
   // Fetch available subscription plans with detailed features
@@ -53,14 +53,14 @@ export default function SubscriptionPage() {
     enabled: true, // Enable to fetch billing history
   });
 
-  // Fetch payment methods
-  const { data: paymentMethodsData, isLoading: paymentMethodsLoading, refetch: refetchPaymentMethods } = useQuery({
-    queryKey: ['/api/payment-methods/'],
+  // Fetch cards
+  const { data: cardsData, isLoading: cardsLoading, refetch: refetchCards } = useQuery({
+    queryKey: ['/api/cards/'],
     enabled: true,
   });
 
-  // Get default payment method
-  const defaultPaymentMethod = paymentMethodsData?.results?.find((pm: any) => pm.is_default);
+  // Get default card
+  const defaultCard = cardsData?.results?.find((card: any) => card.is_default);
 
   // Create checkout session for new subscriptions
   const createCheckoutMutation = useMutation({
@@ -140,47 +140,47 @@ export default function SubscriptionPage() {
     },
   });
 
-  // Delete payment method mutation
-  const deletePaymentMethodMutation = useMutation({
-    mutationFn: async (paymentMethodId: string) => {
-      const response = await apiRequest('DELETE', `/api/payment-methods/${paymentMethodId}/delete_payment_method`);
+  // Delete card mutation
+  const deleteCardMutation = useMutation({
+    mutationFn: async (cardId: string) => {
+      const response = await apiRequest('DELETE', `/api/cards/${cardId}/delete_card`);
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Payment method removed successfully",
+        description: "Card removed successfully",
       });
-      refetchPaymentMethods();
+      refetchCards();
       refetchSubscription();
     },
     onError: (error: any) => {
       toast({
         title: "Error", 
-        description: error.message || "Failed to remove payment method",
+        description: error.message || "Failed to remove card",
         variant: "destructive",
       });
     },
   });
 
-  // Update payment method mutation
-  const updatePaymentMethodMutation = useMutation({
-    mutationFn: async ({ paymentMethodId, data }: { paymentMethodId: string; data: any }) => {
-      const response = await apiRequest('PATCH', `/api/payment-methods/${paymentMethodId}/update_payment_method`, data);
+  // Update card mutation
+  const updateCardMutation = useMutation({
+    mutationFn: async ({ cardId, data }: { cardId: string; data: any }) => {
+      const response = await apiRequest('PATCH', `/api/cards/${cardId}/`, data);
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Payment method updated successfully",
+        description: "Card updated successfully",
       });
-      refetchPaymentMethods();
+      refetchCards();
       refetchSubscription();
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update payment method",
+        description: error.message || "Failed to update card",
         variant: "destructive",
       });
     },
@@ -231,19 +231,19 @@ export default function SubscriptionPage() {
     createBillingPortalMutation.mutate();
   };
 
-  const handleUpdatePaymentMethod = (paymentMethod: any) => {
+  const handleUpdateCard = (card: any) => {
     // For now, just open billing portal for complex updates
     createBillingPortalMutation.mutate();
   };
 
-  const handleAddPaymentMethod = () => {
-    // Open modal to add new payment method
-    setShowAddPaymentModal(true);
+  const handleAddCard = () => {
+    // Open modal to add new card
+    setShowAddCardModal(true);
   };
 
-  const handleDeletePaymentMethod = (paymentMethod: any) => {
-    if (window.confirm(`Are you sure you want to remove this ${paymentMethod.brand} ending in ${paymentMethod.last4}?`)) {
-      deletePaymentMethodMutation.mutate(paymentMethod.id);
+  const handleDeleteCard = (card: any) => {
+    if (window.confirm(`Are you sure you want to remove this ${card.brand} ending in ${card.last4}?`)) {
+      deleteCardMutation.mutate(card.id);
     }
   };
 
@@ -320,16 +320,16 @@ export default function SubscriptionPage() {
 
             {/* Quick Actions */}
             <div className="grid gap-4 md:grid-cols-2">
-              <PaymentMethod
-                paymentMethod={defaultPaymentMethod}
-                onUpdate={handleUpdatePaymentMethod}
-                onAdd={handleAddPaymentMethod}
-                onDelete={handleDeletePaymentMethod}
+              <Card
+                card={defaultCard}
+                onUpdate={handleUpdateCard}
+                onAdd={handleAddCard}
+                onDelete={handleDeleteCard}
                 isProcessing={
                   createBillingPortalMutation.isPending ||
-                  deletePaymentMethodMutation.isPending ||
-                  updatePaymentMethodMutation.isPending ||
-                  paymentMethodsLoading
+                  deleteCardMutation.isPending ||
+                  updateCardMutation.isPending ||
+                  cardsLoading
                 }
               />
 
@@ -417,16 +417,21 @@ export default function SubscriptionPage() {
               onDownloadInvoice={handleDownloadInvoice}
             />
 
-            <PaymentMethod
-              paymentMethod={subscription?.stripe_payment_method_id ? {
+            <Card
+              card={subscription?.stripe_payment_method_id ? {
+                id: 'demo-card',
                 brand: 'Visa',
                 last4: '4242',
                 exp_month: 12,
                 exp_year: 2025,
-                is_default: true
+                is_default: true,
+                stripe_payment_method_id: subscription.stripe_payment_method_id,
+                created_at: '',
+                updated_at: ''
               } : undefined}
-              onUpdate={handleManagePayment}
-              onAdd={handleManagePayment}
+              onUpdate={handleAddCard}
+              onAdd={handleAddCard}
+              onManageBilling={handleManagePayment}
               isProcessing={createBillingPortalMutation.isPending}
             />
           </TabsContent>
@@ -456,12 +461,12 @@ export default function SubscriptionPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Add Payment Method Modal */}
-        <AddPaymentMethodModal
-          open={showAddPaymentModal}
-          onOpenChange={setShowAddPaymentModal}
+        {/* Add Card Modal */}
+        <AddCardModal
+          open={showAddCardModal}
+          onOpenChange={setShowAddCardModal}
           onSuccess={() => {
-            refetchPaymentMethods();
+            refetchCards();
             refetchSubscription();
           }}
         />

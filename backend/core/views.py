@@ -20,15 +20,15 @@ import openpyxl
 from .models import (
     Organization, User, Domain, ContactGroup, Contact, 
     ContactGroupMembership, EmailTemplate, Campaign, 
-    CampaignRecipient, AnalyticsEvent, PaymentMethod
+    CampaignRecipient, AnalyticsEvent, Card
 )
 from .serializers import (
     OrganizationSerializer, UserSerializer, DomainSerializer,
     ContactGroupSerializer, ContactSerializer, ContactGroupMembershipSerializer,
     EmailTemplateSerializer, CampaignSerializer, CampaignRecipientSerializer,
     AnalyticsEventSerializer, DashboardStatsSerializer, ContactImportSerializer,
-    CampaignSendSerializer, PaymentMethodSerializer, PaymentMethodCreateSerializer,
-    PaymentMethodUpdateSerializer
+    CampaignSendSerializer, CardSerializer, CardCreateSerializer,
+    CardUpdateSerializer
 )
 from .tasks import send_campaign_emails, verify_domain_dns, import_contacts_from_csv
 from .subscription_views import (
@@ -821,17 +821,17 @@ class DashboardViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
-class PaymentMethodViewSet(BaseOrganizationViewSet):
-    """ViewSet for managing payment methods"""
-    queryset = PaymentMethod.objects.all()
-    serializer_class = PaymentMethodSerializer
+class CardViewSet(BaseOrganizationViewSet):
+    """ViewSet for managing cards"""
+    queryset = Card.objects.all()
+    serializer_class = CardSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Get payment methods for the current organization"""
+        """Get cards for the current organization"""
         if not self.request.user.organization:
-            return PaymentMethod.objects.none()
-        return PaymentMethod.objects.filter(
+            return Card.objects.none()
+        return Card.objects.filter(
             organization=self.request.user.organization
         ).order_by('-is_default', '-created_at')
 
@@ -848,7 +848,7 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
                 'error': 'User not associated with organization'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = PaymentMethodCreateSerializer(data=request.data)
+        serializer = CardCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -899,8 +899,8 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
                     metadata={'idempotency_key': f'attach_{org.id}_{stripe_payment_method_id}'}
                 )
 
-            # Create local payment method record
-            payment_method = PaymentMethod.objects.create(
+            # Create local card record
+            card = Card.objects.create(
                 organization=org,
                 stripe_payment_method_id=stripe_payment_method_id,
                 last4=stripe_pm.card.last4,
@@ -916,7 +916,7 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
                 org.save()
 
             return Response(
-                PaymentMethodSerializer(payment_method).data,
+                CardSerializer(card).data,
                 status=status.HTTP_201_CREATED
             )
 
@@ -936,15 +936,15 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
         from django.conf import settings
         
         stripe.api_key = settings.STRIPE_SECRET_KEY
-        payment_method = self.get_object()
-        serializer = PaymentMethodUpdateSerializer(data=request.data)
+        card = self.get_object()
+        serializer = CardUpdateSerializer(data=request.data)
         
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             # SECURITY: Refresh card details from Stripe (don't trust client data)
-            stripe_pm = stripe.PaymentMethod.retrieve(payment_method.stripe_payment_method_id)
+            stripe_pm = stripe.PaymentMethod.retrieve(card.stripe_payment_method_id)
             
             # Verify payment method still belongs to our customer
             if stripe_pm.customer != request.user.organization.stripe_customer_id:
@@ -953,24 +953,24 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             # Update ONLY safe fields and refresh sensitive data from Stripe
-            payment_method.last4 = stripe_pm.card.last4
-            payment_method.brand = stripe_pm.card.brand.capitalize()
-            payment_method.exp_month = stripe_pm.card.exp_month
-            payment_method.exp_year = stripe_pm.card.exp_year
+            card.last4 = stripe_pm.card.last4
+            card.brand = stripe_pm.card.brand.capitalize()
+            card.exp_month = stripe_pm.card.exp_month
+            card.exp_year = stripe_pm.card.exp_year
             
             # Only allow updating is_default (safe field)
             if 'is_default' in serializer.validated_data:
-                payment_method.is_default = serializer.validated_data['is_default']
+                card.is_default = serializer.validated_data['is_default']
 
-            payment_method.save()
+            card.save()
 
             # Update organization default payment method if needed
-            if payment_method.is_default:
+            if card.is_default:
                 org = request.user.organization
-                org.stripe_payment_method_id = payment_method.stripe_payment_method_id
+                org.stripe_payment_method_id = card.stripe_payment_method_id
                 org.save()
 
-            return Response(PaymentMethodSerializer(payment_method).data)
+            return Response(CardSerializer(card).data)
             
         except stripe.error.StripeError as e:
             return Response({
@@ -978,18 +978,18 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['delete'])
-    def delete_payment_method(self, request, pk=None):
-        """Delete/detach a payment method"""
+    def delete_card(self, request, pk=None):
+        """Delete/detach a card"""
         import stripe
         from django.conf import settings
         
         stripe.api_key = settings.STRIPE_SECRET_KEY
         
-        payment_method = self.get_object()
+        card = self.get_object()
         
         try:
             # SECURITY: Verify payment method belongs to our customer before detaching
-            stripe_pm = stripe.PaymentMethod.retrieve(payment_method.stripe_payment_method_id)
+            stripe_pm = stripe.PaymentMethod.retrieve(card.stripe_payment_method_id)
             if stripe_pm.customer != request.user.organization.stripe_customer_id:
                 return Response({
                     'error': 'Payment method verification failed'
@@ -997,31 +997,31 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
             
             # Detach from Stripe customer (with idempotency)
             stripe.PaymentMethod.detach(
-                payment_method.stripe_payment_method_id,
-                metadata={'idempotency_key': f'detach_{request.user.organization.id}_{payment_method.stripe_payment_method_id}'}
+                card.stripe_payment_method_id,
+                metadata={'idempotency_key': f'detach_{request.user.organization.id}_{card.stripe_payment_method_id}'}
             )
             
             # Clear organization default if this was the default
-            if payment_method.is_default:
+            if card.is_default:
                 org = request.user.organization
                 org.stripe_payment_method_id = None
                 
-                # Set another payment method as default if available
-                other_pm = PaymentMethod.objects.filter(
+                # Set another card as default if available
+                other_card = Card.objects.filter(
                     organization=org
-                ).exclude(id=payment_method.id).first()
+                ).exclude(id=card.id).first()
                 
-                if other_pm:
-                    other_pm.is_default = True
-                    other_pm.save()
-                    org.stripe_payment_method_id = other_pm.stripe_payment_method_id
+                if other_card:
+                    other_card.is_default = True
+                    other_card.save()
+                    org.stripe_payment_method_id = other_card.stripe_payment_method_id
                 
                 org.save()
             
             # Delete local record
-            payment_method.delete()
+            card.delete()
             
-            return Response({'message': 'Payment method deleted successfully'})
+            return Response({'message': 'Card deleted successfully'})
             
         except stripe.error.StripeError as e:
             return Response({
@@ -1029,25 +1029,25 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({
-                'error': f'Error deleting payment method: {str(e)}'
+                'error': f'Error deleting card: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['get'])
     def default(self, request):
-        """Get the default payment method for the organization"""
+        """Get the default card for the organization"""
         if not request.user.organization:
             return Response({
                 'error': 'User not associated with organization'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        default_pm = PaymentMethod.objects.filter(
+        default_card = Card.objects.filter(
             organization=request.user.organization,
             is_default=True
         ).first()
 
-        if not default_pm:
+        if not default_card:
             return Response({
-                'message': 'No default payment method found'
+                'message': 'No default card found'
             }, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(PaymentMethodSerializer(default_pm).data)
+        return Response(CardSerializer(default_card).data)
