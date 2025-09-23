@@ -401,7 +401,7 @@ export default function Contacts() {
       const link = document.createElement('a');
       link.href = url;
       link.download = `contacts_export.${format}`;
-      document.body.appendChild(link);
+      documentbody.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
