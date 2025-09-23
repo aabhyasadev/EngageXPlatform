@@ -26,20 +26,80 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreditCard, Loader2, Shield } from 'lucide-react';
 
+// Card brand detection utilities - CLIENT-SIDE ONLY for UX
+const detectCardBrand = (cardNumber: string): string => {
+  const cleanNumber = cardNumber.replace(/\D/g, '');
+  
+  if (cleanNumber.startsWith('4')) return 'Visa';
+  if (cleanNumber.startsWith('5') || cleanNumber.startsWith('2')) {
+    const firstFour = cleanNumber.substring(0, 4);
+    if (cleanNumber.startsWith('5') || (parseInt(firstFour) >= 2221 && parseInt(firstFour) <= 2720)) {
+      return 'Mastercard';
+    }
+  }
+  if (cleanNumber.startsWith('34') || cleanNumber.startsWith('37')) return 'American Express';
+  if (cleanNumber.startsWith('6011') || cleanNumber.startsWith('65') || cleanNumber.startsWith('644') || cleanNumber.startsWith('645') || cleanNumber.startsWith('646') || cleanNumber.startsWith('647') || cleanNumber.startsWith('648') || cleanNumber.startsWith('649')) {
+    return 'Discover';
+  }
+  
+  return 'Unknown';
+};
+
+const formatCardNumber = (value: string): string => {
+  const cleanValue = value.replace(/\D/g, '');
+  const groups = cleanValue.match(/.{1,4}/g);
+  return groups ? groups.join(' ') : cleanValue;
+};
+
+const isValidLuhn = (cardNumber: string): boolean => {
+  const cleanNumber = cardNumber.replace(/\D/g, '');
+  if (cleanNumber.length < 13) return true; // Allow partial input
+  
+  let sum = 0;
+  let isEven = false;
+  
+  for (let i = cleanNumber.length - 1; i >= 0; i--) {
+    let digit = parseInt(cleanNumber[i]);
+    
+    if (isEven) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+    
+    sum += digit;
+    isEven = !isEven;
+  }
+  
+  return sum % 10 === 0;
+};
+
 // SECURITY: No full card validation needed - only safe information collected
 
 // Form validation schema - SECURE: Only collects safe card information
 const cardSchema = z.object({
+  // SECURITY: Card number is CLIENT-SIDE ONLY - never submitted to server
+  cardNumber: z
+    .string()
+    .min(13, 'Please enter a valid card number')
+    .max(19, 'Card number is too long')
+    .refine((value) => {
+      const cleanNumber = value.replace(/\D/g, '');
+      return isValidLuhn(cleanNumber);
+    }, 'Please enter a valid card number'),
   cardholderName: z
     .string()
     .min(2, 'Cardholder name must be at least 2 characters')
     .max(50, 'Cardholder name must be less than 50 characters')
     .regex(/^[a-zA-Z\s]+$/, 'Cardholder name can only contain letters and spaces'),
+  // Auto-populated from cardNumber - read-only
   last4: z
     .string()
     .min(4, 'Last 4 digits are required')
     .max(4, 'Last 4 digits must be exactly 4 characters')
     .regex(/^\d{4}$/, 'Last 4 digits must be numbers only'),
+  // Auto-detected from cardNumber - read-only
   brand: z
     .string()
     .min(1, 'Card brand is required'),
@@ -82,6 +142,7 @@ export default function AddCardModal({
   const form = useForm<CardForm>({
     resolver: zodResolver(cardSchema),
     defaultValues: {
+      cardNumber: '', // CLIENT-SIDE ONLY
       cardholderName: '',
       last4: '',
       brand: '',
@@ -91,18 +152,39 @@ export default function AddCardModal({
     },
   });
 
+  // Auto-detect card brand and last4 when card number changes
+  const handleCardNumberChange = (value: string) => {
+    const cleanNumber = value.replace(/\D/g, '');
+    
+    // Update the card number field
+    form.setValue('cardNumber', formatCardNumber(value));
+    
+    // Auto-detect brand
+    const detectedBrand = detectCardBrand(cleanNumber);
+    form.setValue('brand', detectedBrand);
+    
+    // Auto-populate last 4 digits
+    if (cleanNumber.length >= 4) {
+      const last4 = cleanNumber.slice(-4);
+      form.setValue('last4', last4);
+    }
+  };
+
   const createCardMutation = useMutation({
     mutationFn: async (cardData: CardForm) => {
       setIsSubmitting(true);
       
-      // Send secure card details to backend (PCI compliant)
+      // SECURITY: Strip cardNumber - never send to server
+      const { cardNumber, ...safeCardData } = cardData;
+      
+      // Send ONLY secure card details to backend (PCI compliant)
       const response = await apiRequest('POST', '/api/cards/', {
-        cardholder_name: cardData.cardholderName,
-        last4: cardData.last4,
-        brand: cardData.brand,
-        exp_month: parseInt(cardData.expiryMonth),
-        exp_year: parseInt(cardData.expiryYear),
-        set_as_default: cardData.setAsDefault
+        cardholder_name: safeCardData.cardholderName,
+        last4: safeCardData.last4,
+        brand: safeCardData.brand,
+        exp_month: parseInt(safeCardData.expiryMonth),
+        exp_year: parseInt(safeCardData.expiryYear),
+        set_as_default: safeCardData.setAsDefault
       });
       
       return response.json();
@@ -187,20 +269,23 @@ export default function AddCardModal({
               )}
             />
 
-            {/* Last 4 Digits */}
+            {/* Card Number - CLIENT-SIDE ONLY */}
             <FormField
               control={form.control}
-              name="last4"
+              name="cardNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last 4 Digits</FormLabel>
+                  <FormLabel>Card Number</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="1234"
-                      data-testid="input-last4"
+                      placeholder="1234 5678 9012 3456"
+                      data-testid="input-card-number"
                       disabled={isSubmitting}
-                      maxLength={4}
-                      {...field}
+                      maxLength={19}
+                      value={field.value}
+                      onChange={(e) => {
+                        handleCardNumberChange(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -208,32 +293,52 @@ export default function AddCardModal({
               )}
             />
 
-            {/* Card Brand */}
-            <FormField
-              control={form.control}
-              name="brand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Card Brand</FormLabel>
-                  <FormControl>
-                    <select
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                      data-testid="select-brand"
-                      disabled={isSubmitting}
-                      {...field}
-                    >
-                      <option value="">Select card brand</option>
-                      <option value="Visa">Visa</option>
-                      <option value="Mastercard">Mastercard</option>
-                      <option value="American Express">American Express</option>
-                      <option value="Discover">Discover</option>
-                      <option value="Unknown">Other</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Auto-detected fields */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Auto-detected Last 4 Digits */}
+              <FormField
+                control={form.control}
+                name="last4"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last 4 Digits</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="••••"
+                        data-testid="input-last4"
+                        disabled={true}
+                        readOnly={true}
+                        className="bg-muted"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Auto-detected Card Brand */}
+              <FormField
+                control={form.control}
+                name="brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Card Brand</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Auto-detected"
+                        data-testid="input-brand"
+                        disabled={true}
+                        readOnly={true}
+                        className="bg-muted"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Expiry Date */}
             <div className="grid grid-cols-2 gap-3">
