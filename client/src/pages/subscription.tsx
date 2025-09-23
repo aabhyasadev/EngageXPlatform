@@ -244,6 +244,34 @@ export default function SubscriptionPage() {
     deleteCardMutation.mutate(card.id);
   };
 
+  const handleSetDefaultCard = (cardToSetAsDefault: any) => {
+    // First, set all cards as non-default, then set the selected card as default
+    const updatePromises = cardsArray.map((card: any) => {
+      if (card.id === cardToSetAsDefault.id) {
+        // Set this card as default
+        return updateCardMutation.mutateAsync({ 
+          cardId: card.id, 
+          data: { is_default: true } 
+        });
+      } else if (card.is_default) {
+        // Remove default status from currently default cards
+        return updateCardMutation.mutateAsync({ 
+          cardId: card.id, 
+          data: { is_default: false } 
+        });
+      }
+      return Promise.resolve();
+    });
+
+    // Execute all updates
+    Promise.all(updatePromises).then(() => {
+      // Refresh the cards data to reflect changes
+      refetchCards();
+    }).catch((error) => {
+      console.error('Error updating default card:', error);
+    });
+  };
+
   const handleDownloadInvoice = (invoiceUrl: string) => {
     window.open(invoiceUrl, '_blank');
   };
@@ -321,13 +349,7 @@ export default function SubscriptionPage() {
                 cards={cardsArray || []}
                 onAdd={handleAddCard}
                 onDelete={handleDeleteCard}
-                onSetDefault={(card) => {
-                  // Set the selected card as default
-                  updateCardMutation.mutate({ 
-                    cardId: card.id, 
-                    data: { is_default: true } 
-                  });
-                }}
+                onSetDefault={handleSetDefaultCard}
                 isProcessing={
                   createBillingPortalMutation.isPending ||
                   deleteCardMutation.isPending ||
@@ -424,12 +446,7 @@ export default function SubscriptionPage() {
               cards={cardsArray || []}
               onAdd={handleAddCard}
               onDelete={handleDeleteCard}
-              onSetDefault={(card) => {
-                updateCardMutation.mutate({ 
-                  cardId: card.id, 
-                  data: { is_default: true } 
-                });
-              }}
+              onSetDefault={handleSetDefaultCard}
               isProcessing={
                 createBillingPortalMutation.isPending ||
                 deleteCardMutation.isPending ||
