@@ -5,9 +5,6 @@ import { useLocation } from "wouter";
 export default function Landing() {
   const [, setLocation] = useLocation();
 
-  const handleOIDCLogin = () => {
-    window.location.href = "/api/login";
-  };
 
   const handleCustomSignin = () => {
     setLocation("/signin");
@@ -39,26 +36,15 @@ export default function Landing() {
             >
               Start Free Trial
             </Button>
-            <div className="flex gap-2">
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={handleCustomSignin}
-                className="text-lg px-6 py-3"
-                data-testid="button-custom-signin"
-              >
-                Sign In
-              </Button>
-              <Button 
-                size="lg" 
-                variant="secondary"
-                onClick={handleOIDCLogin}
-                className="text-lg px-6 py-3"
-                data-testid="button-oidc-login"
-              >
-                Replit Login
-              </Button>
-            </div>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={handleCustomSignin}
+              className="text-lg px-6 py-3"
+              data-testid="button-custom-signin"
+            >
+              Sign In
+            </Button>
           </div>
         </div>
 
