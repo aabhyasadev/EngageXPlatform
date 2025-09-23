@@ -144,7 +144,7 @@ export default function SubscriptionPage() {
   // Delete card mutation
   const deleteCardMutation = useMutation({
     mutationFn: async (cardId: string) => {
-      const response = await apiRequest('DELETE', `/api/cards/${cardId}/delete_card`);
+      const response = await apiRequest('DELETE', `/api/cards/${cardId}/`);
       return response.json();
     },
     onSuccess: () => {

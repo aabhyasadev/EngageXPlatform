@@ -897,6 +897,31 @@ class CardViewSet(BaseOrganizationViewSet):
 
 
 
+    def destroy(self, request, pk=None):
+        """Delete a card"""
+        try:
+            card = self.get_object()
+            
+            # If this was the default card, set another card as default
+            if card.is_default:
+                org = request.user.organization
+                other_card = Card.objects.filter(
+                    organization=org
+                ).exclude(id=card.id).first()
+                
+                if other_card:
+                    other_card.is_default = True
+                    other_card.save()
+            
+            # Delete the card
+            card.delete()
+            
+            return Response({'message': 'Card deleted successfully'})
+            
+        except Exception as e:
+            return Response({
+                'error': f'Error deleting card: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['get'])
     def default(self, request):
