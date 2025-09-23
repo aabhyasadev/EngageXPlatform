@@ -148,10 +148,7 @@ export default function SubscriptionPage() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Card removed successfully",
-      });
+      // Silently delete - no toast notification
       refetchCards();
       refetchSubscription();
     },
@@ -243,9 +240,8 @@ export default function SubscriptionPage() {
   };
 
   const handleDeleteCard = (card: any) => {
-    if (window.confirm(`Are you sure you want to remove this ${card.brand} ending in ${card.last4}?`)) {
-      deleteCardMutation.mutate(card.id);
-    }
+    // Delete card directly without confirmation alert
+    deleteCardMutation.mutate(card.id);
   };
 
   const handleDownloadInvoice = (invoiceUrl: string) => {
