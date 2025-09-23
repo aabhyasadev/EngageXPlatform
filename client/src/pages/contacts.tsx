@@ -297,6 +297,62 @@ export default function Contacts() {
     },
   });
 
+  const bulkSubscribeMutation = useMutation({
+    mutationFn: async (contactIds: string[]) => {
+      const promises = contactIds.map(id => 
+        apiRequest("PATCH", `/api/contacts/${id}/`, { is_subscribed: true })
+      );
+      await Promise.all(promises);
+    },
+    onSuccess: (_, contactIds) => {
+      toast({
+        title: "Success",
+        description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} subscribed successfully!`,
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === "/api/contacts/";
+        }
+      });
+      clearSelection();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to subscribe contacts",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkUnsubscribeMutation = useMutation({
+    mutationFn: async (contactIds: string[]) => {
+      const promises = contactIds.map(id => 
+        apiRequest("PATCH", `/api/contacts/${id}/`, { is_subscribed: false })
+      );
+      await Promise.all(promises);
+    },
+    onSuccess: (_, contactIds) => {
+      toast({
+        title: "Success",
+        description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} unsubscribed successfully!`,
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === "/api/contacts/";
+        }
+      });
+      clearSelection();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unsubscribe contacts",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Contacts are now filtered server-side, so we use the results directly
   const filteredContacts = contacts;
 
@@ -349,6 +405,22 @@ export default function Contacts() {
   const handleBulkGroupAssignment = () => {
     if (selectedContactIds.size === 0) return;
     setShowBulkGroupModal(true);
+  };
+
+  const handleBulkSubscribe = () => {
+    if (selectedContactIds.size === 0) return;
+    
+    if (window.confirm(`Are you sure you want to subscribe ${selectedContactIds.size} contact${selectedContactIds.size !== 1 ? 's' : ''}?`)) {
+      bulkSubscribeMutation.mutate(Array.from(selectedContactIds));
+    }
+  };
+
+  const handleBulkUnsubscribe = () => {
+    if (selectedContactIds.size === 0) return;
+    
+    if (window.confirm(`Are you sure you want to unsubscribe ${selectedContactIds.size} contact${selectedContactIds.size !== 1 ? 's' : ''}?`)) {
+      bulkUnsubscribeMutation.mutate(Array.from(selectedContactIds));
+    }
   };
 
   const handleGroupSelection = (groupId: string, checked: boolean) => {
@@ -682,6 +754,26 @@ export default function Contacts() {
                       </Button>
                     </div>
                     <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBulkSubscribe}
+                        disabled={bulkSubscribeMutation.isPending}
+                        className="text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
+                        data-testid="button-bulk-subscribe"
+                      >
+                        {bulkSubscribeMutation.isPending ? "Subscribing..." : "Subscribed"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBulkUnsubscribe}
+                        disabled={bulkUnsubscribeMutation.isPending}
+                        className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
+                        data-testid="button-bulk-unsubscribe"
+                      >
+                        {bulkUnsubscribeMutation.isPending ? "Unsubscribing..." : "Unsubscribed"}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
