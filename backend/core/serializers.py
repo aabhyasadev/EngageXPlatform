@@ -207,7 +207,11 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
             'id', 'organization', 'stripe_payment_method_id', 'last4', 'brand',
             'exp_month', 'exp_year', 'is_default', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'organization', 'created_at', 'updated_at']
+        # SECURITY: All sensitive card data fields are read-only (populated from Stripe only)
+        read_only_fields = [
+            'id', 'organization', 'stripe_payment_method_id', 'last4', 'brand',
+            'exp_month', 'exp_year', 'created_at', 'updated_at'
+        ]
 
     def validate_exp_month(self, value):
         if not 1 <= value <= 12:
@@ -244,16 +248,7 @@ class PaymentMethodCreateSerializer(serializers.Serializer):
 
 
 class PaymentMethodUpdateSerializer(serializers.Serializer):
-    """Serializer for updating payment method properties"""
+    """Serializer for updating payment method properties (SECURITY: only safe fields)"""
     is_default = serializers.BooleanField(required=False)
-    exp_month = serializers.IntegerField(required=False, min_value=1, max_value=12)
-    exp_year = serializers.IntegerField(required=False)
-
-    def validate_exp_year(self, value):
-        from datetime import datetime
-        current_year = datetime.now().year
-        if value < current_year:
-            raise serializers.ValidationError("Expiry year cannot be in the past")
-        if value > current_year + 20:
-            raise serializers.ValidationError("Expiry year is too far in the future")
-        return value
+    # SECURITY: Removed exp_month and exp_year - these must come from Stripe only
+    # Client cannot modify sensitive card data

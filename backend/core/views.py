@@ -885,11 +885,18 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
             # Retrieve payment method details from Stripe
             stripe_pm = stripe.PaymentMethod.retrieve(stripe_payment_method_id)
             
-            # Attach to customer if not already attached
+            # SECURITY: Verify payment method belongs to our customer or is unattached
+            if stripe_pm.customer and stripe_pm.customer != org.stripe_customer_id:
+                return Response({
+                    'error': 'Payment method belongs to another customer'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Attach to customer if not already attached (with idempotency)
             if not stripe_pm.customer:
                 stripe.PaymentMethod.attach(
                     stripe_payment_method_id,
-                    customer=org.stripe_customer_id
+                    customer=org.stripe_customer_id,
+                    metadata={'idempotency_key': f'attach_{org.id}_{stripe_payment_method_id}'}
                 )
 
             # Create local payment method record
@@ -924,32 +931,51 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
 
     @action(detail=True, methods=['patch'])
     def update_payment_method(self, request, pk=None):
-        """Update payment method properties"""
+        """Update payment method properties (only local non-sensitive fields)"""
+        import stripe
+        from django.conf import settings
+        
+        stripe.api_key = settings.STRIPE_SECRET_KEY
         payment_method = self.get_object()
         serializer = PaymentMethodUpdateSerializer(data=request.data)
         
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Update local fields
-        if 'is_default' in serializer.validated_data:
-            payment_method.is_default = serializer.validated_data['is_default']
+        try:
+            # SECURITY: Refresh card details from Stripe (don't trust client data)
+            stripe_pm = stripe.PaymentMethod.retrieve(payment_method.stripe_payment_method_id)
             
-        if 'exp_month' in serializer.validated_data:
-            payment_method.exp_month = serializer.validated_data['exp_month']
+            # Verify payment method still belongs to our customer
+            if stripe_pm.customer != request.user.organization.stripe_customer_id:
+                return Response({
+                    'error': 'Payment method verification failed'
+                }, status=status.HTTP_400_BAD_REQUEST)
             
-        if 'exp_year' in serializer.validated_data:
-            payment_method.exp_year = serializer.validated_data['exp_year']
+            # Update ONLY safe fields and refresh sensitive data from Stripe
+            payment_method.last4 = stripe_pm.card.last4
+            payment_method.brand = stripe_pm.card.brand.capitalize()
+            payment_method.exp_month = stripe_pm.card.exp_month
+            payment_method.exp_year = stripe_pm.card.exp_year
+            
+            # Only allow updating is_default (safe field)
+            if 'is_default' in serializer.validated_data:
+                payment_method.is_default = serializer.validated_data['is_default']
 
-        payment_method.save()
+            payment_method.save()
 
-        # Update organization default payment method if needed
-        if payment_method.is_default:
-            org = request.user.organization
-            org.stripe_payment_method_id = payment_method.stripe_payment_method_id
-            org.save()
+            # Update organization default payment method if needed
+            if payment_method.is_default:
+                org = request.user.organization
+                org.stripe_payment_method_id = payment_method.stripe_payment_method_id
+                org.save()
 
-        return Response(PaymentMethodSerializer(payment_method).data)
+            return Response(PaymentMethodSerializer(payment_method).data)
+            
+        except stripe.error.StripeError as e:
+            return Response({
+                'error': f'Stripe verification failed: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['delete'])
     def delete_payment_method(self, request, pk=None):
@@ -962,8 +988,18 @@ class PaymentMethodViewSet(BaseOrganizationViewSet):
         payment_method = self.get_object()
         
         try:
-            # Detach from Stripe customer
-            stripe.PaymentMethod.detach(payment_method.stripe_payment_method_id)
+            # SECURITY: Verify payment method belongs to our customer before detaching
+            stripe_pm = stripe.PaymentMethod.retrieve(payment_method.stripe_payment_method_id)
+            if stripe_pm.customer != request.user.organization.stripe_customer_id:
+                return Response({
+                    'error': 'Payment method verification failed'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Detach from Stripe customer (with idempotency)
+            stripe.PaymentMethod.detach(
+                payment_method.stripe_payment_method_id,
+                metadata={'idempotency_key': f'detach_{request.user.organization.id}_{payment_method.stripe_payment_method_id}'}
+            )
             
             # Clear organization default if this was the default
             if payment_method.is_default:
