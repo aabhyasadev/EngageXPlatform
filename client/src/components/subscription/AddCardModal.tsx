@@ -136,27 +136,17 @@ export default function AddCardModal({
     }
   };
 
-  // Generate simulated Stripe payment method token for demo
-  const generateSimulatedToken = (cardData: CardForm): string => {
-    // In production, this would use Stripe.js to create actual tokens
-    const cardNumber = cardData.cardNumber.replace(/\s/g, '');
-    const brand = cardNumber.startsWith('4') ? 'visa' : 
-                  cardNumber.startsWith('5') ? 'mastercard' : 
-                  cardNumber.startsWith('3') ? 'amex' : 'unknown';
-    const timestamp = Date.now();
-    return `pm_simulated_${brand}_${cardNumber.slice(-4)}_${timestamp}`;
-  };
-
   const createCardMutation = useMutation({
     mutationFn: async (cardData: CardForm) => {
       setIsSubmitting(true);
       
-      // Simulate Stripe tokenization (in production, use Stripe.js)
-      const stripeToken = generateSimulatedToken(cardData);
-      
-      // Send tokenized data to backend (no raw card details)
+      // Send card details directly to backend
       const response = await apiRequest('POST', '/api/cards/', {
-        stripe_token: stripeToken,
+        cardholder_name: cardData.cardholderName,
+        card_number: cardData.cardNumber,
+        exp_month: parseInt(cardData.expiryMonth),
+        exp_year: parseInt(cardData.expiryYear),
+        cvv: cardData.cvv,
         set_as_default: cardData.setAsDefault
       });
       
