@@ -665,7 +665,7 @@ class Card(models.Model):
         on_delete=models.CASCADE,
         related_name='cards'
     )
-    stripe_payment_method_id = models.CharField(max_length=255, unique=True)
+    cardholder_name = models.CharField(max_length=255, default='Card Holder')  # Name on the card
     last4 = models.CharField(max_length=4)  # Last 4 digits of card
     brand = models.CharField(max_length=50)  # Card brand (Visa, Mastercard, etc.)
     exp_month = models.IntegerField()  # Expiry month (1-12)
