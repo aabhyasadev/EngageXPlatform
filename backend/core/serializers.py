@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from .models import (
     Organization, User, Domain, ContactGroup, Contact, 
     ContactGroupMembership, EmailTemplate, Campaign, 
-    CampaignRecipient, AnalyticsEvent
+    CampaignRecipient, AnalyticsEvent, PaymentMethod
 )
 
 User = get_user_model()
@@ -198,3 +198,62 @@ class CampaignSendSerializer(serializers.Serializer):
                 "Must specify either send_all=True, contact_ids, or group_ids"
             )
         return data
+
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentMethod
+        fields = [
+            'id', 'organization', 'stripe_payment_method_id', 'last4', 'brand',
+            'exp_month', 'exp_year', 'is_default', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'organization', 'created_at', 'updated_at']
+
+    def validate_exp_month(self, value):
+        if not 1 <= value <= 12:
+            raise serializers.ValidationError("Expiry month must be between 1 and 12")
+        return value
+
+    def validate_exp_year(self, value):
+        from datetime import datetime
+        current_year = datetime.now().year
+        if value < current_year:
+            raise serializers.ValidationError("Expiry year cannot be in the past")
+        if value > current_year + 20:
+            raise serializers.ValidationError("Expiry year is too far in the future")
+        return value
+
+    def validate_last4(self, value):
+        if not value.isdigit() or len(value) != 4:
+            raise serializers.ValidationError("Last 4 digits must be exactly 4 numeric characters")
+        return value
+
+
+class PaymentMethodCreateSerializer(serializers.Serializer):
+    """Serializer for creating new payment methods via Stripe"""
+    stripe_token = serializers.CharField(required=False)
+    stripe_payment_method_id = serializers.CharField(required=False)
+    set_as_default = serializers.BooleanField(default=True)
+
+    def validate(self, data):
+        if not data.get('stripe_token') and not data.get('stripe_payment_method_id'):
+            raise serializers.ValidationError(
+                "Either stripe_token or stripe_payment_method_id is required"
+            )
+        return data
+
+
+class PaymentMethodUpdateSerializer(serializers.Serializer):
+    """Serializer for updating payment method properties"""
+    is_default = serializers.BooleanField(required=False)
+    exp_month = serializers.IntegerField(required=False, min_value=1, max_value=12)
+    exp_year = serializers.IntegerField(required=False)
+
+    def validate_exp_year(self, value):
+        from datetime import datetime
+        current_year = datetime.now().year
+        if value < current_year:
+            raise serializers.ValidationError("Expiry year cannot be in the past")
+        if value > current_year + 20:
+            raise serializers.ValidationError("Expiry year is too far in the future")
+        return value
