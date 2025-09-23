@@ -326,6 +326,7 @@ class ContactViewSet(BaseOrganizationViewSet):
         from django.http import HttpResponse
         import csv
         import io
+        import openpyxl
         
         # Get format parameter (csv or xlsx)
         export_format = request.query_params.get('format', 'csv').lower()
