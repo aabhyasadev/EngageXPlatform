@@ -28,24 +28,31 @@ export default function ContactGroupsManager() {
 
   // Fetch contact groups
   const { data: contactGroups, isLoading: groupsLoading } = useQuery<ContactGroup[]>({
-    queryKey: ["/api/contact-groups"],
+    queryKey: ["/api/contact-groups/"],
   });
 
   // Fetch all contacts for group assignment
   const { data: allContacts } = useQuery<Contact[]>({
-    queryKey: ["/api/contacts"],
+    queryKey: ["/api/contacts/"],
+    select: (data: any) => {
+      // Transform contact data if it's paginated
+      if (data?.results) {
+        return data.results;
+      }
+      return data || [];
+    },
   });
 
   // Fetch contacts in selected group
   const { data: groupContacts, isLoading: groupContactsLoading } = useQuery<Contact[]>({
-    queryKey: [`/api/contact-groups/${selectedGroup?.id}/contacts`],
+    queryKey: [`/api/contact-groups/${selectedGroup?.id}/contacts/`],
     enabled: !!selectedGroup?.id,
   });
 
   // Create group mutation
   const createGroupMutation = useMutation({
     mutationFn: async (groupData: any) => {
-      const response = await apiRequest("POST", "/api/contact-groups", groupData);
+      const response = await apiRequest("POST", "/api/contact-groups/", groupData);
       return response.json();
     },
     onSuccess: () => {
@@ -53,7 +60,7 @@ export default function ContactGroupsManager() {
         title: "Success",
         description: "Contact group created successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups/"] });
       setShowAddModal(false);
       setNewGroup({ name: "", description: "" });
     },
@@ -69,7 +76,7 @@ export default function ContactGroupsManager() {
   // Update group mutation
   const updateGroupMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await apiRequest("PUT", `/api/contact-groups/${id}`, data);
+      const response = await apiRequest("PUT", `/api/contact-groups/${id}/`, data);
       return response.json();
     },
     onSuccess: () => {
@@ -77,7 +84,7 @@ export default function ContactGroupsManager() {
         title: "Success",
         description: "Contact group updated successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups/"] });
       setShowEditModal(false);
       setSelectedGroup(null);
     },
@@ -93,14 +100,14 @@ export default function ContactGroupsManager() {
   // Delete group mutation
   const deleteGroupMutation = useMutation({
     mutationFn: async (groupId: string) => {
-      await apiRequest("DELETE", `/api/contact-groups/${groupId}`);
+      await apiRequest("DELETE", `/api/contact-groups/${groupId}/`);
     },
     onSuccess: () => {
       toast({
         title: "Success",
         description: "Contact group deleted successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups/"] });
     },
     onError: (error) => {
       toast({
@@ -114,7 +121,7 @@ export default function ContactGroupsManager() {
   // Add contacts to group mutation
   const addContactsToGroupMutation = useMutation({
     mutationFn: async ({ groupId, contactIds }: { groupId: string; contactIds: string[] }) => {
-      const response = await apiRequest("POST", `/api/contact-groups/${groupId}/add-contacts`, {
+      const response = await apiRequest("POST", `/api/contact-groups/${groupId}/add_contacts/`, {
         contact_ids: contactIds,
       });
       return response.json();
@@ -124,7 +131,8 @@ export default function ContactGroupsManager() {
         title: "Success",
         description: "Contacts added to group successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/contact-groups/${selectedGroup?.id}/contacts`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/contact-groups/${selectedGroup?.id}/contacts/`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups/"] });
     },
     onError: (error) => {
       toast({
@@ -138,7 +146,7 @@ export default function ContactGroupsManager() {
   // Remove contacts from group mutation
   const removeContactsFromGroupMutation = useMutation({
     mutationFn: async ({ groupId, contactIds }: { groupId: string; contactIds: string[] }) => {
-      const response = await apiRequest("POST", `/api/contact-groups/${groupId}/remove-contacts`, {
+      const response = await apiRequest("POST", `/api/contact-groups/${groupId}/remove_contacts/`, {
         contact_ids: contactIds,
       });
       return response.json();
@@ -148,7 +156,8 @@ export default function ContactGroupsManager() {
         title: "Success",
         description: "Contacts removed from group successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/contact-groups/${selectedGroup?.id}/contacts`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/contact-groups/${selectedGroup?.id}/contacts/`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups/"] });
     },
     onError: (error) => {
       toast({

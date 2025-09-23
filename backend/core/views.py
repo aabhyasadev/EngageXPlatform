@@ -199,6 +199,24 @@ class ContactGroupViewSet(BaseOrganizationViewSet):
         
         return Response({'message': 'Contacts removed from group'})
 
+    @action(detail=True, methods=['get'])
+    def contacts(self, request, pk=None):
+        """Get all contacts in this group"""
+        group = self.get_object()
+        
+        # Get contacts that belong to this group
+        contact_ids = ContactGroupMembership.objects.filter(
+            group=group
+        ).values_list('contact_id', flat=True)
+        
+        contacts = Contact.objects.filter(
+            id__in=contact_ids,
+            organization=self.request.user.organization
+        )
+        
+        serializer = ContactSerializer(contacts, many=True)
+        return Response(serializer.data)
+
 
 class ContactViewSet(BaseOrganizationViewSet):
     queryset = Contact.objects.all()
