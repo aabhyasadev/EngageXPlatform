@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { Eye, Edit, Trash2, Download, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ContactImport from "@/components/contacts/contact-import";
@@ -57,6 +58,7 @@ export default function Contacts() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   // Transform snake_case from Django API to camelCase for frontend
   const transformContact = (contact: any): Contact => {
@@ -85,7 +87,10 @@ export default function Contacts() {
     previous: string | null;
   }>({
     queryKey: ["/api/contacts/", { page: currentPage, page_size: pageSize, search: debouncedSearchTerm }],
+    queryFn: getQueryFn({ on401: "returnNull" }), // Handle 401 gracefully instead of throwing
+    enabled: isAuthenticated, // Only run when user is authenticated
     select: (data: any) => {
+      if (!data) return { results: [], count: 0, next: null, previous: null };
       console.log("Raw API response:", data);
       const transformed = {
         ...data,
@@ -102,6 +107,8 @@ export default function Contacts() {
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups/"],
+    queryFn: getQueryFn({ on401: "returnNull" }), // Handle 401 gracefully
+    enabled: isAuthenticated, // Only run when user is authenticated
   });
 
   // Contact group memberships - temporarily disabled as backend endpoint needs implementation
@@ -460,7 +467,7 @@ export default function Contacts() {
     });
   };
 
-  if (isLoading) {
+  if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-6">
@@ -470,6 +477,17 @@ export default function Contacts() {
               <div key={i} className="h-32 bg-muted rounded-lg"></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h2 className="text-lg font-medium text-muted-foreground mb-2">Authentication Required</h2>
+          <p className="text-sm text-muted-foreground">Please log in to view your contacts.</p>
         </div>
       </div>
     );
