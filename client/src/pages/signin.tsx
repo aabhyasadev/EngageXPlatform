@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AlertCircle, Eye, EyeOff, ArrowLeft, Building2, Mail, User, Shield, MessageSquare } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 // Step 1: Organization ID & Email validation
@@ -151,7 +151,8 @@ export default function SignInPage() {
           });
           setCurrentStep(3);
         } else {
-          // Login successful - redirect to home
+          // Login successful - invalidate auth cache and redirect to home
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
           toast({ title: "Login successful", description: "Welcome back!" });
           navigate("/");
         }
@@ -176,6 +177,8 @@ export default function SignInPage() {
       
       if (response.ok) {
         const data = await response.json();
+        // Login successful - invalidate auth cache and redirect to home
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
         toast({ title: "Login successful", description: "Welcome back!" });
         navigate("/");
       } else {
