@@ -54,7 +54,7 @@ class ContactGroupSerializer(serializers.ModelSerializer):
             'id', 'organization', 'name', 'description',
             'created_at', 'updated_at', 'members_count'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'organization', 'created_at', 'updated_at']
 
     def get_members_count(self, obj):
         return obj.memberships.count()
