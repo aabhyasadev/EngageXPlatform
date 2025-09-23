@@ -401,7 +401,7 @@ export default function Contacts() {
       const link = document.createElement('a');
       link.href = url;
       link.download = `contacts_export.${format}`;
-      documentbody.appendChild(link);
+      document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
@@ -450,8 +450,6 @@ export default function Contacts() {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedContact?.id) return;
-    
     if (!editContact.email) {
       toast({
         title: "Validation Error",
@@ -460,12 +458,20 @@ export default function Contacts() {
       });
       return;
     }
-    
+    if (!selectedContact) {
+      toast({
+        title: "Error",
+        description: "No contact selected for editing",
+        variant: "destructive",
+      });
+      return;
+    }
     updateContactMutation.mutate({
       contactId: selectedContact.id,
       contactData: editContact
     });
   };
+
 
   if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
