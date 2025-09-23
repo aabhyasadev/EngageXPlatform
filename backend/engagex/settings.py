@@ -94,7 +94,6 @@ AUTH_USER_MODEL = 'core.User'
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
-    'core.authentication.ReplitAuthBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
