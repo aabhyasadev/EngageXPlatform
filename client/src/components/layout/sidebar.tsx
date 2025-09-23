@@ -99,7 +99,7 @@ export default function Sidebar() {
           </div>
           <button 
             className="text-muted-foreground hover:text-foreground"
-            onClick={() => window.location.href = "/api/logout"}
+            onClick={() => window.location.href = "/api/auth/logout"}
             data-testid="button-user-menu"
           >
             <i className="fas fa-ellipsis-v text-sm"></i>
