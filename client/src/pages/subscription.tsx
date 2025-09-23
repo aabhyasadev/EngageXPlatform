@@ -20,6 +20,7 @@ import SubscriptionStatus from '@/components/subscription/SubscriptionStatus';
 import PlanCard from '@/components/subscription/PlanCard';
 import BillingHistory from '@/components/subscription/BillingHistory';
 import PaymentMethod from '@/components/subscription/PaymentMethod';
+import AddPaymentMethodModal from '@/components/subscription/AddPaymentMethodModal';
 
 // Format price from cents to currency display
 const formatPrice = (cents: number): string => {
@@ -33,6 +34,7 @@ export default function SubscriptionPage() {
   const { toast } = useToast();
   const [showYearly, setShowYearly] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [processingAction, setProcessingAction] = useState<string | null>(null);
 
   // Fetch available subscription plans with detailed features
@@ -235,8 +237,8 @@ export default function SubscriptionPage() {
   };
 
   const handleAddPaymentMethod = () => {
-    // Open billing portal to add new payment method
-    createBillingPortalMutation.mutate();
+    // Open modal to add new payment method
+    setShowAddPaymentModal(true);
   };
 
   const handleDeletePaymentMethod = (paymentMethod: any) => {
@@ -453,6 +455,16 @@ export default function SubscriptionPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Add Payment Method Modal */}
+        <AddPaymentMethodModal
+          open={showAddPaymentModal}
+          onOpenChange={setShowAddPaymentModal}
+          onSuccess={() => {
+            refetchPaymentMethods();
+            refetchSubscription();
+          }}
+        />
       </div>
     </div>
   );
