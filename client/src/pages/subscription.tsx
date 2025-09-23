@@ -19,7 +19,7 @@ import {
 import SubscriptionStatus from '@/components/subscription/SubscriptionStatus';
 import PlanCard from '@/components/subscription/PlanCard';
 import BillingHistory from '@/components/subscription/BillingHistory';
-import Card from '@/components/subscription/Card';
+import CardsManager from '@/components/subscription/CardsManager';
 import AddCardModal from '@/components/subscription/AddCardModal';
 
 // Format price from cents to currency display
@@ -319,13 +319,19 @@ export default function SubscriptionPage() {
               />
             )}
 
-            {/* Quick Actions */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card
-                card={defaultCard}
-                onUpdate={handleUpdateCard}
+            {/* Payment Cards */}
+            <div className="grid gap-4 md:grid-cols-1">
+              <CardsManager
+                cards={cardsArray || []}
                 onAdd={handleAddCard}
                 onDelete={handleDeleteCard}
+                onSetDefault={(card) => {
+                  // Set the selected card as default
+                  updateCardMutation.mutate({ 
+                    cardId: card.id, 
+                    data: { is_default: true } 
+                  });
+                }}
                 isProcessing={
                   createBillingPortalMutation.isPending ||
                   deleteCardMutation.isPending ||
@@ -418,22 +424,22 @@ export default function SubscriptionPage() {
               onDownloadInvoice={handleDownloadInvoice}
             />
 
-            <Card
-              card={subscription?.stripe_payment_method_id ? {
-                id: 'demo-card',
-                brand: 'Visa',
-                last4: '4242',
-                exp_month: 12,
-                exp_year: 2025,
-                is_default: true,
-                stripe_payment_method_id: subscription.stripe_payment_method_id,
-                created_at: '',
-                updated_at: ''
-              } : undefined}
-              onUpdate={handleAddCard}
+            <CardsManager
+              cards={cardsArray || []}
               onAdd={handleAddCard}
-              onManageBilling={handleManagePayment}
-              isProcessing={createBillingPortalMutation.isPending}
+              onDelete={handleDeleteCard}
+              onSetDefault={(card) => {
+                updateCardMutation.mutate({ 
+                  cardId: card.id, 
+                  data: { is_default: true } 
+                });
+              }}
+              isProcessing={
+                createBillingPortalMutation.isPending ||
+                deleteCardMutation.isPending ||
+                updateCardMutation.isPending ||
+                cardsLoading
+              }
             />
           </TabsContent>
         </Tabs>
