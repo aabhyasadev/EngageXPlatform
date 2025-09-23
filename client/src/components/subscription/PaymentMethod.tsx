@@ -3,16 +3,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Plus, Edit2, Shield } from 'lucide-react';
 
+interface PaymentMethod {
+  id: string;
+  brand: string;
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+  is_default: boolean;
+  stripe_payment_method_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface PaymentMethodProps {
-  paymentMethod?: {
-    brand: string;
-    last4: string;
-    exp_month: number;
-    exp_year: number;
-    is_default?: boolean;
-  };
-  onUpdate: () => void;
+  paymentMethod?: PaymentMethod;
+  onUpdate: (paymentMethod: PaymentMethod) => void;
   onAdd: () => void;
+  onDelete?: (paymentMethod: PaymentMethod) => void;
   isProcessing?: boolean;
 }
 
@@ -20,6 +27,7 @@ export default function PaymentMethod({
   paymentMethod,
   onUpdate,
   onAdd,
+  onDelete,
   isProcessing
 }: PaymentMethodProps) {
   const getCardBrandIcon = (brand: string) => {
@@ -54,14 +62,8 @@ export default function PaymentMethod({
     return `${monthStr}/${yearStr}`;
   };
 
-  // Mock payment method for demonstration if none provided
-  const mockPaymentMethod = paymentMethod || {
-    brand: 'Visa',
-    last4: '4242',
-    exp_month: 12,
-    exp_year: 2026,
-    is_default: true
-  };
+  // Show empty state if no payment method
+  const hasPaymentMethod = paymentMethod !== undefined;
 
   return (
     <Card data-testid="card-payment-method">
@@ -81,35 +83,48 @@ export default function PaymentMethod({
         </div>
       </CardHeader>
       <CardContent>
-        {mockPaymentMethod ? (
+        {hasPaymentMethod && paymentMethod ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
               <div className="flex items-center gap-4">
-                {getCardBrandIcon(mockPaymentMethod.brand)}
+                {getCardBrandIcon(paymentMethod.brand)}
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-medium" data-testid="text-card-details">
-                      {mockPaymentMethod.brand} ending in {mockPaymentMethod.last4}
+                      {paymentMethod.brand} ending in {paymentMethod.last4}
                     </p>
-                    {mockPaymentMethod.is_default && (
+                    {paymentMethod.is_default && (
                       <Badge variant="secondary" className="text-xs">Default</Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground" data-testid="text-card-expiry">
-                    Expires {formatExpiry(mockPaymentMethod.exp_month, mockPaymentMethod.exp_year)}
+                    Expires {formatExpiry(paymentMethod.exp_month, paymentMethod.exp_year)}
                   </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={onUpdate}
-                disabled={isProcessing}
-                data-testid="button-update-payment"
-              >
-                <Edit2 className="w-4 h-4 mr-2" />
-                Update
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onUpdate(paymentMethod)}
+                  disabled={isProcessing}
+                  data-testid="button-update-payment"
+                >
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                {onDelete && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onDelete(paymentMethod)}
+                    disabled={isProcessing}
+                    data-testid="button-delete-payment"
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -127,7 +142,7 @@ export default function PaymentMethod({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onUpdate}
+                onClick={() => onUpdate(paymentMethod)}
                 disabled={isProcessing}
                 className="w-full"
                 data-testid="button-manage-billing"

@@ -51,6 +51,15 @@ export default function SubscriptionPage() {
     enabled: true, // Enable to fetch billing history
   });
 
+  // Fetch payment methods
+  const { data: paymentMethodsData, isLoading: paymentMethodsLoading, refetch: refetchPaymentMethods } = useQuery({
+    queryKey: ['/api/payment-methods/'],
+    enabled: true,
+  });
+
+  // Get default payment method
+  const defaultPaymentMethod = paymentMethodsData?.results?.find((pm: any) => pm.is_default);
+
   // Create checkout session for new subscriptions
   const createCheckoutMutation = useMutation({
     mutationFn: async (planId: string) => {
@@ -129,6 +138,52 @@ export default function SubscriptionPage() {
     },
   });
 
+  // Delete payment method mutation
+  const deletePaymentMethodMutation = useMutation({
+    mutationFn: async (paymentMethodId: string) => {
+      const response = await apiRequest('DELETE', `/api/payment-methods/${paymentMethodId}/delete_payment_method`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Payment method removed successfully",
+      });
+      refetchPaymentMethods();
+      refetchSubscription();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to remove payment method",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update payment method mutation
+  const updatePaymentMethodMutation = useMutation({
+    mutationFn: async ({ paymentMethodId, data }: { paymentMethodId: string; data: any }) => {
+      const response = await apiRequest('PATCH', `/api/payment-methods/${paymentMethodId}/update_payment_method`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Payment method updated successfully",
+      });
+      refetchPaymentMethods();
+      refetchSubscription();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update payment method",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSelectPlan = (planId: string) => {
     const currentPlan = currentSubscription?.subscription?.plan;
     
@@ -172,6 +227,22 @@ export default function SubscriptionPage() {
 
   const handleManagePayment = () => {
     createBillingPortalMutation.mutate();
+  };
+
+  const handleUpdatePaymentMethod = (paymentMethod: any) => {
+    // For now, just open billing portal for complex updates
+    createBillingPortalMutation.mutate();
+  };
+
+  const handleAddPaymentMethod = () => {
+    // Open billing portal to add new payment method
+    createBillingPortalMutation.mutate();
+  };
+
+  const handleDeletePaymentMethod = (paymentMethod: any) => {
+    if (window.confirm(`Are you sure you want to remove this ${paymentMethod.brand} ending in ${paymentMethod.last4}?`)) {
+      deletePaymentMethodMutation.mutate(paymentMethod.id);
+    }
   };
 
   const handleDownloadInvoice = (invoiceUrl: string) => {
@@ -248,16 +319,16 @@ export default function SubscriptionPage() {
             {/* Quick Actions */}
             <div className="grid gap-4 md:grid-cols-2">
               <PaymentMethod
-                paymentMethod={subscription?.stripe_payment_method_id ? {
-                  brand: 'Visa',
-                  last4: '4242',
-                  exp_month: 12,
-                  exp_year: 2025,
-                  is_default: true
-                } : undefined}
-                onUpdate={handleManagePayment}
-                onAdd={handleManagePayment}
-                isProcessing={createBillingPortalMutation.isPending}
+                paymentMethod={defaultPaymentMethod}
+                onUpdate={handleUpdatePaymentMethod}
+                onAdd={handleAddPaymentMethod}
+                onDelete={handleDeletePaymentMethod}
+                isProcessing={
+                  createBillingPortalMutation.isPending ||
+                  deletePaymentMethodMutation.isPending ||
+                  updatePaymentMethodMutation.isPending ||
+                  paymentMethodsLoading
+                }
               />
 
               {/* Usage Summary */}
