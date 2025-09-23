@@ -232,22 +232,24 @@ class CardSerializer(serializers.ModelSerializer):
 
 
 class CardCreateSerializer(serializers.Serializer):
-    """Serializer for creating new cards with direct card details"""
+    """Serializer for creating new cards with safe card details only (PCI compliant)"""
     cardholder_name = serializers.CharField(max_length=255)
-    card_number = serializers.CharField(max_length=19)  # Card number with spaces
+    last4 = serializers.CharField(max_length=4, min_length=4)  # Only last 4 digits
+    brand = serializers.CharField(max_length=20)  # Card brand (Visa, Mastercard, etc.)
     exp_month = serializers.IntegerField()
     exp_year = serializers.IntegerField()
-    cvv = serializers.CharField(max_length=4)
     set_as_default = serializers.BooleanField(default=True)
 
-    def validate_card_number(self, value):
-        # Remove spaces and validate card number
-        card_number = value.replace(' ', '')
-        if not card_number.isdigit():
-            raise serializers.ValidationError("Card number must contain only digits")
-        if len(card_number) < 13 or len(card_number) > 19:
-            raise serializers.ValidationError("Card number must be between 13 and 19 digits")
-        return card_number
+    def validate_last4(self, value):
+        if not value.isdigit() or len(value) != 4:
+            raise serializers.ValidationError("Last 4 digits must be exactly 4 numeric characters")
+        return value
+
+    def validate_brand(self, value):
+        valid_brands = ['Visa', 'Mastercard', 'American Express', 'Discover', 'Unknown']
+        if value not in valid_brands:
+            raise serializers.ValidationError(f"Brand must be one of: {', '.join(valid_brands)}")
+        return value
 
     def validate_exp_month(self, value):
         if not 1 <= value <= 12:
@@ -261,11 +263,6 @@ class CardCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError("Expiry year cannot be in the past")
         if value > current_year + 20:
             raise serializers.ValidationError("Expiry year is too far in the future")
-        return value
-
-    def validate_cvv(self, value):
-        if not value.isdigit() or len(value) < 3 or len(value) > 4:
-            raise serializers.ValidationError("CVV must be 3 or 4 digits")
         return value
 
 

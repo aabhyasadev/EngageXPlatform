@@ -857,29 +857,15 @@ class CardViewSet(BaseOrganizationViewSet):
         org = request.user.organization
         
         try:
-            # Extract card details from validated data
+            # Extract safe card details from validated data
             validated_data = serializer.validated_data
-            card_number = validated_data.get('card_number')
             
-            # Determine card brand from card number
-            def get_card_brand(card_number):
-                if card_number.startswith('4'):
-                    return 'Visa'
-                elif card_number.startswith(('51', '52', '53', '54', '55')):
-                    return 'Mastercard'
-                elif card_number.startswith(('34', '37')):
-                    return 'American Express'
-                elif card_number.startswith('6011'):
-                    return 'Discover'
-                else:
-                    return 'Unknown'
-
-            # Create card record with provided details
+            # Create card record with safe details only (PCI compliant)
             card = Card.objects.create(
                 organization=org,
                 cardholder_name=validated_data.get('cardholder_name'),
-                last4=card_number[-4:],  # Last 4 digits
-                brand=get_card_brand(card_number),
+                last4=validated_data.get('last4'),  # Already validated to be 4 digits
+                brand=validated_data.get('brand'),  # Already validated brand
                 exp_month=validated_data.get('exp_month'),
                 exp_year=validated_data.get('exp_year'),
                 is_default=validated_data.get('set_as_default', True)

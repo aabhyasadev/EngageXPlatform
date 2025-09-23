@@ -26,45 +26,23 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreditCard, Loader2, Shield } from 'lucide-react';
 
-// Luhn algorithm for credit card validation
-const luhnCheck = (cardNumber: string): boolean => {
-  const digits = cardNumber.replace(/\D/g, '');
-  if (digits.length < 13 || digits.length > 19) return false;
-  
-  let sum = 0;
-  let isEven = false;
-  
-  for (let i = digits.length - 1; i >= 0; i--) {
-    let digit = parseInt(digits[i]);
-    
-    if (isEven) {
-      digit *= 2;
-      if (digit > 9) {
-        digit -= 9;
-      }
-    }
-    
-    sum += digit;
-    isEven = !isEven;
-  }
-  
-  return sum % 10 === 0;
-};
+// SECURITY: No full card validation needed - only safe information collected
 
-// Form validation schema
+// Form validation schema - SECURE: Only collects safe card information
 const cardSchema = z.object({
   cardholderName: z
     .string()
     .min(2, 'Cardholder name must be at least 2 characters')
     .max(50, 'Cardholder name must be less than 50 characters')
     .regex(/^[a-zA-Z\s]+$/, 'Cardholder name can only contain letters and spaces'),
-  cardNumber: z
+  last4: z
     .string()
-    .min(1, 'Card number is required')
-    .transform((value) => value.replace(/\s/g, ''))
-    .refine((value) => luhnCheck(value), {
-      message: 'Please enter a valid card number',
-    }),
+    .min(4, 'Last 4 digits are required')
+    .max(4, 'Last 4 digits must be exactly 4 characters')
+    .regex(/^\d{4}$/, 'Last 4 digits must be numbers only'),
+  brand: z
+    .string()
+    .min(1, 'Card brand is required'),
   expiryMonth: z
     .string()
     .min(1, 'Expiry month is required')
@@ -80,11 +58,6 @@ const cardSchema = z.object({
       const year = parseInt(value);
       return year >= currentYear && year <= currentYear + 20;
     }, 'Please enter a valid future year'),
-  cvv: z
-    .string()
-    .min(3, 'CVV must be 3 or 4 digits')
-    .max(4, 'CVV must be 3 or 4 digits')
-    .regex(/^\d{3,4}$/, 'CVV must contain only numbers'),
   setAsDefault: z.boolean().default(true),
 });
 
@@ -110,43 +83,25 @@ export default function AddCardModal({
     resolver: zodResolver(cardSchema),
     defaultValues: {
       cardholderName: '',
-      cardNumber: '',
+      last4: '',
+      brand: '',
       expiryMonth: '',
       expiryYear: '',
-      cvv: '',
       setAsDefault: true,
     },
   });
-
-  // Format card number input with spaces
-  const formatCardNumber = (value: string): string => {
-    const v = value.replace(/\s/g, '').replace(/\D/g, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
 
   const createCardMutation = useMutation({
     mutationFn: async (cardData: CardForm) => {
       setIsSubmitting(true);
       
-      // Send card details directly to backend
+      // Send secure card details to backend (PCI compliant)
       const response = await apiRequest('POST', '/api/cards/', {
         cardholder_name: cardData.cardholderName,
-        card_number: cardData.cardNumber,
+        last4: cardData.last4,
+        brand: cardData.brand,
         exp_month: parseInt(cardData.expiryMonth),
         exp_year: parseInt(cardData.expiryYear),
-        cvv: cardData.cvv,
         set_as_default: cardData.setAsDefault
       });
       
@@ -206,7 +161,7 @@ export default function AddCardModal({
             Add New Card
           </DialogTitle>
           <DialogDescription>
-            Add a new payment card to your account. Your card information is securely processed by Stripe.
+            Add a new payment card to your account. Only safe, non-sensitive information is collected.
           </DialogDescription>
         </DialogHeader>
 
@@ -232,24 +187,20 @@ export default function AddCardModal({
               )}
             />
 
-            {/* Card Number */}
+            {/* Last 4 Digits */}
             <FormField
               control={form.control}
-              name="cardNumber"
+              name="last4"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Card Number</FormLabel>
+                  <FormLabel>Last 4 Digits</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="1234 5678 9012 3456"
-                      data-testid="input-card-number"
+                      placeholder="1234"
+                      data-testid="input-last4"
                       disabled={isSubmitting}
-                      maxLength={19}
+                      maxLength={4}
                       {...field}
-                      value={formatCardNumber(field.value)}
-                      onChange={(e) => {
-                        field.onChange(e.target.value);
-                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -257,14 +208,41 @@ export default function AddCardModal({
               )}
             />
 
-            {/* Expiry and CVV */}
-            <div className="grid grid-cols-3 gap-3">
+            {/* Card Brand */}
+            <FormField
+              control={form.control}
+              name="brand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Card Brand</FormLabel>
+                  <FormControl>
+                    <select
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                      data-testid="select-brand"
+                      disabled={isSubmitting}
+                      {...field}
+                    >
+                      <option value="">Select card brand</option>
+                      <option value="Visa">Visa</option>
+                      <option value="Mastercard">Mastercard</option>
+                      <option value="American Express">American Express</option>
+                      <option value="Discover">Discover</option>
+                      <option value="Unknown">Other</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Expiry Date */}
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="expiryMonth"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Month</FormLabel>
+                    <FormLabel>Expiry Month</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="MM"
@@ -284,34 +262,13 @@ export default function AddCardModal({
                 name="expiryYear"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Year</FormLabel>
+                    <FormLabel>Expiry Year</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="YYYY"
                         data-testid="input-expiry-year"
                         disabled={isSubmitting}
                         maxLength={4}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="cvv"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CVV</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="123"
-                        data-testid="input-cvv"
-                        disabled={isSubmitting}
-                        maxLength={4}
-                        type="password"
                         {...field}
                       />
                     </FormControl>
@@ -349,7 +306,7 @@ export default function AddCardModal({
             <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
               <Shield className="w-4 h-4 text-green-600" />
               <p className="text-xs text-muted-foreground">
-                Your card information is encrypted and securely processed by Stripe. 
+                Only safe, non-sensitive information is collected for your security. 
                 We never store your card details on our servers.
               </p>
             </div>
