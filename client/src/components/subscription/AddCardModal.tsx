@@ -94,12 +94,14 @@ interface AddCardModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  onRefetch?: () => void;
 }
 
 export default function AddCardModal({
   open,
   onOpenChange,
   onSuccess,
+  onRefetch,
 }: AddCardModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,8 +168,13 @@ export default function AddCardModal({
         description: "Card added successfully",
       });
       
-      // Invalidate cards cache
+      // Invalidate cards cache and refetch
       queryClient.invalidateQueries({ queryKey: ['/api/cards/'] });
+      
+      // Also trigger explicit refetch if available
+      if (onRefetch) {
+        onRefetch();
+      }
       
       form.reset();
       setIsSubmitting(false);

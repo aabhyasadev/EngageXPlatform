@@ -59,8 +59,9 @@ export default function SubscriptionPage() {
     enabled: true,
   });
 
-  // Get default card
-  const defaultCard = cardsData?.results?.find((card: any) => card.is_default);
+  // Get default card - handle both paginated and non-paginated responses
+  const cardsArray = cardsData?.results || cardsData || [];
+  const defaultCard = cardsArray.find?.((card: any) => card.is_default);
 
   // Create checkout session for new subscriptions
   const createCheckoutMutation = useMutation({
@@ -469,6 +470,7 @@ export default function SubscriptionPage() {
             refetchCards();
             refetchSubscription();
           }}
+          onRefetch={refetchCards}
         />
       </div>
     </div>

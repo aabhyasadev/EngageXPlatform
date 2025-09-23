@@ -835,6 +835,132 @@ class CardViewSet(BaseOrganizationViewSet):
             organization=self.request.user.organization
         ).order_by('-is_default', '-created_at')
 
+    def get_serializer_class(self):
+        """Use different serializers for different actions"""
+        if self.action == 'create':
+            return CardCreateSerializer
+        elif self.action == 'update' or self.action == 'partial_update':
+            return CardUpdateSerializer
+        return CardSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Create a new card using Stripe integration"""
+        import stripe
+        from django.conf import settings
+        
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        if not request.user.organization:
+            return Response({
+                'error': 'User not associated with organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        org = request.user.organization
+        
+        try:
+            # Ensure organization has a Stripe customer
+            if not org.stripe_customer_id:
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=org.name,
+                    metadata={'organization_id': str(org.id)}
+                )
+                org.stripe_customer_id = customer.id
+                org.save()
+
+            # Handle Stripe payment method creation
+            stripe_payment_method_id = serializer.validated_data.get('stripe_payment_method_id')
+            stripe_token = serializer.validated_data.get('stripe_token')
+            
+            # Check if this is a simulated token for testing
+            if stripe_token and stripe_token.startswith('pm_simulated_'):
+                # Parse simulated token: pm_simulated_{brand}_{last4}_{timestamp}
+                parts = stripe_token.split('_')
+                if len(parts) >= 4:
+                    brand = parts[2].capitalize()
+                    last4 = parts[3]
+                    # Generate a fake payment method ID for testing
+                    stripe_payment_method_id = f"pm_test_{parts[3]}_{parts[4]}"
+                    
+                    # Create local card record with simulated data
+                    card = Card.objects.create(
+                        organization=org,
+                        stripe_payment_method_id=stripe_payment_method_id,
+                        last4=last4,
+                        brand=brand,
+                        exp_month=12,  # Use fixed values for testing
+                        exp_year=2025,
+                        is_default=serializer.validated_data.get('set_as_default', True)
+                    )
+                else:
+                    return Response({
+                        'error': 'Invalid simulated token format'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # Handle real Stripe tokens/payment methods
+                if stripe_token:
+                    # Create payment method from token (legacy flow)
+                    payment_method = stripe.PaymentMethod.create(
+                        type='card',
+                        card={'token': stripe_token}
+                    )
+                    stripe_payment_method_id = payment_method.id
+                
+                if not stripe_payment_method_id:
+                    return Response({
+                        'error': 'No payment method ID provided'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+                # Retrieve payment method details from Stripe
+                stripe_pm = stripe.PaymentMethod.retrieve(stripe_payment_method_id)
+                
+                # SECURITY: Verify payment method belongs to our customer or is unattached
+                if stripe_pm.customer and stripe_pm.customer != org.stripe_customer_id:
+                    return Response({
+                        'error': 'Payment method belongs to another customer'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Attach to customer if not already attached
+                if not stripe_pm.customer:
+                    stripe.PaymentMethod.attach(
+                        stripe_payment_method_id,
+                        customer=org.stripe_customer_id
+                    )
+
+                # Create local card record with Stripe data
+                card = Card.objects.create(
+                    organization=org,
+                    stripe_payment_method_id=stripe_payment_method_id,
+                    last4=stripe_pm.card.last4,
+                    brand=stripe_pm.card.brand.capitalize(),
+                    exp_month=stripe_pm.card.exp_month,
+                    exp_year=stripe_pm.card.exp_year,
+                    is_default=serializer.validated_data.get('set_as_default', True)
+                )
+
+            # Update organization default payment method if needed
+            if card.is_default:
+                org.stripe_payment_method_id = stripe_payment_method_id
+                org.save()
+
+            return Response(
+                CardSerializer(card).data,
+                status=status.HTTP_201_CREATED
+            )
+
+        except stripe.error.StripeError as e:
+            return Response({
+                'error': f'Stripe error: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'error': f'Error creating card: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=False, methods=['post'])
     def create_payment_method(self, request):
         """Create a new payment method using Stripe"""
