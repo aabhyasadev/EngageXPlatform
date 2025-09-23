@@ -19,10 +19,13 @@ export async function apiRequest(
   // Use relative URLs - Express will proxy /api requests to Django
   const fullUrl = url;
   
+  // Handle FormData differently - don't set Content-Type header and don't JSON.stringify
+  const isFormData = data instanceof FormData;
+  
   const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers: isFormData ? {} : data ? { "Content-Type": "application/json" } : {},
+    body: isFormData ? data as FormData : data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
