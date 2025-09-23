@@ -45,6 +45,7 @@ export default function Contacts() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [subscriptionFilter, setSubscriptionFilter] = useState<"all" | "subscribed" | "unsubscribed">("all");
 
   // Debounce search term to avoid too many API calls
   useEffect(() => {
@@ -55,6 +56,11 @@ export default function Contacts() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Reset to first page when subscription filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [subscriptionFilter]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -86,7 +92,14 @@ export default function Contacts() {
     next: string | null;
     previous: string | null;
   }>({
-    queryKey: ["/api/contacts/", { page: currentPage, page_size: pageSize, search: debouncedSearchTerm }],
+    queryKey: ["/api/contacts/", { 
+      page: currentPage, 
+      page_size: pageSize, 
+      search: debouncedSearchTerm,
+      ...(subscriptionFilter !== "all" && { 
+        is_subscribed: subscriptionFilter === "subscribed" ? "true" : "false" 
+      })
+    }],
     queryFn: getQueryFn({ on401: "returnNull" }), // Handle 401 gracefully instead of throwing
     enabled: isAuthenticated, // Only run when user is authenticated
     select: (data: any) => {
@@ -450,6 +463,8 @@ export default function Contacts() {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedContact?.id) return;
+    
     if (!editContact.email) {
       toast({
         title: "Validation Error",
@@ -458,20 +473,12 @@ export default function Contacts() {
       });
       return;
     }
-    if (!selectedContact) {
-      toast({
-        title: "Error",
-        description: "No contact selected for editing",
-        variant: "destructive",
-      });
-      return;
-    }
+    
     updateContactMutation.mutate({
       contactId: selectedContact.id,
       contactData: editContact
     });
   };
-
 
   if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
@@ -600,24 +607,60 @@ export default function Contacts() {
             </Card>
           </div>
 
-          {/* Search */}
-          <div className="mb-6">
-            <Input
-              placeholder="Search contacts by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-md"
-              data-testid="input-search-contacts"
-            />
+          {/* Search and Filters */}
+          <div className="mb-6 space-y-4">
+            <div>
+              <Input
+                placeholder="Search contacts by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-md"
+                data-testid="input-search-contacts"
+              />
+            </div>
+            
+            {/* Subscription Status Filter */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-muted-foreground">Filter by status:</span>
+              <Button
+                variant={subscriptionFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSubscriptionFilter("all")}
+                data-testid="filter-all-contacts"
+              >
+                All
+              </Button>
+              <Button
+                variant={subscriptionFilter === "subscribed" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSubscriptionFilter("subscribed")}
+                data-testid="filter-subscribed-contacts"
+              >
+                Subscribed
+              </Button>
+              <Button
+                variant={subscriptionFilter === "unsubscribed" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSubscriptionFilter("unsubscribed")}
+                data-testid="filter-unsubscribed-contacts"
+              >
+                Unsubscribed
+              </Button>
+            </div>
           </div>
 
           {/* Contacts Table */}
           <Card>
             <CardHeader>
-              <CardTitle>All Contacts</CardTitle>
+              <CardTitle>
+                {subscriptionFilter === "all" && "All Contacts"}
+                {subscriptionFilter === "subscribed" && "Subscribed Contacts"}
+                {subscriptionFilter === "unsubscribed" && "Unsubscribed Contacts"}
+              </CardTitle>
               <CardDescription>
-                Showing {filteredContacts.length} of {totalCount} contacts
-                {debouncedSearchTerm && ` (filtered by "${debouncedSearchTerm}")`}
+                Showing {contacts.length} of {totalCount} contacts
+                {subscriptionFilter !== "all" && ` (${subscriptionFilter})`}
+                {debouncedSearchTerm && ` (search: "${debouncedSearchTerm}")`}
               </CardDescription>
             </CardHeader>
             <CardContent>
