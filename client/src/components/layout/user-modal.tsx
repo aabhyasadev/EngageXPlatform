@@ -14,8 +14,29 @@ export default function UserModal({ open, onOpenChange }: UserModalProps) {
   const { user } = useAuth();
   const { subscription, isTrialUser, daysRemaining } = useSubscription();
 
-  const handleLogout = () => {
-    window.location.href = "/api/auth/logout";
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (response.ok) {
+        // Redirect to sign-in page after successful logout
+        window.location.href = "/signin";
+      } else {
+        console.error("Logout failed:", response.status);
+        // Fallback: still redirect to sign-in even if logout fails
+        window.location.href = "/signin";
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Fallback: redirect to sign-in on error
+      window.location.href = "/signin";
+    }
   };
 
   const handleEditProfile = () => {
