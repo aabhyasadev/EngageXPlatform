@@ -148,22 +148,29 @@ export default function AddPaymentMethodModal({
     mutationFn: async (data: PaymentMethodForm) => {
       setIsSubmitting(true);
       
-      // For now, we'll simulate creating a Stripe token
-      // In a real implementation, you'd use Stripe.js to securely tokenize the card
-      const mockStripeToken = `tok_${Math.random().toString(36).substr(2, 24)}`;
+      // Simulate Stripe tokenization process
+      // In production, you would use Stripe.js to securely create a token or PaymentMethod
+      // This is a demo implementation that simulates the secure flow
+      const simulateStripeTokenization = async () => {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Generate a mock token that follows Stripe's token format
+        return `tok_${Math.random().toString(36).substr(2, 24)}`;
+      };
       
-      const response = await apiRequest('POST', '/api/payment-methods/create_payment_method', {
-        stripe_token: mockStripeToken,
-        set_as_default: data.setAsDefault,
-        // NOTE: In production, never send raw card details to your server
-        // This is just for demo purposes
-        cardholder_name: data.cardholderName,
-        card_number: data.cardNumber.replace(/\s/g, ''),
-        exp_month: parseInt(data.expiryMonth),
-        exp_year: parseInt(data.expiryYear),
-        cvv: data.cvv,
-      });
-      return response.json();
+      try {
+        // Simulate secure tokenization (in production this would be done by Stripe.js)
+        const stripeToken = await simulateStripeTokenization();
+        
+        const response = await apiRequest('POST', '/api/payment-methods/create_payment_method', {
+          stripe_token: stripeToken,
+          set_as_default: data.setAsDefault,
+        });
+        return response.json();
+      } catch (error) {
+        throw new Error('Failed to process payment method');
+      }
     },
     onSuccess: () => {
       toast({
@@ -352,6 +359,12 @@ export default function AddPaymentMethodModal({
             <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
               <Shield className="w-4 h-4" />
               <span>Your payment information is encrypted and secured by Stripe</span>
+            </div>
+
+            {/* Development Notice */}
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+              <strong>Development Mode:</strong> This form simulates secure card processing. In production, 
+              card details are tokenized by Stripe.js before reaching our servers.
             </div>
 
             <DialogFooter className="gap-2">
