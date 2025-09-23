@@ -102,82 +102,94 @@ export default function Dashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Contacts</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-total-contacts">
-                  {stats?.totalContacts || 0}
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Total Contacts</p>
+                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2" data-testid="text-total-contacts">
+                  {stats?.totalContacts?.toLocaleString() || 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-users text-blue-600 text-xl"></i>
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <i className="fas fa-users text-white text-xl"></i>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600">+12%</span>
-              <span className="text-muted-foreground ml-1">from last month</span>
+              <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <span className="font-semibold">+12%</span>
+              </div>
+              <span className="text-muted-foreground ml-2">from last month</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 border-emerald-200 dark:border-emerald-800 hover:shadow-lg transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Active Campaigns</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-active-campaigns">
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Active Campaigns</p>
+                <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-100 mt-2" data-testid="text-active-campaigns">
                   {stats?.activeCampaigns || 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-paper-plane text-green-600 text-xl"></i>
+              <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                <i className="fas fa-paper-plane text-white text-xl"></i>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600">+3</span>
-              <span className="text-muted-foreground ml-1">this week</span>
+              <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <span className="font-semibold">+3</span>
+              </div>
+              <span className="text-muted-foreground ml-2">this week</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900 border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Open Rate</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-open-rate">
+                <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Open Rate</p>
+                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 mt-2" data-testid="text-open-rate">
                   {stats?.openRate ? `${stats.openRate.toFixed(1)}%` : '0%'}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-envelope-open text-yellow-600 text-xl"></i>
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                <i className="fas fa-envelope-open text-white text-xl"></i>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600">+2.1%</span>
-              <span className="text-muted-foreground ml-1">from last week</span>
+              <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <span className="font-semibold">+2.1%</span>
+              </div>
+              <span className="text-muted-foreground ml-2">from last week</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900 border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Click Rate</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-click-rate">
+                <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Click Rate</p>
+                <p className="text-3xl font-bold text-purple-900 dark:text-purple-100 mt-2" data-testid="text-click-rate">
                   {stats?.clickRate ? `${stats.clickRate.toFixed(1)}%` : '0%'}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-mouse-pointer text-purple-600 text-xl"></i>
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg">
+                <i className="fas fa-mouse-pointer text-white text-xl"></i>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600">+0.8%</span>
-              <span className="text-muted-foreground ml-1">from last week</span>
+              <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <span className="font-semibold">+0.8%</span>
+              </div>
+              <span className="text-muted-foreground ml-2">from last week</span>
             </div>
           </CardContent>
         </Card>

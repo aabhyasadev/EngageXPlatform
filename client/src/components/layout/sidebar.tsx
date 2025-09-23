@@ -2,11 +2,14 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import UserModal from "./user-modal";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
   const { subscription, isTrialUser, daysRemaining } = useSubscription();
+  const [showUserModal, setShowUserModal] = useState(false);
 
   const navigation = [
     { name: "Dashboard", href: "/", icon: "fas fa-tachometer-alt" },
@@ -75,19 +78,23 @@ export default function Sidebar() {
       </nav>
       
       <div className="p-4 border-t border-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+        <button
+          className="flex items-center space-x-3 w-full p-2 rounded-lg hover:bg-accent transition-colors group"
+          onClick={() => setShowUserModal(true)}
+          data-testid="button-user-profile"
+        >
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-sm">
             {user?.profileImageUrl ? (
               <img 
                 src={user.profileImageUrl} 
                 alt="Profile" 
-                className="w-8 h-8 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
-              <i className="fas fa-user text-muted-foreground text-sm"></i>
+              <i className="fas fa-user text-white text-sm"></i>
             )}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-left">
             <p className="text-sm font-medium text-foreground truncate" data-testid="text-user-name">
               {user?.firstName && user?.lastName 
                 ? `${user.firstName} ${user.lastName}` 
@@ -97,15 +104,13 @@ export default function Sidebar() {
               {user?.role || "Member"}
             </p>
           </div>
-          <button 
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => window.location.href = "/api/auth/logout"}
-            data-testid="button-user-menu"
-          >
-            <i className="fas fa-ellipsis-v text-sm"></i>
-          </button>
-        </div>
+          <div className="text-muted-foreground group-hover:text-foreground transition-colors">
+            <i className="fas fa-chevron-right text-xs"></i>
+          </div>
+        </button>
       </div>
+      
+      <UserModal open={showUserModal} onOpenChange={setShowUserModal} />
     </aside>
   );
 }
