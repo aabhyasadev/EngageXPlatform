@@ -37,7 +37,25 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     // Use relative URLs - Express will proxy /api requests to Django
-    const url = queryKey.join("/") as string;
+    const baseUrl = queryKey[0] as string;
+    let url = baseUrl;
+    
+    // Handle query parameters if present
+    if (queryKey.length > 1 && typeof queryKey[1] === 'object' && queryKey[1] !== null) {
+      const params = new URLSearchParams();
+      const queryParams = queryKey[1] as Record<string, any>;
+      
+      Object.entries(queryParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+      
+      const paramString = params.toString();
+      if (paramString) {
+        url += (url.includes('?') ? '&' : '?') + paramString;
+      }
+    }
     
     const res = await fetch(url, {
       credentials: "include",

@@ -11,7 +11,6 @@ import SignIn from "@/pages/signin";
 import SubscriptionPage from "@/pages/subscription";
 import Dashboard from "@/pages/dashboard";
 import Contacts from "@/pages/contacts";
-import Contact from "@/pages/contact";
 import Campaigns from "@/pages/campaigns";
 import Templates from "@/pages/templates";
 import Domains from "@/pages/domains";
@@ -66,7 +65,6 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/contacts" component={Contacts} />
-        <Route path="/contact" component={Contact} />
         <Route path="/campaigns" component={Campaigns} />
         <Route path="/templates" component={Templates} />
         <Route path="/domains" component={Domains} />
