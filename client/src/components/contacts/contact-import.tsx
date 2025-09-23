@@ -25,7 +25,7 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/contacts/import', {
+      const response = await fetch('/api/contacts/import_csv/', {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -40,10 +40,14 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
     },
     onSuccess: (result) => {
       setImportResult(result);
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === "/api/contacts/";
+        }
+      });
       toast({
-        title: "Import Complete",
-        description: `Successfully imported ${result.imported} contacts`,
+        title: "Import Started",
+        description: result.message || "Your contact import has been started and will be processed in the background.",
       });
     },
     onError: (error) => {
@@ -67,7 +71,7 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
     if (!file) {
       toast({
         title: "No File Selected",
-        description: "Please select an Excel file to import",
+        description: "Please select a CSV or Excel file to import",
         variant: "destructive",
       });
       return;
@@ -86,7 +90,7 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import Contacts from Excel</DialogTitle>
+          <DialogTitle>Import Contacts</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -95,21 +99,22 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
             <CardContent className="p-4">
               <h3 className="font-semibold mb-2">File Requirements</h3>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Excel file (.xlsx format)</li>
+                <li>• CSV or Excel file (.csv, .xlsx format)</li>
                 <li>• Required column: email or Email</li>
-                <li>• Optional columns: firstName, lastName, phone, language</li>
-                <li>• Alternative column names: First Name, Last Name, Phone</li>
+                <li>• Optional columns: first_name, last_name, phone, language</li>
+                <li>• Alternative column names: firstName, lastName, First Name, Last Name, Phone</li>
+                <li>• Email addresses will be validated and duplicates will be updated</li>
               </ul>
             </CardContent>
           </Card>
 
           {/* File Upload */}
           <div>
-            <Label htmlFor="file">Select Excel File</Label>
+            <Label htmlFor="file">Select CSV or Excel File</Label>
             <Input
               id="file"
               type="file"
-              accept=".xlsx,.xls"
+              accept=".csv,.xlsx,.xls"
               onChange={handleFileChange}
               className="mt-2"
               data-testid="input-import-file"
@@ -125,30 +130,23 @@ export default function ContactImport({ open, onOpenChange }: ContactImportProps
           {importResult && (
             <Card>
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-2">Import Results</h3>
+                <h3 className="font-semibold mb-2">Import Status</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Successfully imported:</span>
-                    <span className="font-medium text-green-600" data-testid="text-imported-count">
-                      {importResult.imported} contacts
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-green-600 font-medium" data-testid="text-import-status">
+                      Import started successfully
                     </span>
                   </div>
-                  {importResult.errors?.length > 0 && (
-                    <div>
-                      <div className="flex justify-between">
-                        <span>Errors:</span>
-                        <span className="font-medium text-red-600">
-                          {importResult.errors.length} rows
-                        </span>
-                      </div>
-                      <div className="mt-2 max-h-32 overflow-y-auto">
-                        {importResult.errors.map((error: any, index: number) => (
-                          <div key={index} className="text-xs text-red-600">
-                            Row {error.row}: {error.error}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                  <p className="text-muted-foreground">
+                    Your contacts are being processed in the background. 
+                    You can close this dialog and continue working. The contacts 
+                    will appear in your list once processing is complete.
+                  </p>
+                  {importResult.task_id && (
+                    <p className="text-xs text-muted-foreground">
+                      Task ID: {importResult.task_id}
+                    </p>
                   )}
                 </div>
               </CardContent>
