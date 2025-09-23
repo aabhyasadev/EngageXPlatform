@@ -1,7 +1,6 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { setupAuth } from "./replitAuth";
 import crypto from 'crypto';
 
 export async function registerRoutes(app: Express): Promise<Server> {
