@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,7 @@ export default function Templates() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(12); // Grid layout works better with 12 items per page
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [visibleTemplates, setVisibleTemplates] = useState<Set<string>>(new Set());
 
   // Debounce search term for better performance
   useEffect(() => {
@@ -94,6 +95,11 @@ export default function Templates() {
     refetchOnMount: "always",
   });
 
+  // Extract templates from paginated response
+  const templates = templateResponse?.results || [];
+  const totalTemplates = templateResponse?.count || 0;
+  const totalPages = Math.ceil(totalTemplates / pageSize);
+
   // Prefetch next page for better performance
   useEffect(() => {
     if (currentPage < totalPages) {
@@ -104,11 +110,6 @@ export default function Templates() {
       });
     }
   }, [currentPage, totalPages, queryParams, queryClient]);
-
-  // Extract templates from paginated response
-  const templates = templateResponse?.results || [];
-  const totalTemplates = templateResponse?.count || 0;
-  const totalPages = Math.ceil(totalTemplates / pageSize);
 
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
@@ -265,6 +266,31 @@ export default function Templates() {
     
     createTemplateMutation.mutate(duplicatedTemplate);
   };
+
+  // Intersection Observer for lazy loading template previews
+  const observerRef = useRef<IntersectionObserver>();
+  
+  const templateCardRef = useCallback((node: HTMLDivElement, templateId: string) => {
+    if (!node) return;
+    
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleTemplates(prev => new Set(prev).add(templateId));
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px'
+      }
+    );
+    
+    observerRef.current.observe(node);
+  }, []);
 
   // Optimized skeleton loading - render immediately for 150ms target
   const showSkeleton = isLoading && templates.length === 0;

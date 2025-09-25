@@ -62,6 +62,11 @@ export default function Campaigns() {
     refetchOnMount: "always",
   });
 
+  // Extract campaigns from paginated response
+  const campaigns = campaignResponse?.results || [];
+  const totalCampaigns = campaignResponse?.count || 0;
+  const totalPages = Math.ceil(totalCampaigns / pageSize);
+
   // Prefetch next page for better performance
   useEffect(() => {
     if (currentPage < totalPages) {
@@ -72,11 +77,6 @@ export default function Campaigns() {
       });
     }
   }, [currentPage, totalPages, queryParams, queryClient]);
-
-  // Extract campaigns from paginated response
-  const campaigns = campaignResponse?.results || [];
-  const totalCampaigns = campaignResponse?.count || 0;
-  const totalPages = Math.ceil(totalCampaigns / pageSize);
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups"],
