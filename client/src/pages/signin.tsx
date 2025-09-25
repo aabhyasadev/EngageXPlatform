@@ -114,7 +114,7 @@ export default function SignInPage() {
     setError("");
     
     try {
-      const response = await apiRequest("POST", "/api/signin/validate-org-email", values);
+      const response = await apiRequest("POST", "/api/signin/validate-org-email/", values);
       
       if (response.ok) {
         const data = await response.json();
@@ -138,7 +138,7 @@ export default function SignInPage() {
     setError("");
     
     try {
-      const response = await apiRequest("POST", "/api/signin/authenticate", values);
+      const response = await apiRequest("POST", "/api/signin/authenticate/", values);
       
       if (response.ok) {
         const data = await response.json();
@@ -173,7 +173,7 @@ export default function SignInPage() {
     setError("");
     
     try {
-      const response = await apiRequest("POST", "/api/signin/verify", values);
+      const response = await apiRequest("POST", "/api/signin/verify/", values);
       
       if (response.ok) {
         const data = await response.json();
@@ -198,7 +198,7 @@ export default function SignInPage() {
     setError("");
     
     try {
-      const response = await apiRequest("POST", "/api/signin/forgot-account", { email: values.email });
+      const response = await apiRequest("POST", "/api/signin/forgot-account/", { email: values.email });
       
       if (response.ok) {
         toast({ 

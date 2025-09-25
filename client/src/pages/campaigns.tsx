@@ -53,7 +53,7 @@ export default function Campaigns() {
   }), [currentPage, pageSize, debouncedSearchTerm, statusFilter]);
 
   const { data: campaignResponse, isLoading, isFetching, isPending, isPlaceholderData } = useQuery({
-    queryKey: ["/api/campaigns", queryParams],
+    queryKey: ["/api/campaigns/", queryParams],
     staleTime: 2 * 60 * 1000, // 2 minutes - campaigns change frequently
     gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
     retry: 2,
@@ -71,7 +71,7 @@ export default function Campaigns() {
     if (currentPage < totalPages) {
       const nextPageParams = { ...queryParams, page: currentPage + 1 };
       queryClient.prefetchQuery({
-        queryKey: ["/api/campaigns", nextPageParams],
+        queryKey: ["/api/campaigns/", nextPageParams],
         staleTime: 2 * 60 * 1000,
       });
     }
@@ -86,7 +86,7 @@ export default function Campaigns() {
 
   const sendCampaignMutation = useMutation({
     mutationFn: async ({ campaignId, contactGroupIds }: { campaignId: string; contactGroupIds: string[] }) => {
-      const response = await apiRequest("POST", `/api/campaigns/${campaignId}/send`, { contactGroupIds });
+      const response = await apiRequest("POST", `/api/campaigns/${campaignId}/send/`, { contactGroupIds });
       return response.json();
     },
     onSuccess: (result) => {
@@ -94,7 +94,7 @@ export default function Campaigns() {
         title: "Campaign Sent",
         description: `Successfully sent to ${result.sent} of ${result.total} contacts`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns/"] });
       setShowSendModal(false);
       setSelectedCampaign(null);
       setSelectedGroups([]);
@@ -110,14 +110,14 @@ export default function Campaigns() {
 
   const deleteCampaignMutation = useMutation({
     mutationFn: async (campaignId: string) => {
-      await apiRequest("DELETE", `/api/campaigns/${campaignId}`);
+      await apiRequest("DELETE", `/api/campaigns/${campaignId}/`);
     },
     onSuccess: () => {
       toast({
         title: "Success",
         description: "Campaign deleted successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns/"] });
     },
     onError: (error) => {
       toast({

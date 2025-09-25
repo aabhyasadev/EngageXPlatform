@@ -30,20 +30,20 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
   const queryClient = useQueryClient();
 
   const { data: templates } = useQuery<EmailTemplate[]>({
-    queryKey: ["/api/templates"],
+    queryKey: ["/api/templates/"],
   });
 
   const { data: domains } = useQuery<Domain[]>({
-    queryKey: ["/api/domains"],
+    queryKey: ["/api/domains/"],
   });
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
-    queryKey: ["/api/contact-groups"],
+    queryKey: ["/api/contact-groups/"],
   });
 
   const createCampaignMutation = useMutation({
     mutationFn: async (campaignData: any) => {
-      const response = await apiRequest("POST", "/api/campaigns", campaignData);
+      const response = await apiRequest("POST", "/api/campaigns/", campaignData);
       return response.json();
     },
     onSuccess: () => {
@@ -51,7 +51,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
         title: "Success",
         description: "Campaign created successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns/"] });
       onOpenChange(false);
       setFormData({
         name: "",
@@ -62,12 +62,28 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
         scheduledAt: "",
       });
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create campaign",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      console.error("Campaign creation error:", error);
+      let errorMessage = "Failed to create campaign";
+      
+      // Try to extract backend validation errors
+      if (error?.response?.json) {
+        error.response.json().then((errorData: any) => {
+          console.log("Backend error details:", errorData);
+          errorMessage = errorData?.error || errorData?.message || JSON.stringify(errorData);
+          toast({
+            title: "Error",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        });
+      } else {
+        toast({
+          title: "Error", 
+          description: error.message || errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -83,14 +99,25 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
       return;
     }
 
+    // Get selected template and domain for additional data
+    const selectedTemplate = templates?.find(t => t.id === formData.templateId);
+    const selectedDomain = domains?.find(d => d.id === formData.domainId);
+    
     const campaignData = {
       name: formData.name,
+      subject: selectedTemplate?.subject || formData.name, // Use template subject or campaign name as fallback
+      from_email: selectedDomain?.name || "noreply@example.com", // Use domain name or default
       template_id: formData.templateId && formData.templateId !== "none" ? formData.templateId : null,
       domain_id: formData.domainId && formData.domainId !== "none" ? formData.domainId : null,
       contact_group_id: formData.contactGroupId && formData.contactGroupId !== "none" ? formData.contactGroupId : null,
       status: formData.schedule === "now" ? "draft" : "scheduled",
       scheduled_at: formData.schedule === "later" ? new Date(formData.scheduledAt) : null,
+      // Note: organization and created_by should be set by backend from authenticated user
     };
+
+    console.log("Creating campaign with data:", campaignData);
+    console.log("Selected template:", selectedTemplate);
+    console.log("Selected domain:", selectedDomain);
 
     createCampaignMutation.mutate(campaignData);
   };
