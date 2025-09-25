@@ -266,7 +266,10 @@ export default function Templates() {
     createTemplateMutation.mutate(duplicatedTemplate);
   };
 
-  if (isLoading) {
+  // Optimized skeleton loading - render immediately for 150ms target
+  const showSkeleton = isLoading && templates.length === 0;
+  
+  if (showSkeleton) {
     return (
       <div className="p-6 bg-background">
         <SkeletonHeader />
@@ -281,8 +284,8 @@ export default function Templates() {
         
         <SkeletonSearchFilter />
         
-        {/* Template Grid Skeleton */}
-        <SkeletonGrid items={9} columns={3} />
+        {/* Template Grid Skeleton - show 12 items for full page */}
+        <SkeletonGrid items={12} columns={3} />
       </div>
     );
   }

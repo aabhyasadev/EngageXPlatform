@@ -178,7 +178,10 @@ export default function Campaigns() {
     }
   };
 
-  if (isLoading) {
+  // Optimized skeleton loading - render immediately for 150ms target
+  const showSkeleton = isLoading && campaigns.length === 0;
+  
+  if (showSkeleton) {
     return (
       <div className="p-6 bg-background">
         <SkeletonHeader />
@@ -192,7 +195,7 @@ export default function Campaigns() {
         </div>
         
         <SkeletonSearchFilter />
-        <SkeletonTable rows={8} />
+        <SkeletonTable rows={10} />
       </div>
     );
   }
