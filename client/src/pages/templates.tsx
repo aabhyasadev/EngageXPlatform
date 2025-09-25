@@ -492,7 +492,7 @@ export default function Templates() {
                 <Input
                   id="editName"
                   value={selectedTemplate?.name || ""}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
+                  onChange={(e) => setSelectedTemplate(prev => prev ? { ...prev, name: e.target.value } : null)}
                   placeholder="Enter template name"
                   required
                   data-testid="input-edit-template-name"
@@ -502,7 +502,7 @@ export default function Templates() {
                 <Label htmlFor="editCategory">Category</Label>
                 <Select 
                   value={selectedTemplate?.category || "marketing"} 
-                  onValueChange={(value) => setSelectedTemplate({ ...selectedTemplate, category: value })}
+                  onValueChange={(value) => setSelectedTemplate(prev => prev ? { ...prev, category: value } : null)}
                 >
                   <SelectTrigger data-testid="select-edit-template-category">
                     <SelectValue />
@@ -523,7 +523,7 @@ export default function Templates() {
               <Input
                 id="editSubject"
                 value={selectedTemplate?.subject || ""}
-                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
+                onChange={(e) => setSelectedTemplate(prev => prev ? { ...prev, subject: e.target.value } : null)}
                 placeholder="Enter default subject line"
                 data-testid="input-edit-template-subject"
               />
@@ -533,7 +533,7 @@ export default function Templates() {
               <Label htmlFor="editHtmlContent">HTML Content *</Label>
               <RichEditor
                 value={selectedTemplate?.htmlContent || ""}
-                onChange={(value) => setSelectedTemplate({ ...selectedTemplate, htmlContent: value })}
+                onChange={(value) => setSelectedTemplate(prev => prev ? { ...prev, htmlContent: value } : null)}
                 placeholder="Design your email template with rich text formatting..."
                 className="min-h-[300px]"
                 data-testid="rich-editor-edit-template-html"
@@ -545,7 +545,7 @@ export default function Templates() {
               <Textarea
                 id="editTextContent"
                 value={selectedTemplate?.textContent || ""}
-                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, textContent: e.target.value })}
+                onChange={(e) => setSelectedTemplate(prev => prev ? { ...prev, textContent: e.target.value } : null)}
                 placeholder="Enter plain text version"
                 rows={6}
                 data-testid="textarea-edit-template-text"
