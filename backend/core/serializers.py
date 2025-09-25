@@ -106,6 +106,9 @@ class EmailTemplateSerializer(serializers.ModelSerializer):
 class CampaignSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source='created_by.full_name', read_only=True)
     organization_name = serializers.CharField(source='organization.name', read_only=True)
+    template_name = serializers.CharField(source='template.name', read_only=True)
+    domain_name = serializers.CharField(source='domain.domain', read_only=True)
+    contact_group_name = serializers.CharField(source='contact_group.name', read_only=True)
     open_rate = serializers.ReadOnlyField()
     click_rate = serializers.ReadOnlyField()
 
@@ -113,11 +116,13 @@ class CampaignSerializer(serializers.ModelSerializer):
         model = Campaign
         fields = [
             'id', 'organization', 'name', 'subject', 'from_email', 'from_name',
-            'reply_to_email', 'html_content', 'text_content', 'status',
+            'reply_to_email', 'template', 'domain', 'contact_group', 
+            'html_content', 'text_content', 'status',
             'scheduled_at', 'sent_at', 'total_recipients', 'total_sent',
             'total_delivered', 'total_opened', 'total_clicked', 'total_bounced',
             'total_unsubscribed', 'created_by', 'created_at', 'updated_at',
-            'created_by_name', 'organization_name', 'open_rate', 'click_rate'
+            'created_by_name', 'organization_name', 'template_name', 
+            'domain_name', 'contact_group_name', 'open_rate', 'click_rate'
         ]
         read_only_fields = [
             'id', 'total_recipients', 'total_sent', 'total_delivered',
