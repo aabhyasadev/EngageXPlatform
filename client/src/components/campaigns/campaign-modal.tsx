@@ -29,9 +29,12 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: templates } = useQuery<EmailTemplate[]>({
+  const { data: templateResponse } = useQuery({
     queryKey: ["/api/templates/"],
   });
+
+  // Extract templates from paginated response
+  const templates = (templateResponse as any)?.results || [];
 
   const { data: domains } = useQuery<Domain[]>({
     queryKey: ["/api/domains/"],
