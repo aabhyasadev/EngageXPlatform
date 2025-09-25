@@ -1,9 +1,12 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { useState } from "react";
+import CampaignModal from "@/components/campaigns/campaign-modal";
 
 export default function Header() {
   const [location] = useLocation();
+  const [showCampaignModal, setShowCampaignModal] = useState(false);
 
   const getPageTitle = () => {
     switch (location) {
@@ -44,7 +47,10 @@ export default function Header() {
           <NotificationDropdown />
           {location === "/" && (
             <>
-              <Button data-testid="button-header-new-campaign">
+              <Button 
+                onClick={() => setShowCampaignModal(true)}
+                data-testid="button-header-new-campaign"
+              >
                 <i className="fas fa-plus mr-2"></i>
                 New Campaign
               </Button>
@@ -56,6 +62,9 @@ export default function Header() {
           )}
         </div>
       </div>
+      
+      {/* Campaign Modal */}
+      <CampaignModal open={showCampaignModal} onOpenChange={setShowCampaignModal} />
     </header>
   );
 }
