@@ -57,9 +57,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'engagex.urls'
 
-# URL Configuration
-APPEND_SLASH = False  # Disable automatic slash appending to fix API endpoint issues
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

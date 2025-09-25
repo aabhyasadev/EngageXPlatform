@@ -12,12 +12,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'healthy', service: 'express-frontend' });
   });
 
-  // Add body parsing BEFORE proxy for POST requests
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
-
   // Setup Django proxy with authentication bridge
   setupDjangoProxy(app);
+
+  // Add body parsing AFTER proxy to avoid interference
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
   
   const httpServer = createServer(app);
   return httpServer;
