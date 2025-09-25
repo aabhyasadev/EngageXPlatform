@@ -19,6 +19,7 @@ import Team from "@/pages/team";
 import Settings from "@/pages/settings";
 import MainLayout from "@/components/layout/main-layout";
 import OrganizationSetup from "@/components/onboarding/organization-setup";
+import RedirectToSignIn from "@/components/auth/redirect-to-signin";
 
 function Router() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -42,7 +43,7 @@ function Router() {
         <Route path="/signup" component={Signup} />
         <Route path="/signin" component={SignIn} />
         <Route path="/subscription" component={SubscriptionPage} />
-        <Route component={NotFound} />
+        <Route component={RedirectToSignIn} />
       </Switch>
     );
   }
