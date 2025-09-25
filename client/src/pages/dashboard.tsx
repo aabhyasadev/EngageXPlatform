@@ -14,11 +14,14 @@ export default function Dashboard() {
     staleTime: 30000,
   });
 
-  const { data: campaigns, isLoading: campaignsLoading, error: campaignsError } = useQuery({
+  const { data: campaignResponse, isLoading: campaignsLoading, error: campaignsError } = useQuery({
     queryKey: ["/api/campaigns/"],
     retry: 3,
     staleTime: 30000,
   });
+
+  // Extract campaigns from paginated response
+  const campaigns = campaignResponse?.results || [];
 
   const { data: domains, error: domainsError } = useQuery({
     queryKey: ["/api/domains/"],
