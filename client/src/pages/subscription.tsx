@@ -40,23 +40,31 @@ export default function SubscriptionPage() {
   // Fetch available subscription plans with detailed features
   const { data: plansData, isLoading: plansLoading } = useQuery({
     queryKey: ['/api/subscription/plans-detailed'],
+    staleTime: 10 * 60 * 1000, // 10 minutes - plans don't change often
+    retry: 3,
   });
 
   // Fetch current subscription
   const { data: currentSubscription, isLoading: subscriptionLoading, refetch: refetchSubscription } = useQuery({
     queryKey: ['/api/subscription/current'],
+    staleTime: 2 * 60 * 1000, // 2 minutes for subscription status
+    retry: 3,
   });
 
   // Fetch billing history
   const { data: billingHistory, isLoading: billingLoading } = useQuery({
     queryKey: ['/api/subscription/billing-history'],
     enabled: true, // Enable to fetch billing history
+    staleTime: 5 * 60 * 1000, // 5 minutes for billing history
+    retry: 3,
   });
 
   // Fetch cards
   const { data: cardsData, isLoading: cardsLoading, refetch: refetchCards } = useQuery({
     queryKey: ['/api/cards/'],
     enabled: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes for payment methods
+    retry: 3,
   });
 
   // Get default card - handle both paginated and non-paginated responses
