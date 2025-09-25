@@ -425,9 +425,11 @@ class EmailTemplateViewSet(BaseOrganizationViewSet):
     queryset = EmailTemplate.objects.all()
     serializer_class = EmailTemplateSerializer
     pagination_class = DefaultPagination
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'is_default']
     search_fields = ['name', 'subject']
+    ordering = ['-created_at']
+    ordering_fields = ['name', 'created_at', 'updated_at']
     
     def create(self, request, *args, **kwargs):
         """Create a new template with limit check"""
