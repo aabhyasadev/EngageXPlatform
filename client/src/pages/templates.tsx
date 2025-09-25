@@ -29,7 +29,13 @@ import {
   Tag,
   Clock,
   Settings,
-  Globe
+  Globe,
+  TrendingUp,
+  Activity,
+  BarChart3,
+  Timer,
+  Target,
+  PieChart
 } from "lucide-react";
 
 export default function Templates() {
