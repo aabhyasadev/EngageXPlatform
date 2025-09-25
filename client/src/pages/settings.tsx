@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,20 +8,13 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const [orgSettings, setOrgSettings] = useState({
-    name: user?.organization?.name || "",
-    industry: user?.organization?.industry || "",
-    employeesRange: user?.organization?.employeesRange || "",
-    subscriptionPlan: user?.organization?.subscriptionPlan || "free_trial",
-  });
+  const [subscriptionPlan] = useState("free_trial");
 
   const [emailSettings, setEmailSettings] = useState({
     defaultFromName: user?.organization?.name || "",
@@ -32,31 +24,6 @@ export default function Settings() {
     enableOpenTracking: true,
   });
 
-  const updateOrgMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("PUT", `/api/organizations/${user?.organizationId}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Organization settings updated successfully!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update settings",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleOrgUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateOrgMutation.mutate(orgSettings);
-  };
 
   const handleEmailSettingsUpdate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,17 +39,9 @@ export default function Settings() {
     { value: "yearly", label: "Yearly", price: "$290", contacts: "50,000", campaigns: "Unlimited" },
   ];
 
-  const industries = [
-    "Technology", "Healthcare", "Finance", "Education", "Retail", "Manufacturing", 
-    "Real Estate", "Marketing", "Non-profit", "Government", "Other"
-  ];
-
-  const employeeRanges = [
-    "1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"
-  ];
 
   const getCurrentPlan = () => {
-    return subscriptionPlans.find(plan => plan.value === orgSettings.subscriptionPlan);
+    return subscriptionPlans.find(plan => plan.value === subscriptionPlan);
   };
 
   const getTrialDaysLeft = () => {
@@ -109,66 +68,34 @@ export default function Settings() {
           <CardHeader>
             <CardTitle>Organization Information</CardTitle>
             <CardDescription>
-              Update your organization details and basic information
+              View your organization details and basic information
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleOrgUpdate} className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <Label htmlFor="orgName">Organization Name</Label>
-                <Input
-                  id="orgName"
-                  value={orgSettings.name}
-                  onChange={(e) => setOrgSettings({ ...orgSettings, name: e.target.value })}
-                  placeholder="Your Organization Name"
-                  data-testid="input-org-name"
-                />
+                <Label className="text-sm font-medium text-muted-foreground">Organization Name</Label>
+                <p className="text-foreground font-medium mt-1" data-testid="text-org-name">
+                  {user?.organization?.name || "Not Available"}
+                </p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="industry">Industry</Label>
-                  <Select 
-                    value={orgSettings.industry} 
-                    onValueChange={(value) => setOrgSettings({ ...orgSettings, industry: value })}
-                  >
-                    <SelectTrigger data-testid="select-industry">
-                      <SelectValue placeholder="Select industry" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {industries.map((industry) => (
-                        <SelectItem key={industry} value={industry.toLowerCase()}>
-                          {industry}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm font-medium text-muted-foreground">Industry</Label>
+                  <p className="text-foreground font-medium mt-1 capitalize" data-testid="text-org-industry">
+                    {user?.organization?.industry || "Not Specified"}
+                  </p>
                 </div>
                 
                 <div>
-                  <Label htmlFor="employees">Number of Employees</Label>
-                  <Select 
-                    value={orgSettings.employeesRange} 
-                    onValueChange={(value) => setOrgSettings({ ...orgSettings, employeesRange: value })}
-                  >
-                    <SelectTrigger data-testid="select-employees">
-                      <SelectValue placeholder="Select range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employeeRanges.map((range) => (
-                        <SelectItem key={range} value={range}>
-                          {range} employees
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm font-medium text-muted-foreground">Number of Employees</Label>
+                  <p className="text-foreground font-medium mt-1" data-testid="text-org-employees">
+                    {user?.organization?.employeesRange ? `${user.organization.employeesRange} employees` : "Not Specified"}
+                  </p>
                 </div>
               </div>
-
-              <Button type="submit" disabled={updateOrgMutation.isPending} data-testid="button-update-org">
-                {updateOrgMutation.isPending ? "Updating..." : "Update Organization"}
-              </Button>
-            </form>
+            </div>
           </CardContent>
         </Card>
 
@@ -187,7 +114,7 @@ export default function Settings() {
                 <div>
                   <div className="flex items-center space-x-2">
                     <h3 className="font-semibold text-foreground">{getCurrentPlan()?.label}</h3>
-                    {orgSettings.subscriptionPlan === 'free_trial' && (
+                    {subscriptionPlan === 'free_trial' && (
                       <Badge variant="outline">
                         {getTrialDaysLeft()} days left
                       </Badge>
@@ -202,7 +129,7 @@ export default function Settings() {
                     {getCurrentPlan()?.price}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {orgSettings.subscriptionPlan === 'yearly' ? '/year' : '/month'}
+                    {subscriptionPlan === 'yearly' ? '/year' : '/month'}
                   </div>
                 </div>
               </div>
@@ -215,7 +142,7 @@ export default function Settings() {
                     <div 
                       key={plan.value}
                       className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        plan.value === orgSettings.subscriptionPlan 
+                        plan.value === subscriptionPlan 
                           ? 'border-primary bg-primary/5' 
                           : 'border-border hover:border-primary/50'
                       }`}
@@ -228,7 +155,7 @@ export default function Settings() {
                           <div>{plan.contacts} contacts</div>
                           <div>{plan.campaigns} campaigns</div>
                         </div>
-                        {plan.value !== orgSettings.subscriptionPlan && (
+                        {plan.value !== subscriptionPlan && (
                           <Button className="w-full mt-3" size="sm">
                             {plan.value === 'free_trial' ? 'Downgrade' : 'Upgrade'}
                           </Button>
