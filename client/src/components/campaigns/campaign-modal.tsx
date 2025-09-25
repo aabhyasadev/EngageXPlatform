@@ -95,9 +95,9 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
 
     const campaignData = {
       name: formData.name,
-      template: formData.template || null,
-      domain: formData.domain || null,
-      contact_group: formData.contactGroup || null,
+      template: formData.template && formData.template !== "none" ? formData.template : null,
+      domain: formData.domain && formData.domain !== "none" ? formData.domain : null,
+      contact_group: formData.contactGroup && formData.contactGroup !== "none" ? formData.contactGroup : null,
       subject: formData.subject,
       from_email: formData.fromEmail,
       from_name: formData.fromName,
@@ -116,7 +116,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
   const handleTemplateChange = (templateId: string) => {
     setFormData({ ...formData, template: templateId });
     
-    if (templateId) {
+    if (templateId && templateId !== "none") {
       const selectedTemplate = templates?.find((t: any) => t.id === templateId);
       if (selectedTemplate) {
         setFormData({
@@ -160,7 +160,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
                     <SelectValue placeholder="Choose a template (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No template (create from scratch)</SelectItem>
+                    <SelectItem value="none">No template (create from scratch)</SelectItem>
                     {templates?.map((template: any) => (
                       <SelectItem key={template.id} value={template.id}>
                         {template.name}
@@ -183,7 +183,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
                     <SelectValue placeholder="Select verified domain" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Use default domain</SelectItem>
+                    <SelectItem value="none">Use default domain</SelectItem>
                     {verifiedDomains.map((domain: any) => (
                       <SelectItem key={domain.id} value={domain.id}>
                         {domain.domain}
@@ -199,7 +199,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
                     <SelectValue placeholder="Select contact group" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All contacts</SelectItem>
+                    <SelectItem value="none">All contacts</SelectItem>
                     {contactGroups?.map((group: any) => (
                       <SelectItem key={group.id} value={group.id}>
                         {group.name}
