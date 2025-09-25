@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Campaign, ContactGroup } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import CampaignModal from "@/components/campaigns/campaign-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SkeletonHeader, SkeletonStatsCard, SkeletonSearchFilter, SkeletonTable } from "@/components/ui/skeleton";
-import { Mail, TrendingUp, Users, Calendar, MoreVertical, Eye, Edit, Trash2, Send, Filter, Search } from "lucide-react";
+import { Mail, TrendingUp, Users, Calendar, MoreVertical, Eye, Edit, Trash2, Send, Filter, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Campaigns() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,16 +23,55 @@ export default function Campaigns() {
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  // Debounce search term for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page on search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: campaigns, isLoading } = useQuery<Campaign[]>({
-    queryKey: ["/api/campaigns"],
+  // Optimized query with pagination and filtering
+  const queryParams = useMemo(() => ({
+    page: currentPage,
+    page_size: pageSize,
+    search: debouncedSearchTerm.trim(),
+    status: statusFilter === 'all' ? '' : statusFilter,
+  }), [currentPage, pageSize, debouncedSearchTerm, statusFilter]);
+
+  const { data: campaignResponse, isLoading, isFetching } = useQuery({
+    queryKey: ["/api/campaigns", queryParams],
+    staleTime: 2 * 60 * 1000, // 2 minutes - campaigns change frequently
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(300 * 2 ** attemptIndex, 3000),
+    placeholderData: { results: [], count: 0, next: null, previous: null }, // Instant skeleton
+    refetchOnMount: "always",
   });
+
+  // Extract campaigns from paginated response
+  const campaigns = campaignResponse?.results || [];
+  const totalCampaigns = campaignResponse?.count || 0;
+  const totalPages = Math.ceil(totalCampaigns / pageSize);
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
     queryKey: ["/api/contact-groups"],
+    staleTime: 5 * 60 * 1000, // 5 minutes - groups change less frequently
+    gcTime: 15 * 60 * 1000,
+    retry: 2,
   });
 
   const sendCampaignMutation = useMutation({
@@ -79,12 +118,8 @@ export default function Campaigns() {
     },
   });
 
-  const filteredCampaigns = campaigns?.filter((campaign) => {
-    const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         campaign.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }) || [];
+  // Filtered campaigns are now handled server-side via queryParams
+  const filteredCampaigns = campaigns;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -294,7 +329,7 @@ export default function Campaigns() {
             <div>
               <CardTitle className="text-lg">Campaign Management</CardTitle>
               <CardDescription className="mt-1">
-                Showing {filteredCampaigns.length} campaigns
+                Showing {campaigns.length} of {totalCampaigns} campaigns
               </CardDescription>
             </div>
           </div>
@@ -433,6 +468,66 @@ export default function Campaigns() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCampaigns)} of {totalCampaigns} campaigns
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage <= 1 || isFetching}
+              data-testid="button-prev-page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                const isCurrentPage = pageNum === currentPage;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={isCurrentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    disabled={isFetching}
+                    className="w-8"
+                    data-testid={`button-page-${pageNum}`}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+              {totalPages > 5 && <span className="text-muted-foreground">...</span>}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage >= totalPages || isFetching}
+              data-testid="button-next-page"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading indicator for pagination */}
+      {isFetching && currentPage > 1 && (
+        <div className="flex items-center justify-center py-4">
+          <div className="text-sm text-muted-foreground">Loading...</div>
+        </div>
+      )}
 
       {/* Campaign Modal */}
       <CampaignModal open={showCampaignModal} onOpenChange={setShowCampaignModal} />

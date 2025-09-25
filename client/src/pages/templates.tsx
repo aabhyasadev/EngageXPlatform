@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,9 @@ import {
   BarChart3,
   Timer,
   Target,
-  PieChart
+  PieChart,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 export default function Templates() {
@@ -45,6 +47,23 @@ export default function Templates() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(12); // Grid layout works better with 12 items per page
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  // Debounce search term for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page on search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory]);
   const [newTemplate, setNewTemplate] = useState({
     name: "",
     subject: "",
@@ -57,9 +76,28 @@ export default function Templates() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: templates, isLoading } = useQuery<EmailTemplate[]>({
-    queryKey: ["/api/templates"],
+  // Optimized query with pagination and filtering  
+  const queryParams = useMemo(() => ({
+    page: currentPage,
+    page_size: pageSize,
+    search: debouncedSearchTerm.trim(),
+    category: selectedCategory === 'all' ? '' : selectedCategory,
+  }), [currentPage, pageSize, debouncedSearchTerm, selectedCategory]);
+
+  const { data: templateResponse, isLoading, isFetching } = useQuery({
+    queryKey: ["/api/templates", queryParams],
+    staleTime: 3 * 60 * 1000, // 3 minutes - templates change moderately
+    gcTime: 15 * 60 * 1000, // 15 minutes garbage collection
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(300 * 2 ** attemptIndex, 3000),
+    placeholderData: { results: [], count: 0, next: null, previous: null }, // Instant skeleton
+    refetchOnMount: "always",
   });
+
+  // Extract templates from paginated response
+  const templates = templateResponse?.results || [];
+  const totalTemplates = templateResponse?.count || 0;
+  const totalPages = Math.ceil(totalTemplates / pageSize);
 
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
@@ -143,12 +181,8 @@ export default function Templates() {
     },
   });
 
-  const filteredTemplates = (templates as any)?.filter((template: any) => {
-    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.subject?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || template.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  }) || [];
+  // Filtered templates are now handled server-side via queryParams
+  const filteredTemplates = templates;
 
   const categories = [
     { value: "marketing", label: "Marketing" },
@@ -549,6 +583,66 @@ export default function Templates() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalTemplates)} of {totalTemplates} templates
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage <= 1 || isFetching}
+              data-testid="button-prev-page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                const isCurrentPage = pageNum === currentPage;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={isCurrentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    disabled={isFetching}
+                    className="w-8"
+                    data-testid={`button-page-${pageNum}`}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+              {totalPages > 5 && <span className="text-muted-foreground">...</span>}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage >= totalPages || isFetching}
+              data-testid="button-next-page"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading indicator for pagination */}
+      {isFetching && currentPage > 1 && (
+        <div className="flex items-center justify-center py-4">
+          <div className="text-sm text-muted-foreground">Loading templates...</div>
+        </div>
+      )}
 
       {/* Create Template Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
