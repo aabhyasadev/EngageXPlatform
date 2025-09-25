@@ -85,7 +85,7 @@ export default function Templates() {
     category: selectedCategory === 'all' ? '' : selectedCategory,
   }), [currentPage, pageSize, debouncedSearchTerm, selectedCategory]);
 
-  const { data: templateResponse, isLoading, isFetching } = useQuery({
+  const { data: templateResponse, isLoading, isFetching, isPending } = useQuery({
     queryKey: ["/api/templates", queryParams],
     staleTime: 3 * 60 * 1000, // 3 minutes - templates change moderately
     gcTime: 15 * 60 * 1000, // 15 minutes garbage collection
@@ -93,6 +93,7 @@ export default function Templates() {
     retryDelay: (attemptIndex) => Math.min(300 * 2 ** attemptIndex, 3000),
     placeholderData: { results: [], count: 0, next: null, previous: null }, // Instant skeleton
     refetchOnMount: "always",
+    networkMode: "always",
   });
 
   // Extract templates from paginated response
@@ -293,7 +294,7 @@ export default function Templates() {
   }, []);
 
   // Optimized skeleton loading - render immediately for 150ms target
-  const showSkeleton = isLoading && templates.length === 0;
+  const showSkeleton = isPending || (isLoading && !isFetching && templates.length === 0);
   
   if (showSkeleton) {
     return (
