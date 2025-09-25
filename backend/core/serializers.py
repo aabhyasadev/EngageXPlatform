@@ -101,6 +101,22 @@ class EmailTemplateSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def to_representation(self, instance):
+        """Transform field names from snake_case to camelCase for frontend"""
+        data = super().to_representation(instance)
+        return {
+            'id': data['id'],
+            'organization': data['organization'],
+            'name': data['name'],
+            'subject': data['subject'],
+            'htmlContent': data['html_content'],
+            'textContent': data['text_content'],
+            'isDefault': data['is_default'],
+            'category': data['category'],
+            'createdAt': data['created_at'],
+            'updatedAt': data['updated_at']
+        }
 
 
 class CampaignSerializer(serializers.ModelSerializer):

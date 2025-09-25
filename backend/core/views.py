@@ -424,6 +424,7 @@ class ContactViewSet(BaseOrganizationViewSet):
 class EmailTemplateViewSet(BaseOrganizationViewSet):
     queryset = EmailTemplate.objects.all()
     serializer_class = EmailTemplateSerializer
+    pagination_class = DefaultPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['category', 'is_default']
     search_fields = ['name', 'subject']
