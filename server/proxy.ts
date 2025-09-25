@@ -16,7 +16,7 @@ function createAuthHeaders(userId: string, userEmail: string, organizationId?: s
   const timestamp = Date.now().toString();
   const userData = JSON.stringify({ userId, userEmail, organizationId, timestamp });
   const signature = crypto
-    .createHmac("sha256", AUTH_SECRET)
+    .createHmac("sha256", AUTH_SECRET!)
     .update(userData)
     .digest("hex");
 
@@ -35,7 +35,10 @@ export function setupDjangoProxy(app: Express) {
   const djangoProxy = createProxyMiddleware({
     target: DJANGO_URL,
     changeOrigin: true,
-    // pathRewrite not needed - Django expects /api/* routes
+    // Strip /api prefix since Django expects routes without it
+    pathRewrite: {
+      '^/api': '', // Remove /api prefix
+    },
     onProxyReq: (proxyReq: any, req: any) => {
       // Forward authentication from Express session to Django
       if (req.user && req.user.claims) {
