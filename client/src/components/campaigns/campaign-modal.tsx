@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Domain, ContactGroup } from "@shared/schema";
+import type { Domain, ContactGroup, EmailTemplate } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -29,7 +29,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: templates } = useQuery({
+  const { data: templates } = useQuery<EmailTemplate[]>({
     queryKey: ["/api/templates"],
   });
 
@@ -132,7 +132,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No template</SelectItem>
-                  {(templates as any)?.map((template: any) => (
+                  {templates?.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.name}
                     </SelectItem>
