@@ -59,8 +59,6 @@ export default function Campaigns() {
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(300 * 2 ** attemptIndex, 3000),
     placeholderData: { results: [], count: 0, next: null, previous: null },
-    keepPreviousData: true,
-    refetchOnMount: "if-stale",
   });
 
   // Extract campaigns from paginated response
