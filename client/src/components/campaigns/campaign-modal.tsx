@@ -117,7 +117,7 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
     setFormData({ ...formData, template: templateId });
     
     if (templateId && templateId !== "none") {
-      const selectedTemplate = templates?.find((t: any) => t.id === templateId);
+      const selectedTemplate = (templates as any)?.find((t: any) => t.id === templateId);
       if (selectedTemplate) {
         setFormData({
           ...formData,
