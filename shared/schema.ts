@@ -141,6 +141,10 @@ export const campaigns = pgTable("campaigns", {
   fromEmail: varchar("from_email", { length: 255 }).notNull(),
   fromName: varchar("from_name", { length: 255 }),
   replyToEmail: varchar("reply_to_email", { length: 255 }),
+  // New required fields for campaign creation
+  templateId: varchar("template_id").references(() => emailTemplates.id),
+  domainId: varchar("domain_id").references(() => domains.id),
+  contactGroupId: varchar("contact_group_id").references(() => contactGroups.id),
   htmlContent: text("html_content"),
   textContent: text("text_content"),
   status: campaignStatusEnum("status").default('draft').notNull(),
@@ -205,11 +209,12 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   createdCampaigns: many(campaigns),
 }));
 
-export const domainsRelations = relations(domains, ({ one }) => ({
+export const domainsRelations = relations(domains, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [domains.organizationId],
     references: [organizations.id],
   }),
+  campaigns: many(campaigns),
 }));
 
 export const contactsRelations = relations(contacts, ({ one, many }) => ({
@@ -228,6 +233,7 @@ export const contactGroupsRelations = relations(contactGroups, ({ one, many }) =
     references: [organizations.id],
   }),
   memberships: many(contactGroupMemberships),
+  campaigns: many(campaigns),
 }));
 
 export const contactGroupMembershipsRelations = relations(contactGroupMemberships, ({ one }) => ({
@@ -241,11 +247,12 @@ export const contactGroupMembershipsRelations = relations(contactGroupMembership
   }),
 }));
 
-export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
+export const emailTemplatesRelations = relations(emailTemplates, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [emailTemplates.organizationId],
     references: [organizations.id],
   }),
+  campaigns: many(campaigns),
 }));
 
 export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
@@ -256,6 +263,18 @@ export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
   createdBy: one(users, {
     fields: [campaigns.createdBy],
     references: [users.id],
+  }),
+  template: one(emailTemplates, {
+    fields: [campaigns.templateId],
+    references: [emailTemplates.id],
+  }),
+  domain: one(domains, {
+    fields: [campaigns.domainId],
+    references: [domains.id],
+  }),
+  contactGroup: one(contactGroups, {
+    fields: [campaigns.contactGroupId],
+    references: [contactGroups.id],
   }),
   recipients: many(campaignRecipients),
   analyticsEvents: many(analyticsEvents),
