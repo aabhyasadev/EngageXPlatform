@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import UserModal from "./user-modal";
@@ -23,6 +24,7 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
   const { subscription, isTrialUser, daysRemaining } = useSubscription();
+  const { prefetchRoute } = useRoutePrefetch();
   const [showUserModal, setShowUserModal] = useState(false);
 
   const navigation = [
@@ -40,6 +42,29 @@ export default function Sidebar() {
   const isActive = (href: string) => {
     if (href === "/") return location === "/";
     return location.startsWith(href);
+  };
+
+  // Helper function to get route name for prefetching
+  const getRouteNameFromHref = (href: string) => {
+    const routeMap: Record<string, string> = {
+      '/analytics': 'analytics',
+      '/campaigns': 'campaigns',
+      '/contacts': 'contacts',
+      '/templates': 'templates',
+      '/domains': 'domains',
+      '/team': 'team',
+      '/settings': 'settings',
+      '/subscription': 'subscription',
+    };
+    return routeMap[href];
+  };
+
+  // Handle prefetch on hover
+  const handleLinkHover = (href: string) => {
+    const routeName = getRouteNameFromHref(href);
+    if (routeName) {
+      prefetchRoute(routeName);
+    }
   };
 
   return (
@@ -86,6 +111,8 @@ export default function Sidebar() {
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
               data-testid={`link-${item.name.toLowerCase()}`}
+              onMouseEnter={() => handleLinkHover(item.href)}
+              onFocus={() => handleLinkHover(item.href)}
             >
               <IconComponent className="w-4 h-4" />
               <span>{item.name}</span>

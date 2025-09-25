@@ -68,8 +68,8 @@ export default function SubscriptionPage() {
   });
 
   // Get default card - handle both paginated and non-paginated responses
-  const cardsArray = cardsData?.results || cardsData || [];
-  const defaultCard = cardsArray.find?.((card: any) => card.is_default);
+  const cardsArray = (cardsData as any)?.results || cardsData || [];
+  const defaultCard = Array.isArray(cardsArray) ? cardsArray.find?.((card: any) => card.is_default) : null;
 
   // Create checkout session for new subscriptions
   const createCheckoutMutation = useMutation({
@@ -193,7 +193,7 @@ export default function SubscriptionPage() {
   });
 
   const handleSelectPlan = (planId: string) => {
-    const currentPlan = currentSubscription?.subscription?.plan;
+    const currentPlan = (currentSubscription as any)?.subscription?.plan;
     
     if (currentPlan && currentPlan !== 'free_trial') {
       // Existing subscription - upgrade/downgrade
@@ -299,7 +299,7 @@ export default function SubscriptionPage() {
   }, []);
 
   // Get the appropriate plans based on billing toggle
-  const plans = plansData?.plans || [];
+  const plans = (plansData as any)?.plans || [];
   const filteredPlans = plans.filter((plan: any) => {
     // Skip free trial plan
     if (plan.id === 'free_trial') return false;
@@ -312,7 +312,7 @@ export default function SubscriptionPage() {
   const premiumPlan = filteredPlans.find((p: any) => p.id.includes('premium'));
   const orderedPlans = [basicPlan, proPlan, premiumPlan].filter(Boolean);
 
-  const subscription = currentSubscription?.subscription;
+  const subscription = (currentSubscription as any)?.subscription;
 
   return (
     <div className="min-h-screen bg-background">
@@ -445,7 +445,7 @@ export default function SubscriptionPage() {
           {/* Billing Tab */}
           <TabsContent value="billing" className="space-y-6">
             <BillingHistory
-              payments={billingHistory?.items}
+              payments={(billingHistory as any)?.items}
               isLoading={billingLoading}
               onDownloadInvoice={handleDownloadInvoice}
             />

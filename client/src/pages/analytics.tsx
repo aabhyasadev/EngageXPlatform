@@ -1,11 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import PerformanceChart from "@/components/analytics/performance-chart";
+import { useState, Suspense, lazy, startTransition } from "react";
+
+// Lazy load the heavy chart component
+const PerformanceChart = lazy(() => import("@/components/analytics/performance-chart"));
 
 export default function Analytics() {
   const [timeframe, setTimeframe] = useState("30");
+
+  // Handle timeframe changes with startTransition to avoid blocking UI
+  const handleTimeframeChange = (newTimeframe: string) => {
+    startTransition(() => {
+      setTimeframe(newTimeframe);
+    });
+  };
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -41,19 +50,21 @@ export default function Analytics() {
   }
 
   const calculateDeliverability = () => {
-    const totalSent = campaigns?.reduce((sum: number, c: any) => sum + (c.totalSent || 0), 0) || 0;
-    const totalBounced = campaigns?.reduce((sum: number, c: any) => sum + (c.totalBounced || 0), 0) || 0;
+    if (!Array.isArray(campaigns)) return 0;
+    const totalSent = campaigns.reduce((sum: number, c: any) => sum + (c.totalSent || 0), 0) || 0;
+    const totalBounced = campaigns.reduce((sum: number, c: any) => sum + (c.totalBounced || 0), 0) || 0;
     return totalSent > 0 ? ((totalSent - totalBounced) / totalSent) * 100 : 0;
   };
 
   const calculateUnsubscribeRate = () => {
-    const totalSent = campaigns?.reduce((sum: number, c: any) => sum + (c.totalSent || 0), 0) || 0;
-    const totalUnsubscribed = campaigns?.reduce((sum: number, c: any) => sum + (c.totalUnsubscribed || 0), 0) || 0;
+    if (!Array.isArray(campaigns)) return 0;
+    const totalSent = campaigns.reduce((sum: number, c: any) => sum + (c.totalSent || 0), 0) || 0;
+    const totalUnsubscribed = campaigns.reduce((sum: number, c: any) => sum + (c.totalUnsubscribed || 0), 0) || 0;
     return totalSent > 0 ? (totalUnsubscribed / totalSent) * 100 : 0;
   };
 
   const getTopPerformingCampaigns = () => {
-    if (!campaigns) return [];
+    if (!Array.isArray(campaigns)) return [];
     return campaigns
       .filter((c: any) => c.totalSent > 0)
       .sort((a: any, b: any) => {
@@ -74,7 +85,7 @@ export default function Analytics() {
             Track performance and analyze campaign results.
           </p>
         </div>
-        <Select value={timeframe} onValueChange={setTimeframe}>
+        <Select value={timeframe} onValueChange={handleTimeframeChange}>
           <SelectTrigger className="w-48" data-testid="select-timeframe">
             <SelectValue />
           </SelectTrigger>
@@ -95,7 +106,7 @@ export default function Analytics() {
               <div>
                 <p className="text-sm text-muted-foreground">Total Sent</p>
                 <p className="text-3xl font-bold text-foreground" data-testid="text-total-sent">
-                  {stats?.totalSent || 0}
+                  {(stats as any)?.totalSent || 0}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -127,7 +138,7 @@ export default function Analytics() {
               <div>
                 <p className="text-sm text-muted-foreground">Open Rate</p>
                 <p className="text-3xl font-bold text-foreground" data-testid="text-open-rate">
-                  {stats?.openRate ? `${stats.openRate.toFixed(1)}%` : '0%'}
+                  {(stats as any)?.openRate ? `${(stats as any).openRate.toFixed(1)}%` : '0%'}
                 </p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -143,7 +154,7 @@ export default function Analytics() {
               <div>
                 <p className="text-sm text-muted-foreground">Click Rate</p>
                 <p className="text-3xl font-bold text-foreground" data-testid="text-click-rate">
-                  {stats?.clickRate ? `${stats.clickRate.toFixed(1)}%` : '0%'}
+                  {(stats as any)?.clickRate ? `${(stats as any).clickRate.toFixed(1)}%` : '0%'}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -162,7 +173,16 @@ export default function Analytics() {
             <CardDescription>Email performance metrics over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <PerformanceChart campaigns={campaigns} timeframe={timeframe} />
+            <Suspense fallback={
+              <div className="h-64 flex items-center justify-center">
+                <div className="animate-pulse space-y-3 w-full">
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
+                  <div className="h-40 bg-muted rounded"></div>
+                </div>
+              </div>
+            }>
+              <PerformanceChart campaigns={Array.isArray(campaigns) ? campaigns : []} timeframe={timeframe} />
+            </Suspense>
           </CardContent>
         </Card>
 
@@ -187,23 +207,23 @@ export default function Analytics() {
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Open Rate</span>
-                <span className="text-sm font-medium text-foreground">{stats?.openRate?.toFixed(1) || 0}%</span>
+                <span className="text-sm font-medium text-foreground">{(stats as any)?.openRate?.toFixed(1) || 0}%</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
                   className="bg-blue-500 h-2 rounded-full" 
-                  style={{ width: `${stats?.openRate || 0}%` }}
+                  style={{ width: `${(stats as any)?.openRate || 0}%` }}
                 ></div>
               </div>
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Click Through Rate</span>
-                <span className="text-sm font-medium text-foreground">{stats?.clickRate?.toFixed(1) || 0}%</span>
+                <span className="text-sm font-medium text-foreground">{(stats as any)?.clickRate?.toFixed(1) || 0}%</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
                   className="bg-purple-500 h-2 rounded-full" 
-                  style={{ width: `${(stats?.clickRate || 0) * 4}%` }}
+                  style={{ width: `${((stats as any)?.clickRate || 0) * 4}%` }}
                 ></div>
               </div>
               
