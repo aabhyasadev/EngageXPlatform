@@ -446,6 +446,30 @@ class Campaign(models.Model):
     from_email = models.EmailField(max_length=255, validators=[EmailValidator()])
     from_name = models.CharField(max_length=255, null=True, blank=True)
     reply_to_email = models.EmailField(max_length=255, null=True, blank=True, validators=[EmailValidator()])
+    
+    # New required fields for campaign creation
+    template = models.ForeignKey(
+        EmailTemplate,
+        on_delete=models.SET_NULL,
+        related_name='campaigns',
+        null=True,
+        blank=True
+    )
+    domain = models.ForeignKey(
+        Domain,
+        on_delete=models.SET_NULL,
+        related_name='campaigns',
+        null=True,
+        blank=True
+    )
+    contact_group = models.ForeignKey(
+        ContactGroup,
+        on_delete=models.SET_NULL,
+        related_name='campaigns',
+        null=True,
+        blank=True
+    )
+    
     html_content = models.TextField(null=True, blank=True)
     text_content = models.TextField(null=True, blank=True)
     status = models.CharField(
