@@ -55,13 +55,6 @@ export default function Settings() {
 
   return (
     <div className="p-6 bg-background max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-foreground">Settings</h2>
-        <p className="text-sm text-muted-foreground">
-          Configure your organization settings and preferences.
-        </p>
-      </div>
-
       <div className="space-y-6">
         {/* Organization Information */}
         <Card>

@@ -77,14 +77,8 @@ export default function Analytics() {
 
   return (
     <div className="p-6 bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Analytics</h2>
-          <p className="text-sm text-muted-foreground">
-            Track performance and analyze campaign results.
-          </p>
-        </div>
+      {/* Timeframe selector */}
+      <div className="flex justify-end mb-6">
         <Select value={timeframe} onValueChange={handleTimeframeChange}>
           <SelectTrigger className="w-48" data-testid="select-timeframe">
             <SelectValue />
