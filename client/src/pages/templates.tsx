@@ -244,14 +244,8 @@ export default function Templates() {
 
   return (
     <div className="p-6 bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Templates</h2>
-          <p className="text-sm text-muted-foreground">
-            Design and organize your email templates.
-          </p>
-        </div>
+      {/* Action button */}
+      <div className="flex justify-end mb-6">
         <Button onClick={() => setShowCreateModal(true)} data-testid="button-new-template">
           <i className="fas fa-plus mr-2"></i>
           New Template

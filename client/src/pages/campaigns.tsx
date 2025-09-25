@@ -153,50 +153,42 @@ export default function Campaigns() {
 
   return (
     <div className="p-6 bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Campaigns</h1>
-          <p className="text-muted-foreground mt-2">
-            Create, manage, and track your email campaigns with detailed analytics.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setStatusFilter("all")}
-                className={statusFilter === "all" ? "bg-muted" : ""}>
-                All Campaigns
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("draft")}
-                className={statusFilter === "draft" ? "bg-muted" : ""}>
-                Drafts
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("scheduled")}
-                className={statusFilter === "scheduled" ? "bg-muted" : ""}>
-                Scheduled
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("sent")}
-                className={statusFilter === "sent" ? "bg-muted" : ""}>
-                Sent
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("failed")}
-                className={statusFilter === "failed" ? "bg-muted" : ""}>
-                Failed
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button onClick={() => setShowCampaignModal(true)} data-testid="button-new-campaign">
-            <Mail className="h-4 w-4 mr-2" />
-            New Campaign
-          </Button>
-        </div>
+      {/* Filters and Actions */}
+      <div className="flex items-center justify-end gap-3 mb-8">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => setStatusFilter("all")}
+              className={statusFilter === "all" ? "bg-muted" : ""}>
+              All Campaigns
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("draft")}
+              className={statusFilter === "draft" ? "bg-muted" : ""}>
+              Drafts
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("scheduled")}
+              className={statusFilter === "scheduled" ? "bg-muted" : ""}>
+              Scheduled
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("sent")}
+              className={statusFilter === "sent" ? "bg-muted" : ""}>
+              Sent
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("failed")}
+              className={statusFilter === "failed" ? "bg-muted" : ""}>
+              Failed
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button onClick={() => setShowCampaignModal(true)} data-testid="button-new-campaign">
+          <Mail className="h-4 w-4 mr-2" />
+          New Campaign
+        </Button>
       </div>
 
       {/* Enhanced Stats Cards */}

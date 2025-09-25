@@ -140,14 +140,8 @@ export default function Domains() {
 
   return (
     <div className="p-6 bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Domains</h2>
-          <p className="text-sm text-muted-foreground">
-            Configure and verify your sending domains for maximum deliverability.
-          </p>
-        </div>
+      {/* Action button */}
+      <div className="flex justify-end mb-6">
         <Button onClick={() => setShowAddModal(true)} data-testid="button-add-domain">
           <i className="fas fa-plus mr-2"></i>
           Add Domain
