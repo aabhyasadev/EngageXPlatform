@@ -52,15 +52,15 @@ export default function Campaigns() {
     status: statusFilter === 'all' ? '' : statusFilter,
   }), [currentPage, pageSize, debouncedSearchTerm, statusFilter]);
 
-  const { data: campaignResponse, isLoading, isFetching, isPending } = useQuery({
+  const { data: campaignResponse, isLoading, isFetching, isPending, isPlaceholderData } = useQuery({
     queryKey: ["/api/campaigns", queryParams],
     staleTime: 2 * 60 * 1000, // 2 minutes - campaigns change frequently
     gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(300 * 2 ** attemptIndex, 3000),
-    placeholderData: { results: [], count: 0, next: null, previous: null }, // Instant skeleton
-    refetchOnMount: "always",
-    networkMode: "always",
+    placeholderData: { results: [], count: 0, next: null, previous: null },
+    keepPreviousData: true,
+    refetchOnMount: "if-stale",
   });
 
   // Extract campaigns from paginated response
@@ -179,8 +179,8 @@ export default function Campaigns() {
     }
   };
 
-  // Optimized skeleton loading - render immediately for 150ms target
-  const showSkeleton = isPending || (isLoading && !isFetching && campaigns.length === 0);
+  // Fixed skeleton loading - render immediately for 150ms target
+  const showSkeleton = isPlaceholderData || (!campaignResponse && (isPending || isFetching));
   
   if (showSkeleton) {
     return (

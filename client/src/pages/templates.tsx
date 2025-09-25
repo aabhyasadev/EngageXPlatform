@@ -85,15 +85,15 @@ export default function Templates() {
     category: selectedCategory === 'all' ? '' : selectedCategory,
   }), [currentPage, pageSize, debouncedSearchTerm, selectedCategory]);
 
-  const { data: templateResponse, isLoading, isFetching, isPending } = useQuery({
+  const { data: templateResponse, isLoading, isFetching, isPending, isPlaceholderData } = useQuery({
     queryKey: ["/api/templates", queryParams],
     staleTime: 3 * 60 * 1000, // 3 minutes - templates change moderately
     gcTime: 15 * 60 * 1000, // 15 minutes garbage collection
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(300 * 2 ** attemptIndex, 3000),
-    placeholderData: { results: [], count: 0, next: null, previous: null }, // Instant skeleton
-    refetchOnMount: "always",
-    networkMode: "always",
+    placeholderData: { results: [], count: 0, next: null, previous: null },
+    keepPreviousData: true,
+    refetchOnMount: "if-stale",
   });
 
   // Extract templates from paginated response
@@ -268,18 +268,17 @@ export default function Templates() {
     createTemplateMutation.mutate(duplicatedTemplate);
   };
 
-  // Intersection Observer for lazy loading template previews
+  // Fixed Intersection Observer for lazy loading template previews
   const observerRef = useRef<IntersectionObserver>();
+  const nodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
-  const templateCardRef = useCallback((node: HTMLDivElement, templateId: string) => {
-    if (!node) return;
-    
-    if (observerRef.current) observerRef.current.disconnect();
-    
+  useEffect(() => {
+    // Create a single observer instance
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          const templateId = entry.target.getAttribute('data-template-id');
+          if (entry.isIntersecting && templateId) {
             setVisibleTemplates(prev => new Set(prev).add(templateId));
           }
         });
@@ -289,12 +288,37 @@ export default function Templates() {
         rootMargin: '50px'
       }
     );
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
+  
+  const templateCardRef = useCallback((node: HTMLDivElement | null, templateId: string) => {
+    const prevNode = nodeRefs.current.get(templateId);
     
-    observerRef.current.observe(node);
+    // Unobserve previous node if it exists
+    if (prevNode && observerRef.current) {
+      observerRef.current.unobserve(prevNode);
+    }
+    
+    if (node) {
+      // Store the new node and observe it
+      nodeRefs.current.set(templateId, node);
+      node.setAttribute('data-template-id', templateId);
+      if (observerRef.current) {
+        observerRef.current.observe(node);
+      }
+    } else {
+      // Remove from map if node is null
+      nodeRefs.current.delete(templateId);
+    }
   }, []);
 
-  // Optimized skeleton loading - render immediately for 150ms target
-  const showSkeleton = isPending || (isLoading && !isFetching && templates.length === 0);
+  // Fixed skeleton loading - render immediately for 150ms target
+  const showSkeleton = isPlaceholderData || (!templateResponse && (isPending || isFetching));
   
   if (showSkeleton) {
     return (
