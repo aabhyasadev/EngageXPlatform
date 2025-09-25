@@ -131,6 +131,69 @@ class CampaignSerializer(serializers.ModelSerializer):
             'organization', 'created_by'
         ]
 
+    def to_representation(self, instance):
+        """Convert snake_case field names to camelCase for frontend compatibility"""
+        data = super().to_representation(instance)
+        
+        # Transform snake_case keys to camelCase
+        camel_case_data = {}
+        for key, value in data.items():
+            if key == 'created_at':
+                camel_case_data['createdAt'] = value
+            elif key == 'updated_at':
+                camel_case_data['updatedAt'] = value  
+            elif key == 'scheduled_at':
+                camel_case_data['scheduledAt'] = value
+            elif key == 'sent_at':
+                camel_case_data['sentAt'] = value
+            elif key == 'from_email':
+                camel_case_data['fromEmail'] = value
+            elif key == 'from_name':
+                camel_case_data['fromName'] = value
+            elif key == 'reply_to_email':
+                camel_case_data['replyToEmail'] = value
+            elif key == 'html_content':
+                camel_case_data['htmlContent'] = value
+            elif key == 'text_content':
+                camel_case_data['textContent'] = value
+            elif key == 'total_recipients':
+                camel_case_data['totalRecipients'] = value
+            elif key == 'total_sent':
+                camel_case_data['totalSent'] = value
+            elif key == 'total_delivered':
+                camel_case_data['totalDelivered'] = value
+            elif key == 'total_opened':
+                camel_case_data['totalOpened'] = value
+            elif key == 'total_clicked':
+                camel_case_data['totalClicked'] = value
+            elif key == 'total_bounced':
+                camel_case_data['totalBounced'] = value
+            elif key == 'total_unsubscribed':
+                camel_case_data['totalUnsubscribed'] = value
+            elif key == 'created_by':
+                camel_case_data['createdBy'] = value
+            elif key == 'created_by_name':
+                camel_case_data['createdByName'] = value
+            elif key == 'organization_name':
+                camel_case_data['organizationName'] = value
+            elif key == 'template_name':
+                camel_case_data['templateName'] = value
+            elif key == 'domain_name':
+                camel_case_data['domainName'] = value  
+            elif key == 'contact_group_name':
+                camel_case_data['contactGroupName'] = value
+            elif key == 'contact_group':
+                camel_case_data['contactGroup'] = value
+            elif key == 'open_rate':
+                camel_case_data['openRate'] = value
+            elif key == 'click_rate':
+                camel_case_data['clickRate'] = value
+            else:
+                # Keep other fields as-is (id, name, subject, status, organization, template, domain)
+                camel_case_data[key] = value
+                
+        return camel_case_data
+
 
 class CampaignRecipientSerializer(serializers.ModelSerializer):
     contact_email = serializers.CharField(source='contact.email', read_only=True)

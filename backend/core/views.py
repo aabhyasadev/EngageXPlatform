@@ -558,6 +558,7 @@ class CampaignViewSet(BaseOrganizationViewSet):
     search_fields = ['name', 'subject']
     ordering_fields = ['created_at', 'sent_at', 'name']
     ordering = ['-created_at']
+    pagination_class = DefaultPagination
     
     def create(self, request, *args, **kwargs):
         """Create a new campaign with subscription limit check"""
