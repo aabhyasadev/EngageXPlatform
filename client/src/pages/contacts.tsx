@@ -594,63 +594,55 @@ export default function Contacts() {
 
   return (
     <div className="p-6 bg-background">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Contacts</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your contact database and groups for targeted email campaigns.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={isExporting}
-                data-testid="button-export-dropdown"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isExporting ? "Exporting..." : "Export"}
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem 
-                onClick={() => handleExportContacts('csv')}
-                disabled={isExporting}
-                data-testid="menu-item-export-csv"
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleExportContacts('xlsx')}
-                disabled={isExporting}
-                data-testid="menu-item-export-excel"
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export as Excel
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowImportModal(true)}
-            data-testid="button-import-contacts"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
-          <Button onClick={() => setShowAddModal(true)} data-testid="button-add-contact">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Contact
-          </Button>
-        </div>
+      {/* Action buttons */}
+      <div className="flex items-center justify-end gap-3 mb-8">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm"
+              disabled={isExporting}
+              data-testid="button-export-dropdown"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isExporting ? "Exporting..." : "Export"}
+              <ChevronDown className="h-4 w-4 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem 
+              onClick={() => handleExportContacts('csv')}
+              disabled={isExporting}
+              data-testid="menu-item-export-csv"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export as CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => handleExportContacts('xlsx')}
+              disabled={isExporting}
+              data-testid="menu-item-export-excel"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export as Excel
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setShowImportModal(true)}
+          data-testid="button-import-contacts"
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          Import
+        </Button>
+        <Button onClick={() => setShowAddModal(true)} data-testid="button-add-contact">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Contact
+        </Button>
       </div>
 
       {/* Tabs */}
