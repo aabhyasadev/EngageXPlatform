@@ -94,6 +94,17 @@ export default function Templates() {
     refetchOnMount: "always",
   });
 
+  // Prefetch next page for better performance
+  useEffect(() => {
+    if (currentPage < totalPages) {
+      const nextPageParams = { ...queryParams, page: currentPage + 1 };
+      queryClient.prefetchQuery({
+        queryKey: ["/api/templates", nextPageParams],
+        staleTime: 3 * 60 * 1000,
+      });
+    }
+  }, [currentPage, totalPages, queryParams, queryClient]);
+
   // Extract templates from paginated response
   const templates = templateResponse?.results || [];
   const totalTemplates = templateResponse?.count || 0;

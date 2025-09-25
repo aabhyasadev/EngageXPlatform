@@ -62,6 +62,17 @@ export default function Campaigns() {
     refetchOnMount: "always",
   });
 
+  // Prefetch next page for better performance
+  useEffect(() => {
+    if (currentPage < totalPages) {
+      const nextPageParams = { ...queryParams, page: currentPage + 1 };
+      queryClient.prefetchQuery({
+        queryKey: ["/api/campaigns", nextPageParams],
+        staleTime: 2 * 60 * 1000,
+      });
+    }
+  }, [currentPage, totalPages, queryParams, queryClient]);
+
   // Extract campaigns from paginated response
   const campaigns = campaignResponse?.results || [];
   const totalCampaigns = campaignResponse?.count || 0;
