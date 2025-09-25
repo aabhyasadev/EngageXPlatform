@@ -102,6 +102,27 @@ class EmailTemplateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def to_internal_value(self, data):
+        """Transform field names from camelCase to snake_case for backend"""
+        transformed_data = {}
+        
+        for key, value in data.items():
+            if key == 'htmlContent':
+                transformed_data['html_content'] = value
+            elif key == 'textContent':
+                transformed_data['text_content'] = value
+            elif key == 'isDefault':
+                transformed_data['is_default'] = value
+            elif key == 'createdAt':
+                transformed_data['created_at'] = value
+            elif key == 'updatedAt':
+                transformed_data['updated_at'] = value
+            else:
+                # Keep other fields as-is (id, name, subject, organization, category)
+                transformed_data[key] = value
+        
+        return super().to_internal_value(transformed_data)
+    
     def to_representation(self, instance):
         """Transform field names from snake_case to camelCase for frontend"""
         data = super().to_representation(instance)

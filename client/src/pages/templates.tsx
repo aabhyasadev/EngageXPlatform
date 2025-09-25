@@ -101,6 +101,11 @@ export default function Templates() {
   const totalTemplates = templateResponse?.count || 0;
   const totalPages = Math.ceil(totalTemplates / pageSize);
 
+  // Debug logging to understand API response
+  console.log("Templates API Response:", templateResponse);
+  console.log("Templates results:", templates);
+  console.log("Total templates count:", totalTemplates);
+
   // Prefetch next page for better performance
   useEffect(() => {
     if (currentPage < totalPages) {
@@ -114,7 +119,7 @@ export default function Templates() {
 
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
-      const response = await apiRequest("POST", "/api/templates", templateData);
+      const response = await apiRequest("POST", "/api/templates/", templateData);
       return response.json();
     },
     onSuccess: () => {
@@ -153,7 +158,7 @@ export default function Templates() {
         category: templateData.category,
         isDefault: templateData.isDefault,
       };
-      const response = await apiRequest("PUT", `/api/templates/${id}`, safeData);
+      const response = await apiRequest("PUT", `/api/templates/${id}/`, safeData);
       return response.json();
     },
     onSuccess: () => {
@@ -176,7 +181,7 @@ export default function Templates() {
 
   const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      await apiRequest("DELETE", `/api/templates/${templateId}`);
+      await apiRequest("DELETE", `/api/templates/${templateId}/`);
     },
     onSuccess: () => {
       toast({
@@ -358,7 +363,7 @@ export default function Templates() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-3xl font-bold text-foreground" data-testid="text-total-templates">
-                  {(templates as any)?.length || 0}
+                  {totalTemplates || 0}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">Total Templates</p>
                 <div className="flex items-center gap-1 mt-2">

@@ -467,19 +467,31 @@ class EmailTemplateViewSet(BaseOrganizationViewSet):
 
     def list(self, request, *args, **kwargs):
         """List templates and seed defaults if none exist"""
+        print(f"\n=== DEBUG EmailTemplateViewSet.list ===")
+        print(f"User: {request.user}")
+        print(f"User organization: {request.user.organization}")
+        
         queryset = self.get_queryset()
+        print(f"Initial queryset count: {queryset.count()}")
+        print(f"Initial queryset SQL: {queryset.query}")
         
         # If no templates exist, seed default templates
         if not queryset.exists():
+            print("No templates exist, seeding defaults...")
             self.seed_default_templates()
             queryset = self.get_queryset()
+            print(f"After seeding queryset count: {queryset.count()}")
         
         page = self.paginate_queryset(queryset)
         if page is not None:
+            print(f"Paginated, page count: {len(page)}")
             serializer = self.get_serializer(page, many=True)
+            print(f"Serialized data count: {len(serializer.data)}")
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
+        print(f"Non-paginated serialized data count: {len(serializer.data)}")
+        print(f"=== END DEBUG ===\n")
         return Response(serializer.data)
 
     def seed_default_templates(self):
