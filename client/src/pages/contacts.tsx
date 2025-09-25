@@ -12,8 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
-import { Eye, Edit, Trash2, Download, ChevronDown } from "lucide-react";
+import { Eye, Edit, Trash2, Download, ChevronDown, Users, UserPlus, Mail, UserCheck, Search, Filter, MoreVertical, Upload, Plus } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ContactImport from "@/components/contacts/contact-import";
 import ContactGroupsManager from "@/components/contacts/contact-groups-manager";
 
@@ -586,19 +587,20 @@ export default function Contacts() {
 
   return (
     <div className="p-6 bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Enhanced Header */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Contacts</h2>
-          <p className="text-sm text-muted-foreground">
-            Manage your contact lists and groups for targeted campaigns.
+          <h1 className="text-3xl font-bold text-foreground">Contacts</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage your contact database and groups for targeted email campaigns.
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
+                size="sm"
                 disabled={isExporting}
                 data-testid="button-export-dropdown"
               >
@@ -607,35 +609,38 @@ export default function Contacts() {
                 <ChevronDown className="h-4 w-4 ml-1" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem 
                 onClick={() => handleExportContacts('csv')}
                 disabled={isExporting}
                 data-testid="menu-item-export-csv"
+                className="flex items-center gap-2"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4" />
                 Export as CSV
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => handleExportContacts('xlsx')}
                 disabled={isExporting}
                 data-testid="menu-item-export-excel"
+                className="flex items-center gap-2"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4" />
                 Export as Excel
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button 
             variant="outline" 
+            size="sm"
             onClick={() => setShowImportModal(true)}
             data-testid="button-import-contacts"
           >
-            <i className="fas fa-upload mr-2"></i>
-            Import Contacts
+            <Upload className="h-4 w-4 mr-2" />
+            Import
           </Button>
           <Button onClick={() => setShowAddModal(true)} data-testid="button-add-contact">
-            <i className="fas fa-plus mr-2"></i>
+            <Plus className="h-4 w-4 mr-2" />
             Add Contact
           </Button>
         </div>
@@ -649,81 +654,130 @@ export default function Contacts() {
         </TabsList>
 
         <TabsContent value="contacts" className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-foreground" data-testid="text-total-contacts">
-                  {totalCount || 0}
+          {/* Enhanced Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-foreground" data-testid="text-total-contacts">
+                      {(totalCount || 0).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Total Contacts</p>
+                  </div>
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                    <Users className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">Total Contacts</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-foreground" data-testid="text-subscribed-contacts">
-                  {contacts?.filter((c: any) => c.isSubscribed).length || 0}
+            <Card className="relative overflow-hidden border-l-4 border-l-green-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-foreground" data-testid="text-subscribed-contacts">
+                      {(contacts?.filter((c: any) => c.isSubscribed).length || 0).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Subscribed</p>
+                  </div>
+                  <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                    <UserCheck className="h-6 w-6 text-green-600 dark:text-green-300" />
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">Subscribed (this page)</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-foreground" data-testid="text-unsubscribed-contacts">
-                  {contacts?.filter((c: any) => !c.isSubscribed).length || 0}
+            <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-foreground" data-testid="text-unsubscribed-contacts">
+                      {(contacts?.filter((c: any) => !c.isSubscribed).length || 0).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Unsubscribed</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-full">
+                    <Mail className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">Unsubscribed (this page)</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-foreground" data-testid="text-contact-groups">
-                  {contactGroups?.length || 0}
+            <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-foreground" data-testid="text-contact-groups">
+                      {(contactGroups?.length || 0).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Active Groups</p>
+                  </div>
+                  <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                    <UserPlus className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">Groups</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Search and Filters */}
-          <div className="mb-6 space-y-4">
-            <div>
-              <Input
-                placeholder="Search contacts by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-md"
-                data-testid="input-search-contacts"
-              />
+          {/* Enhanced Search and Filters */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search contacts by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-search-contacts"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={subscriptionFilter}
+                  onValueChange={(value: "all" | "subscribed" | "unsubscribed") => setSubscriptionFilter(value)}
+                >
+                  <SelectTrigger className="w-48" data-testid="select-subscription-filter">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Contacts</SelectItem>
+                    <SelectItem value="subscribed">Subscribed Only</SelectItem>
+                    <SelectItem value="unsubscribed">Unsubscribed Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            
-            {/* Subscription Status Filter */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-muted-foreground">Filter by status:</span>
-              <Button
-                variant={subscriptionFilter === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSubscriptionFilter("all")}
-                data-testid="filter-all-contacts"
-              >
-                All
-              </Button>
-              <Button
-                variant={subscriptionFilter === "subscribed" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSubscriptionFilter("subscribed")}
-                data-testid="filter-subscribed-contacts"
-              >
-                Subscribed
-              </Button>
-              <Button
-                variant={subscriptionFilter === "unsubscribed" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSubscriptionFilter("unsubscribed")}
-                data-testid="filter-unsubscribed-contacts"
-              >
-                Unsubscribed
-              </Button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Showing {contacts.length.toLocaleString()} of {totalCount.toLocaleString()} contacts
+              </span>
+              {subscriptionFilter !== "all" && (
+                <Badge variant="secondary" className="capitalize">
+                  {subscriptionFilter}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-1 h-auto p-0 text-xs"
+                    onClick={() => setSubscriptionFilter("all")}
+                  >
+                    ×
+                  </Button>
+                </Badge>
+              )}
+              {debouncedSearchTerm && (
+                <Badge variant="secondary">
+                  "{debouncedSearchTerm}"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-1 h-auto p-0 text-xs"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    ×
+                  </Button>
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -742,62 +796,77 @@ export default function Contacts() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Bulk Actions Bar */}
+              {/* Enhanced Bulk Actions Bar */}
               {showBulkActions && (
-                <div className="mb-4 p-4 border border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <p className="text-sm font-medium text-blue-900 dark:text-blue-100" data-testid="text-bulk-selection-count">
-                        {selectedContactIds.size} contact{selectedContactIds.size !== 1 ? 's' : ''} selected
-                      </p>
+                <div className="mb-6 p-4 border border-primary/20 bg-primary/5 dark:bg-primary/10 dark:border-primary/30 rounded-lg shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-primary/10 rounded-full">
+                          <Users className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground" data-testid="text-bulk-selection-count">
+                            {selectedContactIds.size} contact{selectedContactIds.size !== 1 ? 's' : ''} selected
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Choose an action to apply to selected contacts
+                          </p>
+                        </div>
+                      </div>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={clearSelection}
+                        className="text-muted-foreground hover:text-foreground"
                         data-testid="button-clear-selection"
                       >
-                        Clear selection
+                        Clear
                       </Button>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleBulkSubscribe}
                         disabled={bulkSubscribeMutation.isPending}
-                        className="text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
+                        className="text-green-600 hover:text-green-700 border-green-200 hover:border-green-300 hover:bg-green-50 dark:hover:bg-green-950"
                         data-testid="button-bulk-subscribe"
                       >
-                        {bulkSubscribeMutation.isPending ? "Subscribing..." : "Subscribed"}
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        {bulkSubscribeMutation.isPending ? "Subscribing..." : "Subscribe"}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleBulkUnsubscribe}
                         disabled={bulkUnsubscribeMutation.isPending}
-                        className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
+                        className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950"
                         data-testid="button-bulk-unsubscribe"
                       >
-                        {bulkUnsubscribeMutation.isPending ? "Unsubscribing..." : "Unsubscribed"}
+                        <Mail className="h-4 w-4 mr-2" />
+                        {bulkUnsubscribeMutation.isPending ? "Unsubscribing..." : "Unsubscribe"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBulkGroupAssignment}
+                        className="text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950"
+                        data-testid="button-bulk-assign-groups"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Assign to Groups
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleBulkDelete}
                         disabled={bulkDeleteMutation.isPending}
-                        className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                        className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950"
                         data-testid="button-bulk-delete"
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {bulkDeleteMutation.isPending ? "Deleting..." : "Delete selected"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleBulkGroupAssignment}
-                        data-testid="button-bulk-assign-groups"
-                      >
-                        Assign to groups
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {bulkDeleteMutation.isPending ? "Deleting..." : "Delete"}
                       </Button>
                     </div>
                   </div>
