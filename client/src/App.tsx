@@ -1,25 +1,29 @@
 import { Switch, Route } from "wouter";
+import { Suspense, lazy } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
-import Signup from "@/pages/signup";
-import SignIn from "@/pages/signin";
-import SubscriptionPage from "@/pages/subscription";
-import Dashboard from "@/pages/dashboard";
-import Contacts from "@/pages/contacts";
-import Campaigns from "@/pages/campaigns";
-import Templates from "@/pages/templates";
-import Domains from "@/pages/domains";
-import Analytics from "@/pages/analytics";
-import Team from "@/pages/team";
-import Settings from "@/pages/settings";
 import MainLayout from "@/components/layout/main-layout";
-import OrganizationSetup from "@/components/onboarding/organization-setup";
 import RedirectToSignIn from "@/components/auth/redirect-to-signin";
+import LoadingFallback from "@/components/ui/loading-fallback";
+
+// Lazy load pages for better performance
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Landing = lazy(() => import("@/pages/landing"));
+const Signup = lazy(() => import("@/pages/signup"));
+const SignIn = lazy(() => import("@/pages/signin"));
+const SubscriptionPage = lazy(() => import("@/pages/subscription"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Contacts = lazy(() => import("@/pages/contacts"));
+const Campaigns = lazy(() => import("@/pages/campaigns"));
+const Templates = lazy(() => import("@/pages/templates"));
+const Domains = lazy(() => import("@/pages/domains"));
+const Analytics = lazy(() => import("@/pages/analytics"));
+const Team = lazy(() => import("@/pages/team"));
+const Settings = lazy(() => import("@/pages/settings"));
+const OrganizationSetup = lazy(() => import("@/components/onboarding/organization-setup"));
 
 function Router() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -38,43 +42,49 @@ function Router() {
   // Handle unauthenticated users
   if (!isAuthenticated) {
     return (
-      <Switch>
-        <Route path="/" component={Landing} />
-        <Route path="/signup" component={Signup} />
-        <Route path="/signin" component={SignIn} />
-        <Route path="/subscription" component={SubscriptionPage} />
-        <Route component={RedirectToSignIn} />
-      </Switch>
+      <Suspense fallback={<LoadingFallback message="Loading page..." />}>
+        <Switch>
+          <Route path="/" component={Landing} />
+          <Route path="/signup" component={Signup} />
+          <Route path="/signin" component={SignIn} />
+          <Route path="/subscription" component={SubscriptionPage} />
+          <Route component={RedirectToSignIn} />
+        </Switch>
+      </Suspense>
     );
   }
 
   // Handle authenticated users without organization
   if (!user?.organization?.id) {
     return (
-      <Switch>
-        <Route path="/" component={OrganizationSetup} />
-        <Route path="/subscription" component={SubscriptionPage} />
-        <Route component={NotFound} />
-      </Switch>
+      <Suspense fallback={<LoadingFallback message="Loading page..." />}>
+        <Switch>
+          <Route path="/" component={OrganizationSetup} />
+          <Route path="/subscription" component={SubscriptionPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
     );
   }
 
   // Handle authenticated users with organization
   return (
     <MainLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/contacts" component={Contacts} />
-        <Route path="/campaigns" component={Campaigns} />
-        <Route path="/templates" component={Templates} />
-        <Route path="/domains" component={Domains} />
-        <Route path="/analytics" component={Analytics} />
-        <Route path="/team" component={Team} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/subscription" component={SubscriptionPage} />
-        <Route component={NotFound} />
-      </Switch>
+      <Suspense fallback={<LoadingFallback message="Loading page..." />}>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/contacts" component={Contacts} />
+          <Route path="/campaigns" component={Campaigns} />
+          <Route path="/templates" component={Templates} />
+          <Route path="/domains" component={Domains} />
+          <Route path="/analytics" component={Analytics} />
+          <Route path="/team" component={Team} />
+          <Route path="/settings" component={Settings} />
+          <Route path="/subscription" component={SubscriptionPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
     </MainLayout>
   );
 }
