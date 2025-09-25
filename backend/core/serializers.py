@@ -127,7 +127,8 @@ class CampaignSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'total_recipients', 'total_sent', 'total_delivered',
             'total_opened', 'total_clicked', 'total_bounced',
-            'total_unsubscribed', 'sent_at', 'created_at', 'updated_at'
+            'total_unsubscribed', 'sent_at', 'created_at', 'updated_at',
+            'organization', 'created_by'
         ]
 
 
