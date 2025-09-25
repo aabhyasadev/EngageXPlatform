@@ -62,28 +62,40 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
         scheduledAt: "",
       });
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       console.error("Campaign creation error:", error);
       let errorMessage = "Failed to create campaign";
       
-      // Try to extract backend validation errors
-      if (error?.response?.json) {
-        error.response.json().then((errorData: any) => {
-          console.log("Backend error details:", errorData);
-          errorMessage = errorData?.error || errorData?.message || JSON.stringify(errorData);
-          toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        });
-      } else {
-        toast({
-          title: "Error", 
-          description: error.message || errorMessage,
-          variant: "destructive",
-        });
+      // Try to extract detailed error information
+      try {
+        if (error?.message) {
+          // Parse API error format like "400: {\"error\":\"message\"}"
+          const statusMatch = error.message.match(/^(\d+):\s*(.+)$/);
+          if (statusMatch) {
+            const statusCode = statusMatch[1];
+            const errorBody = statusMatch[2];
+            console.log(`HTTP ${statusCode} error body:`, errorBody);
+            
+            try {
+              const errorData = JSON.parse(errorBody);
+              console.log("Parsed backend error:", errorData);
+              errorMessage = errorData?.error || errorData?.message || `HTTP ${statusCode} Error`;
+            } catch (parseError) {
+              errorMessage = `HTTP ${statusCode}: ${errorBody}`;
+            }
+          } else {
+            errorMessage = error.message;
+          }
+        }
+      } catch (parseError) {
+        console.error("Error parsing error response:", parseError);
       }
+      
+      toast({
+        title: "Campaign Creation Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     },
   });
 
@@ -107,12 +119,12 @@ export default function CampaignModal({ open, onOpenChange }: CampaignModalProps
       name: formData.name,
       subject: selectedTemplate?.subject || formData.name, // Use template subject or campaign name as fallback
       from_email: selectedDomain?.name || "noreply@example.com", // Use domain name or default
+      organization: selectedTemplate?.organization || selectedDomain?.organization || null, // Include explicit organization ID
       template_id: formData.templateId && formData.templateId !== "none" ? formData.templateId : null,
       domain_id: formData.domainId && formData.domainId !== "none" ? formData.domainId : null,
       contact_group_id: formData.contactGroupId && formData.contactGroupId !== "none" ? formData.contactGroupId : null,
       status: formData.schedule === "now" ? "draft" : "scheduled",
       scheduled_at: formData.schedule === "later" ? new Date(formData.scheduledAt) : null,
-      // Note: organization and created_by should be set by backend from authenticated user
     };
 
     console.log("Creating campaign with data:", campaignData);

@@ -197,12 +197,12 @@ class CampaignSendSerializer(serializers.Serializer):
     )
     send_all = serializers.BooleanField(default=False)
 
-    def validate(self, data):
-        if not data.get('send_all') and not data.get('contact_ids') and not data.get('group_ids'):
+    def validate(self, attrs):
+        if not attrs.get('send_all') and not attrs.get('contact_ids') and not attrs.get('group_ids'):
             raise serializers.ValidationError(
                 "Must specify either send_all=True, contact_ids, or group_ids"
             )
-        return data
+        return attrs
 
 
 class CardSerializer(serializers.ModelSerializer):

@@ -561,7 +561,16 @@ class CampaignViewSet(BaseOrganizationViewSet):
     
     def create(self, request, *args, **kwargs):
         """Create a new campaign with subscription limit check"""
+        import logging
+        logger = logging.getLogger('django')
+        
+        logger.error(f"=== CAMPAIGN CREATION DEBUG ===")
+        logger.error(f"User: {request.user.id} - {request.user.email}")
+        logger.error(f"User organization: {request.user.organization}")  
+        logger.error(f"Request data: {request.data}")
+        
         if not request.user.organization:
+            logger.error("No organization found for user")
             return Response({
                 'error': 'No organization found'
             }, status=status.HTTP_403_FORBIDDEN)
@@ -569,6 +578,7 @@ class CampaignViewSet(BaseOrganizationViewSet):
         # Check campaign limit
         limit_check = check_usage_limit(request.user.organization, 'campaigns')
         if not limit_check['allowed']:
+            logger.error(f"Campaign limit reached: {limit_check}")
             return Response({
                 'error': limit_check['reason'],
                 'code': 'CAMPAIGN_LIMIT_REACHED',
@@ -580,6 +590,7 @@ class CampaignViewSet(BaseOrganizationViewSet):
         # Check A/B testing feature if it's an A/B test campaign
         if request.data.get('is_ab_test', False):
             if not check_feature_available(request.user.organization, 'has_ab_testing'):
+                logger.error("A/B testing not available")
                 return Response({
                     'error': 'A/B testing is not available in your current plan',
                     'code': 'FEATURE_NOT_AVAILABLE',
@@ -588,13 +599,27 @@ class CampaignViewSet(BaseOrganizationViewSet):
                 }, status=status.HTTP_403_FORBIDDEN)
         
         # Create the campaign
-        response = super().create(request, *args, **kwargs)
-        
-        # Update usage tracking if successful
-        if response.status_code == 201:
-            update_usage_tracking(request.user.organization, 'campaigns')
-        
-        return response
+        try:
+            logger.error("About to call super().create()")
+            response = super().create(request, *args, **kwargs)
+            logger.error(f"Super create response: {response.status_code}")
+            if hasattr(response, 'data'):
+                logger.error(f"Response data: {response.data}")
+            
+            # Update usage tracking if successful
+            if response.status_code == 201:
+                update_usage_tracking(request.user.organization, 'campaigns')
+                logger.error("Campaign created successfully!")
+            
+            return response
+        except Exception as e:
+            logger.error(f"Exception in campaign creation: {str(e)}")
+            logger.error(f"Exception type: {type(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return Response({
+                'error': f'Campaign creation failed: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):
         serializer.save(
