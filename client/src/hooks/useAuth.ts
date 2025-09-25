@@ -7,9 +7,14 @@ interface User {
   email: string;
   full_name: string;
   role: string;
+  organizationId?: string;
   organization?: {
     id: string;
     name: string;
+    industry?: string;
+    employeesRange?: string;
+    contactsRange?: string;
+    trialEndsAt?: string;
   } | null;
 }
 
