@@ -15,6 +15,7 @@ import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { Eye, Edit, Trash2, Download, ChevronDown, Users, UserPlus, Mail, UserCheck, Search, Filter, MoreVertical, Upload, Plus } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SkeletonHeader, SkeletonStatsCard, SkeletonSearchFilter, SkeletonTable } from "@/components/ui/skeleton";
 import ContactImport from "@/components/contacts/contact-import";
 import ContactGroupsManager from "@/components/contacts/contact-groups-manager";
 
@@ -561,15 +562,21 @@ export default function Contacts() {
 
   if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-64"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-32 bg-muted rounded-lg"></div>
-            ))}
-          </div>
+      <div className="p-6 bg-background">
+        <SkeletonHeader />
+        
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <SkeletonStatsCard />
+          <SkeletonStatsCard />
+          <SkeletonStatsCard />
+          <SkeletonStatsCard />
         </div>
+        
+        <SkeletonSearchFilter />
+        
+        {/* Contact Table Skeleton */}
+        <SkeletonTable rows={10} />
       </div>
     );
   }

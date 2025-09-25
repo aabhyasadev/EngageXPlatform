@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import CampaignModal from "@/components/campaigns/campaign-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SkeletonHeader, SkeletonStatsCard, SkeletonSearchFilter, SkeletonTable } from "@/components/ui/skeleton";
 import { Mail, TrendingUp, Users, Calendar, MoreVertical, Eye, Edit, Trash2, Send, Filter, Search } from "lucide-react";
 
 export default function Campaigns() {
@@ -133,15 +134,19 @@ export default function Campaigns() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-64"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-32 bg-muted rounded-lg"></div>
-            ))}
-          </div>
+      <div className="p-6 bg-background">
+        <SkeletonHeader />
+        
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <SkeletonStatsCard />
+          <SkeletonStatsCard />
+          <SkeletonStatsCard />
+          <SkeletonStatsCard />
         </div>
+        
+        <SkeletonSearchFilter />
+        <SkeletonTable rows={8} />
       </div>
     );
   }
