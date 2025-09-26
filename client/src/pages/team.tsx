@@ -16,7 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsGrid, StatCard } from "@/components/ui/stats-grid";
-import { Users, UserPlus, Shield, Activity, MoreHorizontal, Edit, Trash2, UserCheck, UserX } from "lucide-react";
+import { Users, UserPlus, Shield, Activity, MoreHorizontal, Edit, Trash2, UserCheck, UserX, Plus } from "lucide-react";
 
 // Zod schemas
 const inviteSchema = z.object({
@@ -37,7 +37,22 @@ const inviteSchema = z.object({
   }),
 });
 
+const createTeamSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Team name is required")
+    .min(2, "Team name must be at least 2 characters"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .min(10, "Description must be at least 10 characters"),
+  role: z.enum(["admin", "campaign_manager", "analyst", "editor"], {
+    required_error: "Please select a role for this team",
+  }),
+});
+
 type InviteFormData = z.infer<typeof inviteSchema>;
+type CreateTeamFormData = z.infer<typeof createTeamSchema>;
 
 type TeamMember = {
   id: string;
@@ -60,6 +75,7 @@ type PaginatedResponse<T> = {
 export default function Team() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
 
   const { toast } = useToast();
@@ -72,6 +88,15 @@ export default function Team() {
       email: "",
       firstName: "",
       lastName: "",
+      role: "campaign_manager",
+    },
+  });
+
+  const createTeamForm = useForm<CreateTeamFormData>({
+    resolver: zodResolver(createTeamSchema),
+    defaultValues: {
+      name: "",
+      description: "",
       role: "campaign_manager",
     },
   });
@@ -175,6 +200,34 @@ export default function Team() {
     },
   });
 
+  const createTeamMutation = useMutation({
+    mutationFn: async (teamData: CreateTeamFormData) => {
+      const response = await apiRequest("POST", "/api/teams/", {
+        name: teamData.name,
+        description: teamData.description,
+        role: teamData.role,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Team created successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
+      setShowCreateTeamModal(false);
+      createTeamForm.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create team",
+        variant: "destructive",
+      });
+    },
+  });
+
   const roles = [
     { value: "admin", label: "Admin", description: "Full access to all features" },
     { value: "campaign_manager", label: "Campaign Manager", description: "Create and manage campaigns" },
@@ -218,6 +271,10 @@ export default function Team() {
     if (memberToDelete) {
       deleteUserMutation.mutate(memberToDelete.id);
     }
+  };
+
+  const handleCreateTeamSubmit = (data: CreateTeamFormData) => {
+    createTeamMutation.mutate(data);
   };
 
   // Extract members from paginated response
@@ -310,10 +367,25 @@ export default function Team() {
       {/* Role Permissions */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Role Permissions</CardTitle>
-          <CardDescription>
-            Understanding what each role can do in your organization
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Role Permissions</CardTitle>
+              <CardDescription>
+                Understanding what each role can do in your organization
+              </CardDescription>
+            </div>
+            {user?.role === 'admin' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateTeamModal(true)}
+                data-testid="button-create-team"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Team
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -654,6 +726,106 @@ export default function Team() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Team Modal */}
+      <Dialog open={showCreateTeamModal} onOpenChange={setShowCreateTeamModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Team</DialogTitle>
+          </DialogHeader>
+          <Form {...createTeamForm}>
+            <form onSubmit={createTeamForm.handleSubmit(handleCreateTeamSubmit)} className="space-y-6">
+              <FormField
+                control={createTeamForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Team Name *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Marketing Team"
+                        data-testid="input-team-name"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Choose a descriptive name for your team
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createTeamForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Team responsible for marketing campaigns and strategy"
+                        data-testid="input-team-description"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Describe the purpose and responsibilities of this team
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createTeamForm.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role Permissions *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-team-role">
+                          <SelectValue placeholder="Select role permissions for this team" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {roles.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium">{role.label}</span>
+                              <span className="text-xs text-muted-foreground">{role.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      All team members will have these permissions by default
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateTeamModal(false)}
+                  data-testid="button-cancel-team"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createTeamMutation.isPending}
+                  data-testid="button-save-team"
+                >
+                  {createTeamMutation.isPending ? "Creating..." : "Create Team"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
