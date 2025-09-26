@@ -14,7 +14,9 @@ import DomainVerification from "@/components/domains/domain-verification";
 export default function Domains() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<any>(null);
+  const [domainToDelete, setDomainToDelete] = useState<any>(null);
   const [newDomain, setNewDomain] = useState("");
 
   const { toast } = useToast();
@@ -143,9 +145,16 @@ export default function Domains() {
     setShowVerificationModal(true);
   };
 
-  const handleDeleteDomain = (domainId: string, domainName: string) => {
-    if (window.confirm(`Are you sure you want to delete domain "${domainName}"? This action cannot be undone.`)) {
-      deleteDomainMutation.mutate(domainId);
+  const handleDeleteDomain = (domain: any) => {
+    setDomainToDelete(domain);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteDomain = () => {
+    if (domainToDelete) {
+      deleteDomainMutation.mutate(domainToDelete.id);
+      setShowDeleteModal(false);
+      setDomainToDelete(null);
     }
   };
 
@@ -314,13 +323,13 @@ export default function Domains() {
                   )}
                   <Button
                     variant="outline"
-                    onClick={() => handleDeleteDomain(domain.id, domain.domain)}
+                    onClick={() => handleDeleteDomain(domain)}
                     disabled={deleteDomainMutation.isPending}
                     className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
                     data-testid={`button-delete-domain-${domain.id}`}
                   >
                     <i className="fas fa-trash mr-2"></i>
-                    {deleteDomainMutation.isPending ? "Deleting..." : "Delete"}
+                    Delete
                   </Button>
                 </div>
               </div>
@@ -378,6 +387,40 @@ export default function Domains() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Domain</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Are you sure you want to delete domain <strong>{domainToDelete?.domain}</strong>? 
+              This action cannot be undone and will remove all associated DNS records and configurations.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteDomainMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={confirmDeleteDomain}
+                disabled={deleteDomainMutation.isPending}
+                data-testid="button-confirm-delete-domain"
+              >
+                {deleteDomainMutation.isPending ? "Deleting..." : "Delete Domain"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
