@@ -20,7 +20,6 @@ import {
   Plus,
   Eye,
   Edit,
-  Copy,
   Trash2,
   Star,
   Mail,
@@ -263,18 +262,6 @@ export default function Templates() {
     setShowPreviewModal(true);
   };
 
-  const handleDuplicateTemplate = async (template: any) => {
-    const duplicatedTemplate = {
-      ...template,
-      name: `${template.name} (Copy)`,
-      isDefault: false
-    };
-    delete duplicatedTemplate.id;
-    delete duplicatedTemplate.createdAt;
-    delete duplicatedTemplate.updatedAt;
-    
-    createTemplateMutation.mutate(duplicatedTemplate);
-  };
 
   // Fixed Intersection Observer for lazy loading template previews
   const observerRef = useRef<IntersectionObserver>();
@@ -547,15 +534,6 @@ export default function Templates() {
                     data-testid={`button-edit-template-${template.id}`}
                   >
                     <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDuplicateTemplate(template)}
-                    className="opacity-60 hover:opacity-100 transition-opacity"
-                    data-testid={`button-duplicate-template-${template.id}`}
-                  >
-                    <Copy className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
