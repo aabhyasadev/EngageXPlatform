@@ -21,6 +21,11 @@ import PlanCard from '@/components/subscription/PlanCard';
 import BillingHistory from '@/components/subscription/BillingHistory';
 import CardsManager from '@/components/subscription/CardsManager';
 import AddCardModal from '@/components/subscription/AddCardModal';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatsGrid, StatCard } from '@/components/ui/stats-grid';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Users, BarChart, Mail, Settings, CreditCard, Receipt, AlertTriangle, RefreshCw } from 'lucide-react';
 
 // Format price from cents to currency display
 const formatPrice = (cents: number): string => {
@@ -317,38 +322,89 @@ export default function SubscriptionPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4 max-w-7xl">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" data-testid="text-subscription-title">
-            Subscription Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your subscription, billing, and payment methods
-          </p>
-        </div>
+        <PageHeader
+          title="Subscription Management"
+          description="Manage your subscription, billing, and payment methods"
+          primaryAction={
+            subscription && !subscription.is_trial ? (
+              <Button 
+                onClick={handleManagePayment}
+                disabled={createBillingPortalMutation.isPending}
+                data-testid="button-manage-billing"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                {createBillingPortalMutation.isPending ? "Loading..." : "Manage Billing"}
+              </Button>
+            ) : undefined
+          }
+        />
 
         {/* Tabs for different sections */}
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6" data-testid="tabs-subscription">
           <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="plans" data-testid="tab-plans">Plans</TabsTrigger>
-            <TabsTrigger value="billing" data-testid="tab-billing">Billing</TabsTrigger>
+            <TabsTrigger value="overview" data-testid="tab-overview">
+              <Receipt className="h-4 w-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="plans" data-testid="tab-plans">
+              <BarChart className="h-4 w-4 mr-2" />
+              Plans
+            </TabsTrigger>
+            <TabsTrigger value="billing" data-testid="tab-billing">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Billing
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6" data-testid="content-overview">
+            {/* Error State for Overview */}
+            {subscriptionLoading && !currentSubscription && (
+              <div className="text-center py-8">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-6 bg-muted rounded w-48 mx-auto"></div>
+                  <div className="h-4 bg-muted rounded w-32 mx-auto"></div>
+                </div>
+              </div>
+            )}
+            
+            {!subscriptionLoading && !currentSubscription && (
+              <Alert data-testid="alert-subscription-error">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Failed to load subscription data. 
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-normal"
+                    onClick={() => window.location.reload()}
+                    data-testid="button-retry-subscription"
+                  >
+                    Try again
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             {/* Current Subscription Status */}
             {subscription && (
-              <SubscriptionStatus
-                subscription={{
-                  ...subscription,
-                  current_period_end: subscription.current_period_end || subscription.subscription_ends_at
-                }}
-                onCancel={() => setShowCancelDialog(true)}
-                onResume={handleResumeSubscription}
-                onManagePayment={handleManagePayment}
-                isProcessing={processingAction === 'cancel' || processingAction === 'resume'}
-              />
+              <div data-testid="section-subscription-status" className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold">Current Subscription</h3>
+                  <StatusBadge 
+                    status={subscription.is_active ? "active" : subscription.is_trial ? "trial" : "inactive"}
+                    data-testid="badge-subscription-status"
+                  />
+                </div>
+                <SubscriptionStatus
+                  subscription={{
+                    ...subscription,
+                    current_period_end: subscription.current_period_end || subscription.subscription_ends_at
+                  }}
+                  onCancel={() => setShowCancelDialog(true)}
+                  onResume={handleResumeSubscription}
+                  onManagePayment={handleManagePayment}
+                  isProcessing={processingAction === 'cancel' || processingAction === 'resume'}
+                />
+              </div>
             )}
 
             {/* Payment Cards */}
@@ -367,35 +423,58 @@ export default function SubscriptionPage() {
               />
 
               {/* Usage Summary */}
-              <div className="bg-card border rounded-lg p-6 space-y-4">
+              <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Current Usage</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Contacts</span>
-                    <span className="font-medium" data-testid="text-contacts-usage">
-                      0 / {subscription?.contacts_limit?.toLocaleString() || '1,000'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Campaigns</span>
-                    <span className="font-medium" data-testid="text-campaigns-usage">
-                      0 / {subscription?.campaigns_limit?.toLocaleString() || '10'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Emails Sent (This Month)</span>
-                    <span className="font-medium" data-testid="text-emails-usage">0</span>
-                  </div>
-                </div>
+                <StatsGrid className="grid-cols-1 md:grid-cols-3">
+                  <StatCard
+                    title="Contacts Used"
+                    value={`0 / ${subscription?.contacts_limit?.toLocaleString() || '1,000'}`}
+                    description="Active contacts"
+                    icon={<Users className="h-6 w-6 text-blue-600" />}
+                    testId="stat-contacts-usage"
+                  />
+                  <StatCard
+                    title="Campaigns Created"
+                    value={`0 / ${subscription?.campaigns_limit?.toLocaleString() || '10'}`}
+                    description="Total campaigns"
+                    icon={<BarChart className="h-6 w-6 text-green-600" />}
+                    testId="stat-campaigns-usage"
+                  />
+                  <StatCard
+                    title="Emails Sent"
+                    value="0"
+                    description="This month"
+                    icon={<Mail className="h-6 w-6 text-purple-600" />}
+                    testId="stat-emails-usage"
+                  />
+                </StatsGrid>
               </div>
             </div>
           </TabsContent>
 
           {/* Plans Tab */}
-          <TabsContent value="plans" className="space-y-6">
+          <TabsContent value="plans" className="space-y-6" data-testid="content-plans">
+            {/* Error State for Plans */}
+            {!plansLoading && (!plansData || orderedPlans.length === 0) && (
+              <Alert data-testid="alert-plans-error">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Failed to load subscription plans. 
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-normal"
+                    onClick={() => window.location.reload()}
+                    data-testid="button-retry-plans"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Refresh
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 py-4">
-              <Label htmlFor="billing-toggle" className={!showYearly ? 'font-semibold' : 'text-muted-foreground'}>
+            <div className="flex items-center justify-center gap-4 py-4" data-testid="section-billing-toggle">
+              <Label htmlFor="billing-toggle" className={!showYearly ? 'font-semibold' : 'text-muted-foreground'} data-testid="label-monthly">
                 Monthly
               </Label>
               <Switch
@@ -404,20 +483,20 @@ export default function SubscriptionPage() {
                 onCheckedChange={setShowYearly}
                 data-testid="switch-billing-toggle"
               />
-              <Label htmlFor="billing-toggle" className={showYearly ? 'font-semibold' : 'text-muted-foreground'}>
+              <Label htmlFor="billing-toggle" className={showYearly ? 'font-semibold' : 'text-muted-foreground'} data-testid="label-yearly">
                 Yearly
-                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full" data-testid="badge-yearly-savings">
                   Save 17%
                 </span>
               </Label>
             </div>
 
             {/* Plans Grid */}
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3" data-testid="grid-subscription-plans">
               {plansLoading ? (
                 // Loading skeleton
                 [...Array(3)].map((_, i) => (
-                  <div key={i} className="h-96 bg-muted rounded-lg animate-pulse" />
+                  <div key={i} className="h-96 bg-muted rounded-lg animate-pulse" data-testid={`skeleton-plan-${i}`} />
                 ))
               ) : (
                 orderedPlans.map((plan: any) => (
@@ -434,43 +513,109 @@ export default function SubscriptionPage() {
               )}
             </div>
 
-            {/* Feature Comparison */}
-            <div className="mt-8 text-center">
-              <Button variant="link" className="text-primary">
-                View detailed feature comparison →
-              </Button>
+            {/* Plan Comparison Grid */}
+            <div className="mt-8" data-testid="section-plan-comparison">
+              <h3 className="text-lg font-semibold mb-4 text-center">Plan Comparison</h3>
+              <StatsGrid className="grid-cols-1 md:grid-cols-3">
+                <StatCard
+                  title="Basic Plan"
+                  value={showYearly ? "$290/year" : "$29/month"}
+                  description="Perfect for small teams"
+                  icon={<Users className="h-6 w-6 text-blue-600" />}
+                  testId="stat-basic-plan"
+                  extra={
+                    <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      <div>5,000 contacts</div>
+                      <div>50 campaigns</div>
+                      <div>Basic analytics</div>
+                    </div>
+                  }
+                />
+                <StatCard
+                  title="Pro Plan"
+                  value={showYearly ? "$790/year" : "$79/month"}
+                  description="Most popular choice"
+                  icon={<BarChart className="h-6 w-6 text-green-600" />}
+                  testId="stat-pro-plan"
+                  extra={
+                    <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      <div>25,000 contacts</div>
+                      <div>200 campaigns</div>
+                      <div>Advanced analytics</div>
+                      <div>Automation</div>
+                    </div>
+                  }
+                />
+                <StatCard
+                  title="Premium Plan"
+                  value={showYearly ? "$1,190/year" : "$119/month"}
+                  description="Enterprise features"
+                  icon={<Settings className="h-6 w-6 text-purple-600" />}
+                  testId="stat-premium-plan"
+                  extra={
+                    <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      <div>Unlimited contacts</div>
+                      <div>Unlimited campaigns</div>
+                      <div>White-label options</div>
+                      <div>Priority support</div>
+                    </div>
+                  }
+                />
+              </StatsGrid>
             </div>
           </TabsContent>
 
           {/* Billing Tab */}
-          <TabsContent value="billing" className="space-y-6">
-            <BillingHistory
-              payments={(billingHistory as any)?.items}
-              isLoading={billingLoading}
-              onDownloadInvoice={handleDownloadInvoice}
-            />
+          <TabsContent value="billing" className="space-y-6" data-testid="content-billing">
+            {/* Error State for Billing */}
+            {!billingLoading && !billingHistory && (
+              <Alert data-testid="alert-billing-error">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Failed to load billing history. 
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-normal"
+                    onClick={() => window.location.reload()}
+                    data-testid="button-retry-billing"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Refresh
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            <div data-testid="section-billing-history">
+              <BillingHistory
+                payments={(billingHistory as any)?.items}
+                isLoading={billingLoading}
+                onDownloadInvoice={handleDownloadInvoice}
+              />
+            </div>
 
-            <CardsManager
-              cards={cardsArray || []}
-              onAdd={handleAddCard}
-              onDelete={handleDeleteCard}
-              onSetDefault={handleSetDefaultCard}
-              isProcessing={
-                createBillingPortalMutation.isPending ||
-                deleteCardMutation.isPending ||
-                updateCardMutation.isPending ||
-                cardsLoading
-              }
-            />
+            <div data-testid="section-cards-manager">
+              <CardsManager
+                cards={cardsArray || []}
+                onAdd={handleAddCard}
+                onDelete={handleDeleteCard}
+                onSetDefault={handleSetDefaultCard}
+                isProcessing={
+                  createBillingPortalMutation.isPending ||
+                  deleteCardMutation.isPending ||
+                  updateCardMutation.isPending ||
+                  cardsLoading
+                }
+              />
+            </div>
           </TabsContent>
         </Tabs>
 
         {/* Cancel Subscription Dialog */}
-        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog} data-testid="dialog-cancel-subscription">
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle data-testid="title-cancel-dialog">Cancel Subscription</AlertDialogTitle>
+              <AlertDialogDescription data-testid="description-cancel-dialog">
                 Are you sure you want to cancel your subscription? You'll continue to have access until the end of your current billing period.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -482,23 +627,26 @@ export default function SubscriptionPage() {
                 onClick={handleCancelSubscription}
                 className="bg-red-600 hover:bg-red-700"
                 data-testid="button-cancel-dialog-confirm"
+                disabled={processingAction === 'cancel'}
               >
-                Yes, Cancel Subscription
+                {processingAction === 'cancel' ? 'Canceling...' : 'Yes, Cancel Subscription'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
         {/* Add Card Modal */}
-        <AddCardModal
-          open={showAddCardModal}
-          onOpenChange={setShowAddCardModal}
-          onSuccess={() => {
-            refetchCards();
-            refetchSubscription();
-          }}
-          onRefetch={refetchCards}
-        />
+        <div data-testid="modal-add-card">
+          <AddCardModal
+            open={showAddCardModal}
+            onOpenChange={setShowAddCardModal}
+            onSuccess={() => {
+              refetchCards();
+              refetchSubscription();
+            }}
+            onRefetch={refetchCards}
+          />
+        </div>
       </div>
     </div>
   );
