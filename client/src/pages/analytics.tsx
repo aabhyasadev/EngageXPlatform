@@ -16,35 +16,55 @@ export default function Analytics() {
     });
   };
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["/api/dashboard/stats"],
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
+    queryKey: ["/api/dashboard/stats", { timeframe }],
     staleTime: 2 * 60 * 1000, // 2 minutes for analytics data
     retry: 3,
   });
 
-  const { data: campaigns } = useQuery({
-    queryKey: ["/api/campaigns"],
+  const { data: campaigns, isLoading: campaignsLoading, error: campaignsError } = useQuery({
+    queryKey: ["/api/campaigns/", { timeframe }],
     staleTime: 5 * 60 * 1000, // 5 minutes for campaign list
     retry: 3,
   });
 
-  const { data: analyticsEvents } = useQuery({
-    queryKey: ["/api/analytics/events"],
-    staleTime: 1 * 60 * 1000, // 1 minute for real-time analytics events
-    retry: 3,
-  });
 
-  if (statsLoading) {
+  // Loading state
+  if (statsLoading || campaignsLoading) {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-muted rounded w-64"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
               <div key={i} className="h-32 bg-muted rounded-lg"></div>
             ))}
           </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="h-80 bg-muted rounded-lg"></div>
+            <div className="h-80 bg-muted rounded-lg"></div>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (statsError || campaignsError) {
+    const error = statsError || campaignsError;
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Unable to Load Analytics</h3>
+            <p className="text-muted-foreground mb-4">
+              {error?.message || "There was an error loading analytics data. Please try again later."}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -94,69 +114,56 @@ export default function Analytics() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Sent</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-total-sent">
-                  {(stats as any)?.totalSent || 0}
-                </p>
+        {[
+          {
+            label: "Total Sent",
+            value: (stats as any)?.totalSent || 0,
+            icon: "fas fa-paper-plane",
+            bgColor: "bg-blue-100",
+            iconColor: "text-blue-600",
+            testId: "text-total-sent"
+          },
+          {
+            label: "Deliverability",
+            value: `${calculateDeliverability().toFixed(1)}%`,
+            icon: "fas fa-check-circle",
+            bgColor: "bg-green-100",
+            iconColor: "text-green-600",
+            testId: "text-deliverability"
+          },
+          {
+            label: "Open Rate",
+            value: (stats as any)?.openRate ? `${(stats as any).openRate.toFixed(1)}%` : '0%',
+            icon: "fas fa-envelope-open",
+            bgColor: "bg-yellow-100",
+            iconColor: "text-yellow-600",
+            testId: "text-open-rate"
+          },
+          {
+            label: "Click Rate",
+            value: (stats as any)?.clickRate ? `${(stats as any).clickRate.toFixed(1)}%` : '0%',
+            icon: "fas fa-mouse-pointer",
+            bgColor: "bg-purple-100",
+            iconColor: "text-purple-600",
+            testId: "text-click-rate"
+          }
+        ].map((metric, index) => (
+          <Card key={index}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{metric.label}</p>
+                  <p className="text-3xl font-bold text-foreground" data-testid={metric.testId}>
+                    {metric.value}
+                  </p>
+                </div>
+                <div className={`w-12 h-12 ${metric.bgColor} rounded-lg flex items-center justify-center`}>
+                  <i className={`${metric.icon} ${metric.iconColor} text-xl`}></i>
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-paper-plane text-blue-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Deliverability</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-deliverability">
-                  {calculateDeliverability().toFixed(1)}%
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-check-circle text-green-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Open Rate</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-open-rate">
-                  {(stats as any)?.openRate ? `${(stats as any).openRate.toFixed(1)}%` : '0%'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-envelope-open text-yellow-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Click Rate</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-click-rate">
-                  {(stats as any)?.clickRate ? `${(stats as any).clickRate.toFixed(1)}%` : '0%'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-mouse-pointer text-purple-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -217,7 +224,7 @@ export default function Analytics() {
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
                   className="bg-purple-500 h-2 rounded-full" 
-                  style={{ width: `${((stats as any)?.clickRate || 0) * 4}%` }}
+                  style={{ width: `${Math.min(100, Math.max(0, (stats as any)?.clickRate || 0))}%` }}
                 ></div>
               </div>
               
@@ -228,7 +235,7 @@ export default function Analytics() {
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
                   className="bg-red-500 h-2 rounded-full" 
-                  style={{ width: `${calculateUnsubscribeRate() * 10}%` }}
+                  style={{ width: `${Math.min(100, Math.max(0, calculateUnsubscribeRate()))}%` }}
                 ></div>
               </div>
             </div>
