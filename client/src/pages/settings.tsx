@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsGrid, StatCard } from "@/components/ui/stats-grid";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Building2, Settings, Mail, Eye, MousePointer, Shield, Users, Calendar, Clock, AlertTriangle, RefreshCw, Trash2, Save, CreditCard } from "lucide-react";
+import { Building2, Settings as SettingsIcon, Mail, Eye, MousePointer, Shield, Users, Calendar, Clock, AlertTriangle, RefreshCw, Trash2, Save, CreditCard } from "lucide-react";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -347,7 +347,7 @@ export default function Settings() {
               </div>
 
               <Button type="submit" data-testid="button-update-email-settings">
-                <Settings className="h-4 w-4 mr-2" />
+                <SettingsIcon className="h-4 w-4 mr-2" />
                 Update Email Settings
               </Button>
               </form>
@@ -404,7 +404,7 @@ export default function Settings() {
 
               <div className="flex items-center justify-between" data-testid="security-api-keys">
                 <div className="flex items-center gap-3">
-                  <Settings className="h-5 w-5 text-purple-600" />
+                  <SettingsIcon className="h-5 w-5 text-purple-600" />
                   <div>
                     <Label>API Keys</Label>
                     <p className="text-sm text-muted-foreground">
@@ -413,7 +413,7 @@ export default function Settings() {
                   </div>
                 </div>
                 <Button variant="outline" size="sm" data-testid="button-manage-keys">
-                  <Settings className="h-4 w-4 mr-2" />
+                  <SettingsIcon className="h-4 w-4 mr-2" />
                   Manage Keys
                 </Button>
               </div>
