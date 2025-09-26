@@ -287,7 +287,7 @@ export default function Contacts() {
         description: `${contactIds.length} contact${contactIds.length !== 1 ? 's' : ''} assigned to ${groupIds.length} group${groupIds.length !== 1 ? 's' : ''} successfully!`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts/"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-groups/"] });
       setShowBulkGroupModal(false);
       setSelectedGroupIds(new Set());
       clearSelection();

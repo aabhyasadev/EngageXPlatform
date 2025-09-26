@@ -17,19 +17,19 @@ export default function Analytics() {
   };
 
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["/api/dashboard/stats"],
+    queryKey: ["/api/dashboard/stats", { timeframe }],
     staleTime: 2 * 60 * 1000, // 2 minutes for analytics data
     retry: 3,
   });
 
   const { data: campaigns } = useQuery({
-    queryKey: ["/api/campaigns"],
+    queryKey: ["/api/campaigns/", { timeframe }],
     staleTime: 5 * 60 * 1000, // 5 minutes for campaign list
     retry: 3,
   });
 
   const { data: analyticsEvents } = useQuery({
-    queryKey: ["/api/analytics/events"],
+    queryKey: ["/api/analytics/events/", { timeframe }],
     staleTime: 1 * 60 * 1000, // 1 minute for real-time analytics events
     retry: 3,
   });

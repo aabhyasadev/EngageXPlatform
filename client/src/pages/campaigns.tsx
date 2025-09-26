@@ -78,7 +78,7 @@ export default function Campaigns() {
   }, [currentPage, totalPages, queryParams, queryClient]);
 
   const { data: contactGroups } = useQuery<ContactGroup[]>({
-    queryKey: ["/api/contact-groups"],
+    queryKey: ["/api/contact-groups/"],
     staleTime: 5 * 60 * 1000, // 5 minutes - groups change less frequently
     gcTime: 15 * 60 * 1000,
     retry: 2,
