@@ -1,7 +1,9 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -1613,6 +1615,51 @@ class InvitationViewSet(viewsets.ModelViewSet):
             return Invitation.objects.none()
         return Invitation.objects.filter(organization=self.request.user.organization)
 
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny], authentication_classes=[])
+    def validate(self, request):
+        """Validate invitation token and return invitation details"""
+        token = request.query_params.get('token')
+        
+        if not token:
+            return Response({
+                'error': 'Token parameter is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            invitation = Invitation.objects.get(token=token)
+            
+            # Check if invitation is still valid
+            if invitation.status != InvitationStatus.PENDING:
+                return Response({
+                    'valid': False,
+                    'status': 'used',
+                    'message': 'This invitation has already been used'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if invitation.is_expired():
+                return Response({
+                    'valid': False,
+                    'status': 'expired',
+                    'message': 'This invitation has expired'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Return invitation details
+            return Response({
+                'valid': True,
+                'email': invitation.email,
+                'role': invitation.role,
+                'organization_name': invitation.organization.name,
+                'invited_by_name': invitation.invited_by.full_name if invitation.invited_by else 'System',
+                'expires_at': invitation.expires_at.isoformat(),
+            }, status=status.HTTP_200_OK)
+            
+        except Invitation.DoesNotExist:
+            return Response({
+                'valid': False,
+                'status': 'invalid',
+                'message': 'Invalid invitation token'
+            }, status=status.HTTP_404_NOT_FOUND)
+
     @action(detail=False, methods=['post'])
     def invite(self, request):
         """Create and send invitation"""
@@ -1666,7 +1713,8 @@ class InvitationViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny], authentication_classes=[])
+    @csrf_exempt
     def accept(self, request):
         """Accept invitation and create user account"""
         serializer = InvitationAcceptSerializer(data=request.data)

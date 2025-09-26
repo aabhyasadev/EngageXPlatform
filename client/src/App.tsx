@@ -24,6 +24,7 @@ const Analytics = lazy(() => import("@/pages/analytics"));
 const Team = lazy(() => import("@/pages/team"));
 const Settings = lazy(() => import("@/pages/settings"));
 const OrganizationSetup = lazy(() => import("@/components/onboarding/organization-setup"));
+const AcceptInvitation = lazy(() => import("@/pages/accept-invitation"));
 
 function Router() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -48,6 +49,7 @@ function Router() {
           <Route path="/signup" component={Signup} />
           <Route path="/signin" component={SignIn} />
           <Route path="/subscription" component={SubscriptionPage} />
+          <Route path="/accept-invitation" component={AcceptInvitation} />
           <Route component={RedirectToSignIn} />
         </Switch>
       </Suspense>
