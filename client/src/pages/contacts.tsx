@@ -940,7 +940,7 @@ export default function Contacts() {
                               onClick={() => handleEditContact(contact)}
                               data-testid={`button-edit-contact-${contact.id}`}
                             >
-                              <i className="fas fa-edit text-primary"></i>
+                              <Edit className="h-4 w-4 text-primary" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -949,7 +949,7 @@ export default function Contacts() {
                               disabled={deleteContactMutation.isPending}
                               data-testid={`button-delete-contact-${contact.id}`}
                             >
-                              <i className="fas fa-trash text-destructive"></i>
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
                         </td>
@@ -1245,7 +1245,7 @@ export default function Contacts() {
                       }}
                       data-testid="button-quick-edit"
                     >
-                      <i className="fas fa-edit mr-2"></i>
+                      <Edit className="h-4 w-4 mr-2" />
                       Edit Contact
                     </Button>
                     <Button 
