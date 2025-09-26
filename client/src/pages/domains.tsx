@@ -87,6 +87,26 @@ export default function Domains() {
     },
   });
 
+  const deleteDomainMutation = useMutation({
+    mutationFn: async (domainId: string) => {
+      await apiRequest("DELETE", `/api/domains/${domainId}/`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/domains/"] });
+      toast({
+        title: "Success",
+        description: "Domain deleted successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete domain",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'verified': return 'bg-green-100 text-green-800';
@@ -121,6 +141,12 @@ export default function Domains() {
   const handleShowVerification = (domain: any) => {
     setSelectedDomain(domain);
     setShowVerificationModal(true);
+  };
+
+  const handleDeleteDomain = (domainId: string, domainName: string) => {
+    if (window.confirm(`Are you sure you want to delete domain "${domainName}"? This action cannot be undone.`)) {
+      deleteDomainMutation.mutate(domainId);
+    }
   };
 
   // Show error state if query failed
@@ -286,6 +312,16 @@ export default function Domains() {
                       {verifyDomainMutation.isPending ? "Verifying..." : "Verify"}
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDeleteDomain(domain.id, domain.domain)}
+                    disabled={deleteDomainMutation.isPending}
+                    className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                    data-testid={`button-delete-domain-${domain.id}`}
+                  >
+                    <i className="fas fa-trash mr-2"></i>
+                    {deleteDomainMutation.isPending ? "Deleting..." : "Delete"}
+                  </Button>
                 </div>
               </div>
             </CardContent>
