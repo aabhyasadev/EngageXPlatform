@@ -1,37 +1,95 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatsGrid, StatCard } from "@/components/ui/stats-grid";
+import { Users, UserPlus, Shield, Activity, MoreHorizontal, Edit, Trash2, UserCheck, UserX } from "lucide-react";
+
+// Zod schemas
+const inviteSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .regex(/^[A-Za-z\s]+$/, "First name can only contain letters and spaces"),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .regex(/^[A-Za-z\s]+$/, "Last name can only contain letters and spaces"),
+  role: z.enum(["admin", "campaign_manager", "analyst", "editor"], {
+    required_error: "Please select a role",
+  }),
+});
+
+type InviteFormData = z.infer<typeof inviteSchema>;
+
+type TeamMember = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  full_name: string;
+};
+
+type PaginatedResponse<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};
 
 export default function Team() {
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [newUser, setNewUser] = useState({
-    email: "",
-    firstName: "",
-    lastName: "",
-    role: "campaign_manager",
-  });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: teamMembers, isLoading } = useQuery({
-    queryKey: ["/api/team/members"],
-    enabled: false, // This endpoint would need to be implemented
+  const form = useForm<InviteFormData>({
+    resolver: zodResolver(inviteSchema),
+    defaultValues: {
+      email: "",
+      firstName: "",
+      lastName: "",
+      role: "campaign_manager",
+    },
+  });
+
+  const { data: teamMembersResponse, isLoading, isError, error } = useQuery<PaginatedResponse<TeamMember>>({
+    queryKey: ["/api/users/"],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 3,
   });
 
   const inviteUserMutation = useMutation({
-    mutationFn: async (userData: any) => {
-      const response = await apiRequest("POST", "/api/team/invite", userData);
+    mutationFn: async (userData: InviteFormData) => {
+      const response = await apiRequest("POST", "/api/users/", {
+        email: userData.email,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        role: userData.role,
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -39,19 +97,79 @@ export default function Team() {
         title: "Success",
         description: "Team member invited successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/team/members"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
       setShowInviteModal(false);
-      setNewUser({
-        email: "",
-        firstName: "",
-        lastName: "",
-        role: "campaign_manager",
-      });
+      form.reset();
     },
     onError: (error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to invite team member",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const response = await apiRequest("PATCH", `/api/users/${userId}/`, { role });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Role updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update role",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ userId, is_active }: { userId: string; is_active: boolean }) => {
+      const response = await apiRequest("PATCH", `/api/users/${userId}/`, { is_active });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Member status updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update member status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest("DELETE", `/api/users/${userId}/`);
+      return response.ok;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Team member removed successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
+      setShowDeleteModal(false);
+      setMemberToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove team member",
         variant: "destructive",
       });
     },
@@ -79,95 +197,115 @@ export default function Team() {
     return roleData?.description || '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUser.email) {
-      toast({
-        title: "Validation Error",
-        description: "Email is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    inviteUserMutation.mutate(newUser);
+  const handleInviteSubmit = (data: InviteFormData) => {
+    inviteUserMutation.mutate(data);
   };
 
-  // Since team management isn't fully implemented in the backend,
-  // we'll show current user and placeholder for team functionality
-  const mockTeamMembers = [
-    {
-      id: user?.id,
-      email: user?.email,
-      firstName: user?.firstName,
-      lastName: user?.lastName,
-      role: user?.role,
-      isActive: true,
-      createdAt: user?.createdAt,
-    }
-  ];
+  const handleRoleChange = (userId: string, newRole: string) => {
+    updateRoleMutation.mutate({ userId, role: newRole });
+  };
 
+  const handleToggleActive = (userId: string, currentStatus: boolean) => {
+    toggleActiveMutation.mutate({ userId, is_active: !currentStatus });
+  };
+
+  const confirmDeleteMember = (member: TeamMember) => {
+    setMemberToDelete(member);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteMember = () => {
+    if (memberToDelete) {
+      deleteUserMutation.mutate(memberToDelete.id);
+    }
+  };
+
+  // Extract members from paginated response
+  const members = teamMembersResponse?.results || [];
+
+  // Calculate statistics
+  const totalMembers = members.length;
+  const adminCount = members.filter(m => m.role === 'admin').length;
+  const managerCount = members.filter(m => m.role === 'campaign_manager').length;
+  const activeCount = members.filter(m => m.is_active).length;
+
+  // Loading state
   if (isLoading) {
     return (
-      <div className="p-6">
+      <div className="p-6 space-y-8">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-muted rounded w-64"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
               <div key={i} className="h-32 bg-muted rounded-lg"></div>
             ))}
           </div>
+          <div className="h-96 bg-muted rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="mx-auto mb-4 h-12 w-12 text-red-500">
+            <Users className="h-12 w-12" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Failed to Load Team Members</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {error?.message || "There was an error loading your team members. Please try again."}
+          </p>
+          <Button onClick={() => window.location.reload()} data-testid="button-retry-team-load">
+            Try Again
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-background">
-      {/* Action button */}
-      <div className="flex justify-end mb-6">
-        {user?.role === 'admin' && (
-          <Button onClick={() => setShowInviteModal(true)} data-testid="button-invite-member">
-            <i className="fas fa-plus mr-2"></i>
-            Invite Member
-          </Button>
-        )}
-      </div>
+    <div className="p-6 bg-background space-y-8">
+      <PageHeader
+        title="Team Management"
+        description="Manage your team members, roles, and permissions."
+        primaryAction={user?.role === 'admin' ? {
+          label: "Invite Member",
+          onClick: () => setShowInviteModal(true),
+          testId: "button-invite-member",
+          icon: <UserPlus className="h-4 w-4" />,
+        } : undefined}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-total-members">
-              {mockTeamMembers.length}
-            </div>
-            <p className="text-sm text-muted-foreground">Total Members</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-admin-members">
-              {mockTeamMembers.filter(m => m.role === 'admin').length}
-            </div>
-            <p className="text-sm text-muted-foreground">Admins</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-manager-members">
-              {mockTeamMembers.filter(m => m.role === 'campaign_manager').length}
-            </div>
-            <p className="text-sm text-muted-foreground">Campaign Managers</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground" data-testid="text-active-members">
-              {mockTeamMembers.filter(m => m.isActive).length}
-            </div>
-            <p className="text-sm text-muted-foreground">Active Members</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Team Statistics */}
+      <StatsGrid columns={4}>
+        <StatCard
+          title="Total Members"
+          value={totalMembers}
+          icon={<Users className="h-6 w-6 text-blue-600" />}
+          testId="text-total-members"
+        />
+        <StatCard
+          title="Administrators"
+          value={adminCount}
+          icon={<Shield className="h-6 w-6 text-red-600" />}
+          testId="text-admin-members"
+        />
+        <StatCard
+          title="Campaign Managers"
+          value={managerCount}
+          icon={<UserPlus className="h-6 w-6 text-blue-600" />}
+          testId="text-manager-members"
+        />
+        <StatCard
+          title="Active Members"
+          value={activeCount}
+          icon={<Activity className="h-6 w-6 text-green-600" />}
+          testId="text-active-members"
+        />
+      </StatsGrid>
 
       {/* Role Permissions */}
       <Card className="mb-6">
@@ -191,15 +329,15 @@ export default function Team() {
                   {role.value === 'admin' && (
                     <>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Manage organization settings</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Invite and manage team members</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Access all features</span>
                       </div>
                     </>
@@ -207,15 +345,15 @@ export default function Team() {
                   {role.value === 'campaign_manager' && (
                     <>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Create and send campaigns</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Manage contacts and lists</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>View campaign analytics</span>
                       </div>
                     </>
@@ -223,15 +361,15 @@ export default function Team() {
                   {role.value === 'analyst' && (
                     <>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>View all analytics</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Export reports</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-times text-red-600"></i>
+                        <UserX className="h-3 w-3 text-red-600" />
                         <span>Cannot send campaigns</span>
                       </div>
                     </>
@@ -239,15 +377,15 @@ export default function Team() {
                   {role.value === 'editor' && (
                     <>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Create and edit templates</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-check text-green-600"></i>
+                        <UserCheck className="h-3 w-3 text-green-600" />
                         <span>Manage template library</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-times text-red-600"></i>
+                        <UserX className="h-3 w-3 text-red-600" />
                         <span>Cannot send campaigns</span>
                       </div>
                     </>
@@ -259,73 +397,124 @@ export default function Team() {
         </CardContent>
       </Card>
 
-      {/* Team Members */}
+      {/* Team Members Table */}
       <Card>
         <CardHeader>
           <CardTitle>Team Members</CardTitle>
           <CardDescription>
-            {mockTeamMembers.length} active member{mockTeamMembers.length !== 1 ? 's' : ''}
+            {totalMembers} member{totalMembers !== 1 ? 's' : ''} in your organization
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Member</th>
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Role</th>
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Status</th>
-                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Joined</th>
-                  <th className="text-right py-3 text-sm font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockTeamMembers.map((member: any) => (
-                  <tr key={member.id} className="border-b border-border last:border-0">
-                    <td className="py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                          <i className="fas fa-user text-muted-foreground text-sm"></i>
-                        </div>
-                        <div>
-                          <div className="font-medium text-foreground" data-testid={`text-member-name-${member.id}`}>
-                            {member.firstName && member.lastName 
-                              ? `${member.firstName} ${member.lastName}` 
-                              : member.email}
-                          </div>
-                          <div className="text-sm text-muted-foreground">{member.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      <Badge className={getRoleColor(member.role)}>
-                        {roles.find(r => r.value === member.role)?.label || member.role}
-                      </Badge>
-                    </td>
-                    <td className="py-4">
-                      <Badge variant={member.isActive ? "default" : "secondary"}>
-                        {member.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </td>
-                    <td className="py-4 text-foreground">
-                      {new Date(member.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 text-right">
-                      {user?.role === 'admin' && member.id !== user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          data-testid={`button-member-menu-${member.id}`}
-                        >
-                          <i className="fas fa-ellipsis-h"></i>
-                        </Button>
-                      )}
-                    </td>
+          {members.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No team members yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Invite your first team member to get started with collaboration.
+              </p>
+              {user?.role === 'admin' && (
+                <Button onClick={() => setShowInviteModal(true)} data-testid="button-invite-first-member">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite Team Member
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">Member</th>
+                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">Role</th>
+                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">Status</th>
+                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">Joined</th>
+                    <th className="text-right py-3 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {members.map((member) => (
+                    <tr key={member.id} className="border-b border-border last:border-0" data-testid={`row-member-${member.id}`}>
+                      <td className="py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-foreground" data-testid={`text-member-name-${member.id}`}>
+                              {member.full_name || member.email}
+                            </div>
+                            <div className="text-sm text-muted-foreground" data-testid={`text-member-email-${member.id}`}>
+                              {member.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4">
+                        <Badge className={getRoleColor(member.role)} data-testid={`badge-role-${member.id}`}>
+                          {roles.find(r => r.value === member.role)?.label || member.role}
+                        </Badge>
+                      </td>
+                      <td className="py-4">
+                        <Badge 
+                          variant={member.is_active ? "default" : "secondary"}
+                          data-testid={`badge-status-${member.id}`}
+                        >
+                          {member.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </td>
+                      <td className="py-4 text-foreground" data-testid={`text-joined-date-${member.id}`}>
+                        {new Date(member.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 text-right">
+                        {user?.role === 'admin' && member.id !== user?.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                data-testid={`button-member-menu-${member.id}`}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleToggleActive(member.id, member.is_active)}
+                                data-testid={`menu-toggle-status-${member.id}`}
+                              >
+                                {member.is_active ? <UserX className="h-4 w-4 mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
+                                {member.is_active ? "Deactivate" : "Activate"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => confirmDeleteMember(member)}
+                                className="text-red-600"
+                                data-testid={`menu-delete-${member.id}`}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Remove Member
+                              </DropdownMenuItem>
+                              {/* Role change options */}
+                              {roles.filter(r => r.value !== member.role).map(role => (
+                                <DropdownMenuItem
+                                  key={role.value}
+                                  onClick={() => handleRoleChange(member.id, role.value)}
+                                  data-testid={`menu-change-role-${role.value}-${member.id}`}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Change to {role.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -335,68 +524,136 @@ export default function Team() {
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                placeholder="team.member@example.com"
-                required
-                data-testid="input-invite-email"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleInviteSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="team.member@example.com"
+                        data-testid="input-invite-email"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={newUser.firstName}
-                  onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
-                  placeholder="John"
-                  data-testid="input-invite-first-name"
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="John"
+                          data-testid="input-invite-first-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Doe"
+                          data-testid="input-invite-last-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={newUser.lastName}
-                  onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
-                  placeholder="Doe"
-                  data-testid="input-invite-last-name"
-                />
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role *</FormLabel>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger data-testid="select-invite-role">
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roles.map((role) => (
+                            <SelectItem key={role.value} value={role.value}>
+                              <div>
+                                <div className="font-medium">{role.label}</div>
+                                <div className="text-xs text-muted-foreground">{role.description}</div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setShowInviteModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={inviteUserMutation.isPending} 
+                  data-testid="button-send-invite"
+                >
+                  {inviteUserMutation.isPending ? "Inviting..." : "Invite Member"}
+                </Button>
               </div>
-            </div>
-            <div>
-              <Label htmlFor="role">Role</Label>
-              <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
-                <SelectTrigger data-testid="select-invite-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      <div>
-                        <div className="font-medium">{role.label}</div>
-                        <div className="text-xs text-muted-foreground">{role.description}</div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Member Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Team Member</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to remove <span className="font-medium">{memberToDelete?.full_name || memberToDelete?.email}</span> from your team? This action cannot be undone.
+            </p>
             <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setShowInviteModal(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowDeleteModal(false)}
+                data-testid="button-cancel-delete"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={inviteUserMutation.isPending} data-testid="button-send-invite">
-                {inviteUserMutation.isPending ? "Sending..." : "Send Invite"}
+              <Button 
+                type="button" 
+                variant="destructive"
+                disabled={deleteUserMutation.isPending}
+                onClick={handleDeleteMember}
+                data-testid="button-confirm-delete"
+              >
+                {deleteUserMutation.isPending ? "Removing..." : "Remove Member"}
               </Button>
             </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
