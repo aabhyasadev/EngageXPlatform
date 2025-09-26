@@ -13,6 +13,18 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import DomainVerification from "@/components/domains/domain-verification";
+import { 
+  Plus, 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  HelpCircle, 
+  Settings, 
+  Check, 
+  Send, 
+  Globe, 
+  Trash2 
+} from "lucide-react";
 
 const domainSchema = z.object({
   domain: z
@@ -133,10 +145,10 @@ export default function Domains() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'verified': return 'fas fa-check-circle text-green-600';
-      case 'pending': return 'fas fa-clock text-yellow-600';
-      case 'failed': return 'fas fa-times-circle text-red-600';
-      default: return 'fas fa-question-circle text-gray-600';
+      case 'verified': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'pending': return <Clock className="h-4 w-4 text-yellow-600" />;
+      case 'failed': return <XCircle className="h-4 w-4 text-red-600" />;
+      default: return <HelpCircle className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -198,7 +210,7 @@ export default function Domains() {
       {/* Action button */}
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowAddModal(true)} data-testid="button-add-domain">
-          <i className="fas fa-plus mr-2"></i>
+          <Plus className="h-4 w-4 mr-2" />
           Add Domain
         </Button>
       </div>
@@ -251,28 +263,28 @@ export default function Domains() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <i className="fas fa-plus text-blue-600"></i>
+                <Plus className="h-6 w-6 text-blue-600" />
               </div>
               <h4 className="font-semibold mb-2">1. Add Domain</h4>
               <p className="text-sm text-muted-foreground">Add your sending domain to get DNS records</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <i className="fas fa-cog text-purple-600"></i>
+                <Settings className="h-6 w-6 text-purple-600" />
               </div>
               <h4 className="font-semibold mb-2">2. Configure DNS</h4>
               <p className="text-sm text-muted-foreground">Add DKIM, DMARC, and SPF records to your DNS</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <i className="fas fa-check text-green-600"></i>
+                <Check className="h-6 w-6 text-green-600" />
               </div>
               <h4 className="font-semibold mb-2">3. Verify Domain</h4>
               <p className="text-sm text-muted-foreground">Click verify to check DNS configuration</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <i className="fas fa-paper-plane text-yellow-600"></i>
+                <Send className="h-6 w-6 text-yellow-600" />
               </div>
               <h4 className="font-semibold mb-2">4. Start Sending</h4>
               <p className="text-sm text-muted-foreground">Use your verified domain in campaigns</p>
@@ -297,7 +309,7 @@ export default function Domains() {
                     </Badge>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <i className={getStatusIcon(domain.status)}></i>
+                    {getStatusIcon(domain.status)}
                     <span>
                       {domain.status === 'verified' && domain.verifiedAt && 
                         `Verified on ${new Date(domain.verifiedAt).toLocaleDateString()}`
@@ -313,7 +325,7 @@ export default function Domains() {
                     onClick={() => handleShowVerification(domain)}
                     data-testid={`button-view-records-${domain.id}`}
                   >
-                    <i className="fas fa-cog mr-2"></i>
+                    <Settings className="h-4 w-4 mr-2" />
                     DNS Records
                   </Button>
                   {domain.status !== 'verified' && (
@@ -332,7 +344,7 @@ export default function Domains() {
                     className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
                     data-testid={`button-delete-domain-${domain.id}`}
                   >
-                    <i className="fas fa-trash mr-2"></i>
+                    <Trash2 className="h-4 w-4 mr-2" />
                     Delete
                   </Button>
                 </div>
@@ -345,14 +357,14 @@ export default function Domains() {
           <Card>
             <CardContent className="p-12 text-center">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-globe text-2xl text-muted-foreground"></i>
+                <Globe className="h-8 w-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">No domains configured</h3>
               <p className="text-muted-foreground mb-4">
                 Add your first domain to start sending verified emails
               </p>
               <Button onClick={() => setShowAddModal(true)}>
-                <i className="fas fa-plus mr-2"></i>
+                <Plus className="h-4 w-4 mr-2" />
                 Add Your First Domain
               </Button>
             </CardContent>
