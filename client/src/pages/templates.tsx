@@ -86,7 +86,7 @@ export default function Templates() {
   }), [currentPage, pageSize, debouncedSearchTerm, selectedCategory]);
 
   const { data: templateResponse, isLoading, isFetching, isPending, isPlaceholderData } = useQuery({
-    queryKey: ["/api/templates", queryParams],
+    queryKey: ["/api/templates/", queryParams],
     staleTime: 3 * 60 * 1000, // 3 minutes - templates change moderately
     gcTime: 15 * 60 * 1000, // 15 minutes garbage collection
     retry: 2,
@@ -105,13 +105,16 @@ export default function Templates() {
   console.log("Templates API Response:", templateResponse);
   console.log("Templates results:", templates);
   console.log("Total templates count:", totalTemplates);
+  console.log("Query params:", queryParams);
+  console.log("Query key:", ["/api/templates", queryParams]);
+  console.log("Loading states:", { isLoading, isFetching, isPending, isPlaceholderData });
 
   // Prefetch next page for better performance
   useEffect(() => {
     if (currentPage < totalPages) {
       const nextPageParams = { ...queryParams, page: currentPage + 1 };
       queryClient.prefetchQuery({
-        queryKey: ["/api/templates", nextPageParams],
+        queryKey: ["/api/templates/", nextPageParams],
         staleTime: 3 * 60 * 1000,
       });
     }
@@ -127,7 +130,7 @@ export default function Templates() {
         title: "Success",
         description: "Template created successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/templates/"] });
       setShowCreateModal(false);
       setNewTemplate({
         name: "",
@@ -166,7 +169,7 @@ export default function Templates() {
         title: "Success",
         description: "Template updated successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/templates/"] });
       setShowEditModal(false);
       setSelectedTemplate(null);
     },
@@ -188,7 +191,7 @@ export default function Templates() {
         title: "Success",
         description: "Template deleted successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/templates/"] });
     },
     onError: (error) => {
       toast({

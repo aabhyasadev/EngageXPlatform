@@ -425,11 +425,26 @@ class EmailTemplateViewSet(BaseOrganizationViewSet):
     queryset = EmailTemplate.objects.all()
     serializer_class = EmailTemplateSerializer
     pagination_class = DefaultPagination
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'is_default']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'subject']
     ordering = ['-created_at']
     ordering_fields = ['name', 'created_at', 'updated_at']
+    
+    def get_queryset(self):
+        """Override to handle empty string parameters properly"""
+        queryset = super().get_queryset()
+        
+        # Handle category filtering - ignore empty strings
+        category = self.request.query_params.get('category', None)
+        if category and category.strip():  # Only filter if category is not empty
+            queryset = queryset.filter(category=category)
+            
+        # Handle is_default filtering
+        is_default = self.request.query_params.get('is_default', None)
+        if is_default is not None:
+            queryset = queryset.filter(is_default=is_default.lower() == 'true')
+            
+        return queryset
     
     def create(self, request, *args, **kwargs):
         """Create a new template with limit check"""
