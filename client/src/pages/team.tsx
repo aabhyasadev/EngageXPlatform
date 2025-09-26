@@ -451,10 +451,10 @@ export default function Team() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCreateTeamModal(true)}
-                data-testid="button-create-team"
+                data-testid="button-add-team"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Create Team
+                Add Team
               </Button>
             )}
           </div>
