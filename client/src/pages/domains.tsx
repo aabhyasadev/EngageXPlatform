@@ -1,15 +1,34 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import DomainVerification from "@/components/domains/domain-verification";
+
+const domainSchema = z.object({
+  domain: z
+    .string()
+    .min(1, "Domain is required")
+    .regex(
+      /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])+$/,
+      "Please enter a valid domain name (e.g., example.com)"
+    )
+    .refine(
+      (domain) => !domain.startsWith("http") && !domain.startsWith("www."),
+      "Enter domain without 'http://', 'https://', or 'www.'"
+    ),
+});
+
+type DomainFormData = z.infer<typeof domainSchema>;
 
 export default function Domains() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -17,7 +36,13 @@ export default function Domains() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<any>(null);
   const [domainToDelete, setDomainToDelete] = useState<any>(null);
-  const [newDomain, setNewDomain] = useState("");
+
+  const form = useForm<DomainFormData>({
+    resolver: zodResolver(domainSchema),
+    defaultValues: {
+      domain: "",
+    },
+  });
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -30,21 +55,9 @@ export default function Domains() {
   });
 
   const createDomainMutation = useMutation({
-    mutationFn: async (domain: string) => {
-      // Log organization details for tracking/debugging
-      if (user?.organization) {
-        console.log("Creating domain for organization:", {
-          id: user.organization.id,
-          name: user.organization.name,
-          industry: user.organization.industry,
-          employeesRange: user.organization.employeesRange,
-          contactsRange: user.organization.contactsRange,
-          trialEndsAt: user.organization.trialEndsAt
-        });
-      }
-      
+    mutationFn: async (data: DomainFormData) => {
       const response = await apiRequest("POST", "/api/domains/", { 
-        domain,
+        domain: data.domain,
         // Backend expects organization ID, not full object
         organization: user?.organizationId || user?.organization?.id
       });
@@ -57,7 +70,7 @@ export default function Domains() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/domains/"] });
       setShowAddModal(false);
-      setNewDomain("");
+      form.reset();
     },
     onError: (error) => {
       toast({
@@ -127,17 +140,8 @@ export default function Domains() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newDomain) {
-      toast({
-        title: "Validation Error",
-        description: "Domain is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    createDomainMutation.mutate(newDomain);
+  const handleSubmit = (data: DomainFormData) => {
+    createDomainMutation.mutate(data);
   };
 
   const handleShowVerification = (domain: any) => {
@@ -357,36 +361,55 @@ export default function Domains() {
       </div>
 
       {/* Add Domain Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+      <Dialog open={showAddModal} onOpenChange={(open) => {
+        setShowAddModal(open);
+        if (!open) form.reset();
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Domain</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="domain">Domain Name *</Label>
-              <Input
-                id="domain"
-                type="text"
-                value={newDomain}
-                onChange={(e) => setNewDomain(e.target.value)}
-                placeholder="example.com"
-                required
-                data-testid="input-domain-name"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="domain"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Domain Name *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="example.com"
+                        data-testid="input-domain-name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Enter your domain without 'https://', 'http://', or 'www.'
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                Enter your domain without 'https://' or 'www.'
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createDomainMutation.isPending} data-testid="button-save-domain">
-                {createDomainMutation.isPending ? "Adding..." : "Add Domain"}
-              </Button>
-            </div>
-          </form>
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowAddModal(false)}
+                  disabled={createDomainMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createDomainMutation.isPending} 
+                  data-testid="button-save-domain"
+                >
+                  {createDomainMutation.isPending ? "Adding..." : "Add Domain"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
