@@ -29,7 +29,23 @@ export default function Domains() {
 
   const createDomainMutation = useMutation({
     mutationFn: async (domain: string) => {
-      const response = await apiRequest("POST", "/api/domains/", { domain });
+      // Log organization details for tracking/debugging
+      if (user?.organization) {
+        console.log("Creating domain for organization:", {
+          id: user.organization.id,
+          name: user.organization.name,
+          industry: user.organization.industry,
+          employeesRange: user.organization.employeesRange,
+          contactsRange: user.organization.contactsRange,
+          trialEndsAt: user.organization.trialEndsAt
+        });
+      }
+      
+      const response = await apiRequest("POST", "/api/domains/", { 
+        domain,
+        // Backend expects organization ID, not full object
+        organization: user?.organizationId || user?.organization?.id
+      });
       return response.json();
     },
     onSuccess: () => {
