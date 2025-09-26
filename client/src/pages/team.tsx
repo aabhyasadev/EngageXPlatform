@@ -24,14 +24,6 @@ const inviteSchema = z.object({
     .string()
     .min(1, "Email is required")
     .email("Please enter a valid email address"),
-  firstName: z
-    .string()
-    .min(1, "First name is required")
-    .regex(/^[A-Za-z\s]+$/, "First name can only contain letters and spaces"),
-  lastName: z
-    .string()
-    .min(1, "Last name is required")
-    .regex(/^[A-Za-z\s]+$/, "Last name can only contain letters and spaces"),
   role: z.enum(["admin", "campaign_manager", "analyst", "editor"], {
     required_error: "Please select a role",
   }),
@@ -71,8 +63,6 @@ export default function Team() {
     resolver: zodResolver(inviteSchema),
     defaultValues: {
       email: "",
-      firstName: "",
-      lastName: "",
       role: "campaign_manager",
     },
   });
@@ -88,8 +78,6 @@ export default function Team() {
     mutationFn: async (userData: InviteFormData) => {
       const response = await apiRequest("POST", "/api/users/", {
         email: userData.email,
-        first_name: userData.firstName,
-        last_name: userData.lastName,
         role: userData.role,
       });
       return response.json();
@@ -553,42 +541,6 @@ export default function Team() {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="John"
-                          data-testid="input-invite-first-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Doe"
-                          data-testid="input-invite-last-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
               <FormField
                 control={form.control}
                 name="role"
