@@ -20,7 +20,7 @@ import openpyxl
 from .models import (
     Organization, User, Domain, ContactGroup, Contact, 
     ContactGroupMembership, EmailTemplate, Campaign, 
-    CampaignRecipient, AnalyticsEvent, Card
+    CampaignRecipient, AnalyticsEvent, Card, Invitation, InvitationStatus
 )
 from .serializers import (
     OrganizationSerializer, UserSerializer, DomainSerializer,
@@ -28,7 +28,8 @@ from .serializers import (
     EmailTemplateSerializer, CampaignSerializer, CampaignRecipientSerializer,
     AnalyticsEventSerializer, DashboardStatsSerializer, ContactImportSerializer,
     CampaignSendSerializer, CardSerializer, CardCreateSerializer,
-    CardUpdateSerializer
+    CardUpdateSerializer, InvitationSerializer, InvitationCreateSerializer,
+    InvitationAcceptSerializer
 )
 from .tasks import send_campaign_emails, verify_domain_dns, import_contacts_from_csv
 from .subscription_views import (
@@ -36,6 +37,7 @@ from .subscription_views import (
     check_usage_limit, get_current_usage, update_usage_tracking
 )
 from .middleware import requires_active_subscription, requires_plan_feature, track_usage
+from .notifications import send_invitation_email
 
 
 class BaseOrganizationViewSet(viewsets.ModelViewSet):
@@ -1597,3 +1599,166 @@ class CardViewSet(BaseOrganizationViewSet):
             }, status=status.HTTP_404_NOT_FOUND)
 
         return Response(CardSerializer(default_card).data)
+
+
+class InvitationViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing invitations"""
+    queryset = Invitation.objects.all()
+    serializer_class = InvitationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filter invitations by organization"""
+        if not self.request.user.organization:
+            return Invitation.objects.none()
+        return Invitation.objects.filter(organization=self.request.user.organization)
+
+    @action(detail=False, methods=['post'])
+    def invite(self, request):
+        """Create and send invitation"""
+        if not request.user.organization:
+            return Response({
+                'error': 'User not associated with organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check permissions - only admin and organizer can invite
+        if request.user.role not in ['admin', 'organizer']:
+            return Response({
+                'error': 'Insufficient permissions to send invitations'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = InvitationCreateSerializer(
+            data=request.data, 
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    # Create invitation
+                    invitation = Invitation.objects.create(
+                        email=serializer.validated_data['email'],
+                        role=serializer.validated_data['role'],
+                        organization=request.user.organization,
+                        invited_by=request.user
+                    )
+
+                    # Send invitation email
+                    success, error = send_invitation_email(invitation, request)
+                    
+                    if not success:
+                        # Log error but don't fail the invitation creation
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.error(f"Failed to send invitation email: {error}")
+
+                    # Return success response
+                    return Response({
+                        'message': 'Invitation sent successfully',
+                        'invitation_id': invitation.id,
+                        'email_sent': success
+                    }, status=status.HTTP_201_CREATED)
+                    
+            except Exception as e:
+                return Response({
+                    'error': f'Failed to create invitation: {str(e)}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def accept(self, request):
+        """Accept invitation and create user account"""
+        serializer = InvitationAcceptSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    invitation = serializer.invitation
+                    
+                    # Check if user already exists
+                    existing_user = User.objects.filter(email=invitation.email).first()
+                    if existing_user:
+                        return Response({
+                            'error': 'A user with this email already exists'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    # Create new user
+                    user_data = {
+                        'email': invitation.email,
+                        'role': invitation.role,
+                        'organization': invitation.organization,
+                        'is_active': True
+                    }
+                    
+                    # Add names if provided
+                    if serializer.validated_data.get('first_name'):
+                        user_data['first_name'] = serializer.validated_data['first_name']
+                    if serializer.validated_data.get('last_name'):
+                        user_data['last_name'] = serializer.validated_data['last_name']
+
+                    # Create user
+                    user = User.objects.create_user(**user_data)
+                    
+                    # Set password if provided
+                    if serializer.validated_data.get('password'):
+                        user.set_password(serializer.validated_data['password'])
+                        user.save()
+
+                    # Mark invitation as accepted
+                    invitation.status = InvitationStatus.ACCEPTED
+                    invitation.accepted_at = timezone.now()
+                    invitation.save()
+
+                    return Response({
+                        'message': 'Invitation accepted successfully',
+                        'user_id': user.id,
+                        'redirect_to': '/login'
+                    }, status=status.HTTP_201_CREATED)
+                    
+            except Exception as e:
+                return Response({
+                    'error': f'Failed to accept invitation: {str(e)}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def resend(self, request, pk=None):
+        """Resend invitation email"""
+        try:
+            invitation = self.get_object()
+            
+            # Check permissions
+            if request.user.role not in ['admin', 'organizer']:
+                return Response({
+                    'error': 'Insufficient permissions to resend invitations'
+                }, status=status.HTTP_403_FORBIDDEN)
+
+            # Check if invitation is still valid
+            if invitation.status != InvitationStatus.PENDING:
+                return Response({
+                    'error': 'Invitation is no longer pending'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if invitation.is_expired():
+                return Response({
+                    'error': 'Invitation has expired'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Resend email
+            success, error = send_invitation_email(invitation, request)
+            
+            if success:
+                return Response({
+                    'message': 'Invitation email resent successfully'
+                })
+            else:
+                return Response({
+                    'error': f'Failed to resend invitation: {error}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except Exception as e:
+            return Response({
+                'error': f'Error resending invitation: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from .models import (
     Organization, User, Domain, ContactGroup, Contact, 
     ContactGroupMembership, EmailTemplate, Campaign, 
-    CampaignRecipient, AnalyticsEvent, Card
+    CampaignRecipient, AnalyticsEvent, Card, Invitation, InvitationStatus
 )
 
 User = get_user_model()
@@ -397,3 +397,82 @@ class CardUpdateSerializer(serializers.Serializer):
     is_default = serializers.BooleanField(required=False)
     # SECURITY: Removed exp_month and exp_year - these must come from Stripe only
     # Client cannot modify sensitive card data
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    """Serializer for invitation model"""
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
+    invited_by_name = serializers.CharField(source='invited_by.full_name', read_only=True)
+    role_display = serializers.CharField(source='get_role_display', read_only=True)
+    is_expired = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Invitation
+        fields = [
+            'id', 'email', 'role', 'status', 'token', 'expires_at', 
+            'created_at', 'updated_at', 'organization_name', 
+            'invited_by_name', 'role_display', 'is_expired'
+        ]
+        read_only_fields = [
+            'id', 'token', 'status', 'expires_at', 'created_at', 
+            'updated_at', 'organization_name', 'invited_by_name', 
+            'role_display', 'is_expired'
+        ]
+
+
+class InvitationCreateSerializer(serializers.Serializer):
+    """Serializer for creating invitations"""
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(choices=['admin', 'campaign_manager', 'analyst', 'editor'])
+
+    def validate_email(self, value):
+        """Validate email is not already a user in the organization"""
+        request = self.context.get('request')
+        if request and request.user.organization:
+            # Check if user already exists in the organization
+            if User.objects.filter(
+                email=value, 
+                organization=request.user.organization
+            ).exists():
+                raise serializers.ValidationError(
+                    "A user with this email is already a member of your organization."
+                )
+            
+            # Check if there's already a pending invitation
+            if Invitation.objects.filter(
+                email=value,
+                organization=request.user.organization,
+                status=InvitationStatus.PENDING
+            ).exists():
+                raise serializers.ValidationError(
+                    "There is already a pending invitation for this email address."
+                )
+        
+        return value
+
+
+class InvitationAcceptSerializer(serializers.Serializer):
+    """Serializer for accepting invitations"""
+    token = serializers.CharField()
+    first_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    password = serializers.CharField(min_length=8, required=False)
+
+    def validate_token(self, value):
+        """Validate invitation token"""
+        try:
+            invitation = Invitation.objects.get(token=value)
+            
+            # Check if invitation is still valid
+            if invitation.status != InvitationStatus.PENDING:
+                raise serializers.ValidationError("This invitation is no longer valid.")
+            
+            if invitation.is_expired():
+                raise serializers.ValidationError("This invitation has expired.")
+            
+            # Store invitation for later use
+            self.invitation = invitation
+            return value
+            
+        except Invitation.DoesNotExist:
+            raise serializers.ValidationError("Invalid invitation token.")
