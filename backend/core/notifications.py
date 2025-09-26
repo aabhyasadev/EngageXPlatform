@@ -11,7 +11,7 @@ from .models import (
     NotificationType, NotificationChannel, NotificationStatus,
     SubscriptionPlan, Invitation
 )
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.urls import reverse
 
 logger = logging.getLogger(__name__)
@@ -890,9 +890,7 @@ def send_usage_limit_warning(organization, warning_details):
 
 
 def send_invitation_email(invitation, request=None):
-    """
-    Send invitation email using Django SMTP
-    """
+    """Send invitation email using Django SMTP - same method as OTP and Welcome emails"""
     try:
         # Build invitation link
         if hasattr(settings, 'FRONTEND_BASE_URL'):
@@ -903,102 +901,77 @@ def send_invitation_email(invitation, request=None):
             invite_url = f"http://localhost:5000/accept-invite?token={invitation.token}"
 
         # Email context
-        context = {
-            'invitation': invitation,
-            'organization_name': invitation.organization.name,
-            'inviter_name': invitation.invited_by.full_name,
-            'invite_url': invite_url,
-            'role_display': invitation.get_role_display(),
-            'expires_at': invitation.expires_at,
-            'days_until_expiry': (invitation.expires_at - timezone.now()).days,
-        }
+        inviter_name = invitation.invited_by.full_name
+        organization_name = invitation.organization.name
+        role_display = invitation.get_role_display()
+        expires_at = invitation.expires_at
+        days_until_expiry = (invitation.expires_at - timezone.now()).days
 
         # HTML email content
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                .container {{ max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }}
-                .header {{ background: #2563eb; color: white; padding: 20px; text-align: center; }}
-                .content {{ padding: 30px; background: #f9fafb; }}
-                .button {{ 
-                    display: inline-block; 
-                    background: #2563eb; 
-                    color: white; 
-                    padding: 12px 24px; 
-                    text-decoration: none; 
-                    border-radius: 6px; 
-                    margin: 20px 0; 
-                }}
-                .footer {{ padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>EngageX</h1>
+        html_message = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #007bff;">You're invited to join {organization_name}! 🎉</h2>
+            <p style="font-size: 16px; color: #333;">
+                Hi there,
+            </p>
+            <p style="color: #666;">
+                {inviter_name} has invited you to join <strong>{organization_name}</strong> as a <strong>{role_display}</strong>.
+            </p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="color: #333; margin-top: 0;">Click the button below to accept your invitation:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{invite_url}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Accept Invitation
+                    </a>
                 </div>
-                <div class="content">
-                    <h2>You're invited to join {context['organization_name']}!</h2>
-                    <p>Hi there,</p>
-                    <p>{context['inviter_name']} has invited you to join <strong>{context['organization_name']}</strong> as a <strong>{context['role_display']}</strong>.</p>
-                    <p>Click the button below to accept your invitation:</p>
-                    <p style="text-align: center;">
-                        <a href="{context['invite_url']}" class="button">Accept Invitation</a>
-                    </p>
-                    <p>Or copy and paste this link into your browser:</p>
-                    <p style="word-break: break-all; color: #6b7280;">{context['invite_url']}</p>
-                    <p><strong>Note:</strong> This invitation expires on {context['expires_at'].strftime('%B %d, %Y at %I:%M %p')} ({context['days_until_expiry']} days from now).</p>
-                    <p>Welcome to EngageX!</p>
-                </div>
-                <div class="footer">
-                    <p>© 2025 EngageX. All rights reserved.</p>
-                </div>
+                <p style="color: #666; font-size: 14px;">Or copy and paste this link into your browser:</p>
+                <p style="word-break: break-all; color: #6b7280; font-size: 14px;">{invite_url}</p>
             </div>
-        </body>
-        </html>
+            <p style="color: #666;">
+                <strong>Note:</strong> This invitation expires on {expires_at.strftime('%B %d, %Y at %I:%M %p')} ({days_until_expiry} days from now).
+            </p>
+            <p style="color: #666;">
+                Welcome to EngageX!
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #999; font-size: 12px;">
+                EngageX - Professional Email Marketing Platform
+            </p>
+        </div>
         """
-
+        
         # Plain text content
-        text_content = f"""
-        You're invited to join {context['organization_name']}!
+        plain_message = f"""
+        You're invited to join {organization_name}!
 
         Hi there,
 
-        {context['inviter_name']} has invited you to join {context['organization_name']} as a {context['role_display']}.
+        {inviter_name} has invited you to join {organization_name} as a {role_display}.
 
         Please visit the following link to accept your invitation:
-        {context['invite_url']}
+        {invite_url}
 
-        This invitation expires on {context['expires_at'].strftime('%B %d, %Y at %I:%M %p')} ({context['days_until_expiry']} days from now).
+        This invitation expires on {expires_at.strftime('%B %d, %Y at %I:%M %p')} ({days_until_expiry} days from now).
 
         Welcome to EngageX!
 
-        © 2025 EngageX. All rights reserved.
+        EngageX - Professional Email Marketing Platform
         """
 
-        # Create email
-        subject = f"You're invited to join {invitation.organization.name} on EngageX"
-        from_email = settings.DEFAULT_FROM_EMAIL
-        to_email = [invitation.email]
-
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=from_email,
-            to=to_email
+        # Send email using the same method as OTP and Welcome emails
+        sent = send_mail(
+            subject=f"You're invited to join {invitation.organization.name} on EngageX",
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[invitation.email],
+            html_message=html_message,
+            fail_silently=False,
         )
-        msg.attach_alternative(html_content, "text/html")
-
-        # Send email
-        msg.send(fail_silently=False)
         
         logger.info(f"Invitation email sent successfully to {invitation.email}")
-        return True, None
+        return sent == 1
 
     except Exception as e:
         error_msg = f"Failed to send invitation email: {str(e)}"
         logger.error(error_msg)
-        return False, error_msg
+        return False
