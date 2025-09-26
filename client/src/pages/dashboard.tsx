@@ -4,6 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import CampaignModal from "@/components/campaigns/campaign-modal";
+import { 
+  Users, 
+  Send, 
+  MailOpen, 
+  MousePointer, 
+  TrendingUp, 
+  MoreHorizontal, 
+  Plus, 
+  Upload, 
+  FileText, 
+  Globe, 
+  ChevronRight, 
+  CheckCircle, 
+  Clock 
+} from "lucide-react";
 
 export default function Dashboard() {
   const [showCampaignModal, setShowCampaignModal] = useState(false);
@@ -93,12 +108,12 @@ export default function Dashboard() {
                 </p>
               </div>
               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-users text-white text-xl"></i>
+                <Users className="h-6 w-6 text-white" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <TrendingUp className="h-3 w-3 mr-1" />
                 <span className="font-semibold">+12%</span>
               </div>
               <span className="text-muted-foreground ml-2">from last month</span>
@@ -116,12 +131,12 @@ export default function Dashboard() {
                 </p>
               </div>
               <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-paper-plane text-white text-xl"></i>
+                <Send className="h-6 w-6 text-white" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <TrendingUp className="h-3 w-3 mr-1" />
                 <span className="font-semibold">+3</span>
               </div>
               <span className="text-muted-foreground ml-2">this week</span>
@@ -139,12 +154,12 @@ export default function Dashboard() {
                 </p>
               </div>
               <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-envelope-open text-white text-xl"></i>
+                <MailOpen className="h-6 w-6 text-white" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <TrendingUp className="h-3 w-3 mr-1" />
                 <span className="font-semibold">+2.1%</span>
               </div>
               <span className="text-muted-foreground ml-2">from last week</span>
@@ -162,12 +177,12 @@ export default function Dashboard() {
                 </p>
               </div>
               <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-mouse-pointer text-white text-xl"></i>
+                <MousePointer className="h-6 w-6 text-white" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <div className="flex items-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                <i className="fas fa-arrow-up text-xs mr-1"></i>
+                <TrendingUp className="h-3 w-3 mr-1" />
                 <span className="font-semibold">+0.8%</span>
               </div>
               <span className="text-muted-foreground ml-2">from last week</span>
@@ -231,7 +246,7 @@ export default function Dashboard() {
                           </td>
                           <td className="py-4 text-right">
                             <button className="text-muted-foreground hover:text-foreground" data-testid={`button-campaign-menu-${campaign.id}`}>
-                              <i className="fas fa-ellipsis-h"></i>
+                              <MoreHorizontal className="h-4 w-4" />
                             </button>
                           </td>
                         </tr>
@@ -271,31 +286,31 @@ export default function Dashboard() {
                   data-testid="button-quick-create-campaign"
                 >
                   <div className="flex items-center space-x-3">
-                    <i className="fas fa-plus text-primary"></i>
+                    <Plus className="h-4 w-4 text-primary" />
                     <span>Create Campaign</span>
                   </div>
-                  <i className="fas fa-chevron-right text-muted-foreground"></i>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Button>
                 <Button variant="outline" className="w-full justify-between" data-testid="button-quick-import-contacts">
                   <div className="flex items-center space-x-3">
-                    <i className="fas fa-upload text-primary"></i>
+                    <Upload className="h-4 w-4 text-primary" />
                     <span>Import Contacts</span>
                   </div>
-                  <i className="fas fa-chevron-right text-muted-foreground"></i>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Button>
                 <Button variant="outline" className="w-full justify-between" data-testid="button-quick-create-template">
                   <div className="flex items-center space-x-3">
-                    <i className="fas fa-file-alt text-primary"></i>
+                    <FileText className="h-4 w-4 text-primary" />
                     <span>Create Template</span>
                   </div>
-                  <i className="fas fa-chevron-right text-muted-foreground"></i>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Button>
                 <Button variant="outline" className="w-full justify-between" data-testid="button-quick-verify-domain">
                   <div className="flex items-center space-x-3">
-                    <i className="fas fa-globe text-primary"></i>
+                    <Globe className="h-4 w-4 text-primary" />
                     <span>Verify Domain</span>
                   </div>
-                  <i className="fas fa-chevron-right text-muted-foreground"></i>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </div>
             </CardContent>
@@ -330,9 +345,11 @@ export default function Dashboard() {
                         </span>
                       </div>
                     </div>
-                    <i className={`fas ${
-                      domain.status === 'verified' ? 'fa-check-circle text-green-600' : 'fa-clock text-yellow-600'
-                    }`}></i>
+                    {domain.status === 'verified' ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-yellow-600" />
+                    )}
                   </div>
                 ))}
                 {(!domains || domains.length === 0) && (
