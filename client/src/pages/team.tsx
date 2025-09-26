@@ -16,7 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsGrid, StatCard } from "@/components/ui/stats-grid";
-import { Users, UserPlus, Shield, Activity, MoreHorizontal, Edit, Trash2, UserCheck, UserX, Plus } from "lucide-react";
+import { Users, UserPlus, Shield, Activity, MoreHorizontal, Edit, Trash2, UserCheck, UserX } from "lucide-react";
 
 // Zod schemas
 const inviteSchema = z.object({
@@ -37,38 +37,8 @@ const inviteSchema = z.object({
   }),
 });
 
-const createTeamSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Team name is required")
-    .min(2, "Team name must be at least 2 characters"),
-  description: z
-    .string()
-    .min(1, "Description is required")
-    .min(10, "Description must be at least 10 characters"),
-  role: z.enum(["admin", "campaign_manager", "analyst", "editor"], {
-    required_error: "Please select a role for this team",
-  }),
-});
-
-const teamManagementSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters")
-    .regex(/^[A-Za-z\s]+$/, "Name can only contain letters and spaces"),
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
-  role: z.enum(["admin", "campaign_manager", "analyst", "editor"], {
-    required_error: "Please select a role",
-  }),
-});
 
 type InviteFormData = z.infer<typeof inviteSchema>;
-type CreateTeamFormData = z.infer<typeof createTeamSchema>;
-type TeamManagementFormData = z.infer<typeof teamManagementSchema>;
 
 type TeamMember = {
   id: string;
@@ -91,8 +61,6 @@ type PaginatedResponse<T> = {
 export default function Team() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
-  const [showTeamManagementModal, setShowTeamManagementModal] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
 
   const { toast } = useToast();
@@ -109,23 +77,6 @@ export default function Team() {
     },
   });
 
-  const createTeamForm = useForm<CreateTeamFormData>({
-    resolver: zodResolver(createTeamSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      role: "campaign_manager",
-    },
-  });
-
-  const teamManagementForm = useForm<TeamManagementFormData>({
-    resolver: zodResolver(teamManagementSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      role: "campaign_manager",
-    },
-  });
 
   const { data: teamMembersResponse, isLoading, isError, error } = useQuery<PaginatedResponse<TeamMember>>({
     queryKey: ["/api/users/"],
@@ -226,61 +177,6 @@ export default function Team() {
     },
   });
 
-  const createTeamMutation = useMutation({
-    mutationFn: async (teamData: CreateTeamFormData) => {
-      const response = await apiRequest("POST", "/api/teams/", {
-        name: teamData.name,
-        description: teamData.description,
-        role: teamData.role,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Team created successfully!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/teams/"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
-      setShowCreateTeamModal(false);
-      createTeamForm.reset();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create team",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const teamManagementMutation = useMutation({
-    mutationFn: async (memberData: TeamManagementFormData) => {
-      const response = await apiRequest("POST", "/api/users/", {
-        email: memberData.email,
-        first_name: memberData.name.split(" ")[0] || "",
-        last_name: memberData.name.split(" ").slice(1).join(" ") || "",
-        role: memberData.role,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Team member added successfully!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
-      setShowTeamManagementModal(false);
-      teamManagementForm.reset();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add team member",
-        variant: "destructive",
-      });
-    },
-  });
 
   const roles = [
     { value: "admin", label: "Admin", description: "Full access to all features" },
@@ -327,13 +223,6 @@ export default function Team() {
     }
   };
 
-  const handleCreateTeamSubmit = (data: CreateTeamFormData) => {
-    createTeamMutation.mutate(data);
-  };
-
-  const handleTeamManagementSubmit = (data: TeamManagementFormData) => {
-    teamManagementMutation.mutate(data);
-  };
 
   // Extract members from paginated response
   const members = teamMembersResponse?.results || [];
@@ -394,19 +283,6 @@ export default function Team() {
         } : undefined}
       />
 
-      {/* Team Management Button */}
-      {(user?.role === 'admin' || user?.role === 'organizer') && (
-        <div className="flex justify-end mb-6">
-          <Button
-            variant="outline"
-            onClick={() => setShowTeamManagementModal(true)}
-            data-testid="button-team-management"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Team Management
-          </Button>
-        </div>
-      )}
 
       {/* Team Statistics */}
       <StatsGrid columns={4}>
@@ -446,17 +322,6 @@ export default function Team() {
                 Understanding what each role can do in your organization
               </CardDescription>
             </div>
-            {(user?.role === 'admin' || user?.role === 'organizer') && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowCreateTeamModal(true)}
-                data-testid="button-add-team"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Team
-              </Button>
-            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -801,206 +666,6 @@ export default function Team() {
         </DialogContent>
       </Dialog>
 
-      {/* Create Team Modal */}
-      <Dialog open={showCreateTeamModal} onOpenChange={setShowCreateTeamModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Team</DialogTitle>
-          </DialogHeader>
-          <Form {...createTeamForm}>
-            <form onSubmit={createTeamForm.handleSubmit(handleCreateTeamSubmit)} className="space-y-6">
-              <FormField
-                control={createTeamForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Team Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Marketing Team"
-                        data-testid="input-team-name"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Choose a descriptive name for your team
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={createTeamForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Team responsible for marketing campaigns and strategy"
-                        data-testid="input-team-description"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Describe the purpose and responsibilities of this team
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={createTeamForm.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role Permissions *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-team-role">
-                          <SelectValue placeholder="Select role permissions for this team" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.value} value={role.value}>
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{role.label}</span>
-                              <span className="text-xs text-muted-foreground">{role.description}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      All team members will have these permissions by default
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCreateTeamModal(false)}
-                  data-testid="button-cancel-team"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createTeamMutation.isPending}
-                  data-testid="button-save-team"
-                >
-                  {createTeamMutation.isPending ? "Creating..." : "Create Team"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Team Management Modal */}
-      <Dialog open={showTeamManagementModal} onOpenChange={setShowTeamManagementModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Team Management</DialogTitle>
-          </DialogHeader>
-          <Form {...teamManagementForm}>
-            <form onSubmit={teamManagementForm.handleSubmit(handleTeamManagementSubmit)} className="space-y-6">
-              <FormField
-                control={teamManagementForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="John Doe"
-                        data-testid="input-team-member-name"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Enter the full name of the team member
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={teamManagementForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="team.member@example.com"
-                        data-testid="input-team-member-email"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Enter the email address for the team member
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={teamManagementForm.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role Permissions *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-team-member-role">
-                          <SelectValue placeholder="Select role permissions" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.value} value={role.value}>
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{role.label}</span>
-                              <span className="text-xs text-muted-foreground">{role.description}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Select the role and permissions for this team member
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowTeamManagementModal(false)}
-                  data-testid="button-cancel-team-management"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={teamManagementMutation.isPending}
-                  data-testid="button-save-team-management"
-                >
-                  {teamManagementMutation.isPending ? "Adding..." : "Add Team Member"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
