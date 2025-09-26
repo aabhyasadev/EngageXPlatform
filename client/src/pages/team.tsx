@@ -386,7 +386,7 @@ export default function Team() {
       <PageHeader
         title="Team Management"
         description="Manage your team members, roles, and permissions."
-        primaryAction={user?.role === 'admin' ? {
+        primaryAction={(user?.role === 'admin' || user?.role === 'organizer') ? {
           label: "Invite Member",
           onClick: () => setShowInviteModal(true),
           testId: "button-invite-member",
@@ -395,7 +395,7 @@ export default function Team() {
       />
 
       {/* Team Management Button */}
-      {user?.role === 'admin' && (
+      {(user?.role === 'admin' || user?.role === 'organizer') && (
         <div className="flex justify-end mb-6">
           <Button
             variant="outline"
@@ -446,7 +446,7 @@ export default function Team() {
                 Understanding what each role can do in your organization
               </CardDescription>
             </div>
-            {user?.role === 'admin' && (
+            {(user?.role === 'admin' || user?.role === 'organizer') && (
               <Button
                 variant="outline"
                 size="sm"
@@ -611,7 +611,7 @@ export default function Team() {
                         {new Date(member.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-4 text-right">
-                        {user?.role === 'admin' && member.id !== user?.id && (
+                        {(user?.role === 'admin' || user?.role === 'organizer') && member.id !== user?.id && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
