@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useState, Suspense, lazy, startTransition } from "react";
+import { Send, CheckCircle, Mail, MousePointer } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatsGrid, StatCard } from "@/components/ui/stats-grid";
 
 // Lazy load the heavy chart component
 const PerformanceChart = lazy(() => import("@/components/analytics/performance-chart"));
@@ -16,23 +20,41 @@ export default function Analytics() {
     });
   };
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["/api/dashboard/stats", { timeframe }],
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
+    queryKey: ["/api/dashboard/stats/", { timeframe }],
     staleTime: 2 * 60 * 1000, // 2 minutes for analytics data
     retry: 3,
   });
 
-  const { data: campaigns } = useQuery({
+  const { data: campaigns, error: campaignsError } = useQuery({
     queryKey: ["/api/campaigns/", { timeframe }],
     staleTime: 5 * 60 * 1000, // 5 minutes for campaign list
     retry: 3,
   });
 
-  const { data: analyticsEvents } = useQuery({
+  const { data: analyticsEvents, error: eventsError } = useQuery({
     queryKey: ["/api/analytics/events/", { timeframe }],
     staleTime: 1 * 60 * 1000, // 1 minute for real-time analytics events
     retry: 3,
   });
+
+  // Show error state if any query failed
+  if (statsError || campaignsError || eventsError) {
+    console.error("Analytics query error:", { statsError, campaignsError, eventsError });
+    return (
+      <div className="p-6">
+        <div className="text-center" data-testid="container-analytics-error">
+          <h2 className="text-xl font-semibold mb-2">Analytics</h2>
+          <p className="text-muted-foreground mb-4">
+            There was an error loading your analytics data. Please try refreshing the page.
+          </p>
+          <Button onClick={() => window.location.reload()} data-testid="button-refresh-analytics-error">
+            Refresh
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (statsLoading) {
     return (
@@ -75,89 +97,59 @@ export default function Analytics() {
       .slice(0, 5);
   };
 
+
   return (
     <div className="p-6 bg-background">
-      {/* Timeframe selector */}
-      <div className="flex justify-end mb-6">
-        <Select value={timeframe} onValueChange={handleTimeframeChange}>
-          <SelectTrigger className="w-48" data-testid="select-timeframe">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
-            <SelectItem value="365">Last year</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <PageHeader
+        title="Analytics"
+        description="Track email campaign performance and engagement metrics"
+      >
+        {/* Timeframe selector */}
+        <div className="flex justify-end">
+          <Select value={timeframe} onValueChange={handleTimeframeChange}>
+            <SelectTrigger className="w-48" data-testid="select-timeframe">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="365">Last year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </PageHeader>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Sent</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-total-sent">
-                  {(stats as any)?.totalSent || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-paper-plane text-blue-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Deliverability</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-deliverability">
-                  {calculateDeliverability().toFixed(1)}%
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-check-circle text-green-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Open Rate</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-open-rate">
-                  {(stats as any)?.openRate ? `${(stats as any).openRate.toFixed(1)}%` : '0%'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-envelope-open text-yellow-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Click Rate</p>
-                <p className="text-3xl font-bold text-foreground" data-testid="text-click-rate">
-                  {(stats as any)?.clickRate ? `${(stats as any).clickRate.toFixed(1)}%` : '0%'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-mouse-pointer text-purple-600 text-xl"></i>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <StatsGrid className="mb-8">
+        <StatCard
+          title="Total Sent"
+          value={(stats as any)?.totalSent || 0}
+          description="Emails delivered"
+          icon={<Send className="h-6 w-6 text-primary" />}
+          testId="stat-total-sent"
+        />
+        <StatCard
+          title="Deliverability"
+          value={`${calculateDeliverability().toFixed(1)}%`}
+          description="Successfully delivered"
+          icon={<CheckCircle className="h-6 w-6 text-green-600" />}
+          testId="stat-deliverability"
+        />
+        <StatCard
+          title="Open Rate"
+          value={(stats as any)?.openRate ? `${(stats as any).openRate.toFixed(1)}%` : '0%'}
+          description="Emails opened"
+          icon={<Mail className="h-6 w-6 text-blue-600" />}
+          testId="stat-open-rate"
+        />
+        <StatCard
+          title="Click Rate"
+          value={(stats as any)?.clickRate ? `${(stats as any).clickRate.toFixed(1)}%` : '0%'}
+          description="Links clicked"
+          icon={<MousePointer className="h-6 w-6 text-purple-600" />}
+          testId="stat-click-rate"
+        />
+      </StatsGrid>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Performance Chart */}
@@ -257,29 +249,29 @@ export default function Analytics() {
               </thead>
               <tbody>
                 {getTopPerformingCampaigns().map((campaign: any) => (
-                  <tr key={campaign.id} className="border-b border-border last:border-0">
+                  <tr key={campaign.id} className="border-b border-border last:border-0" data-testid={`row-top-campaign-${campaign.id}`}>
                     <td className="py-4">
-                      <div className="font-medium text-foreground" data-testid={`text-top-campaign-${campaign.id}`}>
+                      <div className="font-medium text-foreground" data-testid={`text-campaign-name-${campaign.id}`}>
                         {campaign.name}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground" data-testid={`text-campaign-date-${campaign.id}`}>
                         {new Date(campaign.sentAt || campaign.createdAt).toLocaleDateString()}
                       </div>
                     </td>
-                    <td className="py-4 text-foreground">{campaign.totalSent}</td>
-                    <td className="py-4 text-foreground">{campaign.totalOpened}</td>
-                    <td className="py-4 text-foreground">{campaign.totalClicked}</td>
-                    <td className="py-4 text-foreground">
+                    <td className="py-4 text-foreground" data-testid={`text-campaign-sent-${campaign.id}`}>{campaign.totalSent}</td>
+                    <td className="py-4 text-foreground" data-testid={`text-campaign-opened-${campaign.id}`}>{campaign.totalOpened}</td>
+                    <td className="py-4 text-foreground" data-testid={`text-campaign-clicked-${campaign.id}`}>{campaign.totalClicked}</td>
+                    <td className="py-4 text-foreground" data-testid={`text-campaign-open-rate-${campaign.id}`}>
                       {((campaign.totalOpened / campaign.totalSent) * 100).toFixed(1)}%
                     </td>
-                    <td className="py-4 text-foreground">
+                    <td className="py-4 text-foreground" data-testid={`text-campaign-click-rate-${campaign.id}`}>
                       {((campaign.totalClicked / campaign.totalSent) * 100).toFixed(1)}%
                     </td>
                   </tr>
                 ))}
                 {getTopPerformingCampaigns().length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground" data-testid="text-no-campaigns">
                       No campaign data available yet.
                     </td>
                   </tr>
