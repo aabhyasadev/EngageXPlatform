@@ -1,41 +1,21 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatsGrid } from "@/components/ui/stats-grid";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { EmptyState } from "@/components/ui/empty-state";
-import { FormModal } from "@/components/ui/form-modal";
 import DomainVerification from "@/components/domains/domain-verification";
-import { Plus, Settings, Globe, CheckCircle, Clock, XCircle, Eye } from "lucide-react";
-
-const domainSchema = z.object({
-  domain: z.string()
-    .min(1, "Domain is required")
-    .regex(/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/, "Enter a valid domain (e.g., example.com)")
-});
-
-type DomainFormData = z.infer<typeof domainSchema>;
 
 export default function Domains() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<any>(null);
-  
-  const form = useForm<DomainFormData>({
-    resolver: zodResolver(domainSchema),
-    defaultValues: { domain: "" }
-  });
+  const [newDomain, setNewDomain] = useState("");
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -48,8 +28,8 @@ export default function Domains() {
   });
 
   const createDomainMutation = useMutation({
-    mutationFn: async (data: DomainFormData) => {
-      const response = await apiRequest("POST", "/api/domains/", data);
+    mutationFn: async (domain: string) => {
+      const response = await apiRequest("POST", "/api/domains/", { domain });
       return response.json();
     },
     onSuccess: () => {
@@ -59,7 +39,7 @@ export default function Domains() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/domains/"] });
       setShowAddModal(false);
-      form.reset();
+      setNewDomain("");
     },
     onError: (error) => {
       toast({
@@ -91,17 +71,35 @@ export default function Domains() {
     },
   });
 
-  const getStatusIcon = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'verified': return CheckCircle;
-      case 'pending': return Clock;
-      case 'failed': return XCircle;
-      default: return Eye;
+      case 'verified': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const onSubmit = (data: DomainFormData) => {
-    createDomainMutation.mutate(data);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'verified': return 'fas fa-check-circle text-green-600';
+      case 'pending': return 'fas fa-clock text-yellow-600';
+      case 'failed': return 'fas fa-times-circle text-red-600';
+      default: return 'fas fa-question-circle text-gray-600';
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDomain) {
+      toast({
+        title: "Validation Error",
+        description: "Domain is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    createDomainMutation.mutate(newDomain);
   };
 
   const handleShowVerification = (domain: any) => {
@@ -119,7 +117,7 @@ export default function Domains() {
           <p className="text-muted-foreground mb-4">
             There was an error loading your domains. Please try refreshing the page.
           </p>
-          <Button onClick={() => window.location.reload()} data-testid="button-refresh-error">Refresh</Button>
+          <Button onClick={() => window.location.reload()}>Refresh</Button>
         </div>
       </div>
     );
@@ -140,50 +138,51 @@ export default function Domains() {
     );
   }
 
-  const stats = [
-    {
-      id: "total-domains",
-      label: "Total Domains",
-      value: (domains as any)?.length || 0,
-      subtext: "All configured domains"
-    },
-    {
-      id: "verified-domains", 
-      label: "Verified",
-      value: (domains as any)?.filter((d: any) => d.status === 'verified').length || 0,
-      subtext: "Ready for sending",
-      variant: "success" as const
-    },
-    {
-      id: "pending-domains",
-      label: "Pending", 
-      value: (domains as any)?.filter((d: any) => d.status === 'pending').length || 0,
-      subtext: "Awaiting verification",
-      variant: "warning" as const
-    },
-    {
-      id: "failed-domains",
-      label: "Failed",
-      value: (domains as any)?.filter((d: any) => d.status === 'failed').length || 0, 
-      subtext: "Verification failed",
-      variant: "error" as const
-    }
-  ];
-
   return (
     <div className="p-6 bg-background">
-      <PageHeader
-        title="Domain Management"
-        description="Configure and verify your domains for email sending"
-        primaryAction={{
-          label: "Add Domain",
-          onClick: () => setShowAddModal(true),
-          icon: <Plus className="h-4 w-4" />,
-          testId: "button-add-domain"
-        }}
-      />
+      {/* Action button */}
+      <div className="flex justify-end mb-6">
+        <Button onClick={() => setShowAddModal(true)} data-testid="button-add-domain">
+          <i className="fas fa-plus mr-2"></i>
+          Add Domain
+        </Button>
+      </div>
 
-      <StatsGrid stats={stats} className="mb-6" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-foreground" data-testid="text-total-domains">
+              {(domains as any)?.length || 0}
+            </div>
+            <p className="text-sm text-muted-foreground">Total Domains</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600" data-testid="text-verified-domains">
+              {(domains as any)?.filter((d: any) => d.status === 'verified').length || 0}
+            </div>
+            <p className="text-sm text-muted-foreground">Verified</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-yellow-600" data-testid="text-pending-domains">
+              {(domains as any)?.filter((d: any) => d.status === 'pending').length || 0}
+            </div>
+            <p className="text-sm text-muted-foreground">Pending</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-red-600" data-testid="text-failed-domains">
+              {(domains as any)?.filter((d: any) => d.status === 'failed').length || 0}
+            </div>
+            <p className="text-sm text-muted-foreground">Failed</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Setup Instructions */}
       <Card className="mb-6">
@@ -197,28 +196,28 @@ export default function Domains() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Plus className="h-6 w-6 text-blue-600" />
+                <i className="fas fa-plus text-blue-600"></i>
               </div>
               <h4 className="font-semibold mb-2">1. Add Domain</h4>
               <p className="text-sm text-muted-foreground">Add your sending domain to get DNS records</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Settings className="h-6 w-6 text-purple-600" />
+                <i className="fas fa-cog text-purple-600"></i>
               </div>
               <h4 className="font-semibold mb-2">2. Configure DNS</h4>
               <p className="text-sm text-muted-foreground">Add DKIM, DMARC, and SPF records to your DNS</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <i className="fas fa-check text-green-600"></i>
               </div>
               <h4 className="font-semibold mb-2">3. Verify Domain</h4>
               <p className="text-sm text-muted-foreground">Click verify to check DNS configuration</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Globe className="h-6 w-6 text-yellow-600" />
+                <i className="fas fa-paper-plane text-yellow-600"></i>
               </div>
               <h4 className="font-semibold mb-2">4. Start Sending</h4>
               <p className="text-sm text-muted-foreground">Use your verified domain in campaigns</p>
@@ -238,13 +237,12 @@ export default function Domains() {
                     <h3 className="text-lg font-semibold text-foreground" data-testid={`text-domain-name-${domain.id}`}>
                       {domain.domain}
                     </h3>
-                    <StatusBadge status={domain.status} />
+                    <Badge className={getStatusColor(domain.status)}>
+                      {domain.status}
+                    </Badge>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    {(() => {
-                      const IconComponent = getStatusIcon(domain.status);
-                      return <IconComponent className="h-4 w-4" />;
-                    })()}
+                    <i className={getStatusIcon(domain.status)}></i>
                     <span>
                       {domain.status === 'verified' && domain.verifiedAt && 
                         `Verified on ${new Date(domain.verifiedAt).toLocaleDateString()}`
@@ -260,7 +258,7 @@ export default function Domains() {
                     onClick={() => handleShowVerification(domain)}
                     data-testid={`button-view-records-${domain.id}`}
                   >
-                    <Settings className="h-4 w-4 mr-2" />
+                    <i className="fas fa-cog mr-2"></i>
                     DNS Records
                   </Button>
                   {domain.status !== 'verified' && (
@@ -279,17 +277,21 @@ export default function Domains() {
         ))}
 
         {(!domains || (domains as any).length === 0) && (
-          <EmptyState
-            icon={Globe}
-            title="No domains configured"
-            description="Add your first domain to start sending verified emails"
-            action={
-              <Button onClick={() => setShowAddModal(true)} data-testid="button-empty-add-domain">
-                <Plus className="h-4 w-4 mr-2" />
+          <Card>
+            <CardContent className="p-12 text-center">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-globe text-2xl text-muted-foreground"></i>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No domains configured</h3>
+              <p className="text-muted-foreground mb-4">
+                Add your first domain to start sending verified emails
+              </p>
+              <Button onClick={() => setShowAddModal(true)}>
+                <i className="fas fa-plus mr-2"></i>
                 Add Your First Domain
               </Button>
-            }
-          />
+            </CardContent>
+          </Card>
         )}
       </div>
 
@@ -299,38 +301,31 @@ export default function Domains() {
           <DialogHeader>
             <DialogTitle>Add New Domain</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="domain"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Domain Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="example.com"
-                        data-testid="input-domain"
-                        {...field}
-                      />
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      Enter your domain without 'https://' or 'www.'
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="domain">Domain Name *</Label>
+              <Input
+                id="domain"
+                type="text"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                placeholder="example.com"
+                required
+                data-testid="input-domain-name"
               />
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setShowAddModal(false)} data-testid="button-cancel-add-domain">
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createDomainMutation.isPending} data-testid="button-submit-domain">
-                  {createDomainMutation.isPending ? "Adding..." : "Add Domain"}
-                </Button>
-              </div>
-            </form>
-          </Form>
+              <p className="text-sm text-muted-foreground mt-1">
+                Enter your domain without 'https://' or 'www.'
+              </p>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createDomainMutation.isPending} data-testid="button-save-domain">
+                {createDomainMutation.isPending ? "Adding..." : "Add Domain"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 

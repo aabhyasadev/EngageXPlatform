@@ -152,7 +152,7 @@ export default function SignInPage() {
           setCurrentStep(3);
         } else {
           // Login successful - invalidate auth cache and redirect to home
-          queryClient.invalidateQueries({ queryKey: ["/api/auth/user/"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
           toast({ title: "Login successful", description: "Welcome back!" });
           navigate("/");
         }
