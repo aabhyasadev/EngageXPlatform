@@ -969,9 +969,9 @@ def send_invitation_email(invitation, request=None):
         )
         
         logger.info(f"Invitation email sent successfully to {invitation.email}")
-        return sent == 1
+        return sent == 1, None
 
     except Exception as e:
         error_msg = f"Failed to send invitation email: {str(e)}"
         logger.error(error_msg)
-        return False
+        return False, error_msg
