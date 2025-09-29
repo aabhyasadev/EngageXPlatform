@@ -327,7 +327,7 @@ export default function InvitationPage() {
               disabled={acceptMutation.isPending || invitation?.is_expired}
               data-testid="button-accept-invitation"
             >
-              {acceptMutation.isPending ? "Accepting..." : "Accept Invitation"}
+              {acceptMutation.isPending ? "Processing..." : "Accept Invitation"}
             </Button>
             <Button 
               onClick={handleDecline}
@@ -376,9 +376,19 @@ export default function InvitationPage() {
       <Dialog open={showProfileSetup} onOpenChange={setShowProfileSetup}>
         <DialogContent data-testid="modal-profile-setup" className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Complete Your Profile</DialogTitle>
-            <DialogDescription>
-              Since this is your first time joining EngageX, please set up your profile and create a password.
+            <DialogTitle>Create Your EngageX Account</DialogTitle>
+            <DialogDescription className="space-y-2">
+              <p>Welcome to EngageX! Since this is your first time, we'll create a complete account for you.</p>
+              <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800 mt-2">
+                <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                  🎉 You'll receive:
+                </p>
+                <ul className="text-xs text-blue-700 dark:text-blue-300 mt-1 space-y-1">
+                  <li>• Your own organization with 14-day free trial</li>
+                  <li>• Access to {invitation?.organization_name} as {invitation?.role_display}</li>
+                  <li>• Welcome email with login details</li>
+                </ul>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <Form {...profileForm}>
@@ -471,7 +481,7 @@ export default function InvitationPage() {
                   className="flex-1"
                   data-testid="button-complete-profile"
                 >
-                  {acceptMutation.isPending ? "Setting up..." : "Complete & Join"}
+                  {acceptMutation.isPending ? "Creating account..." : "Create Account & Join"}
                 </Button>
               </div>
             </form>
