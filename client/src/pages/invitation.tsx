@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,6 +25,7 @@ export default function InvitationPage() {
   const [showModal, setShowModal] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const token = params?.token;
 
@@ -45,24 +46,33 @@ export default function InvitationPage() {
   // Mutation to accept invitation
   const acceptMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/invitations/${token}/accept/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to accept invitation');
-      }
+      const response = await apiRequest('POST', `/api/invitations/${token}/accept/`);
       return response.json();
     },
     onSuccess: (data) => {
       setAccepted(true);
+      
+      // Show success toast
       toast({
         title: "Invitation Accepted!",
         description: `Welcome to ${data.organization}! You can now sign in to access your account.`,
       });
+
+      // Invalidate relevant queries to update UI for all users in the organization
+      // This ensures the team page shows the new member immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/users/'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/invitations/'] });
+      
+      // Invalidate notifications to update the notification dropdown
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/notifications'] });
+      
+      // Show a secondary toast for team members who might be viewing the team page
+      setTimeout(() => {
+        toast({
+          title: "Team Updated",
+          description: "A new member has joined your organization!",
+        });
+      }, 1000);
     },
     onError: (error: Error) => {
       toast({
@@ -76,15 +86,7 @@ export default function InvitationPage() {
   // Mutation to decline invitation
   const declineMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/invitations/${token}/decline/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to decline invitation');
-      }
+      const response = await apiRequest('POST', `/api/invitations/${token}/decline/`);
       return response.json();
     },
     onSuccess: () => {
@@ -92,6 +94,11 @@ export default function InvitationPage() {
         title: "Invitation Declined",
         description: "You have declined the invitation.",
       });
+      
+      // Invalidate invitation queries to update any pending invitations lists
+      queryClient.invalidateQueries({ queryKey: ['/api/invitations/'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/notifications'] });
+      
       // Redirect to landing page after a short delay
       setTimeout(() => {
         window.location.href = '/';

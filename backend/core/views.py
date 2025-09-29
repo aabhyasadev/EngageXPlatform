@@ -380,6 +380,18 @@ class InvitationViewSet(viewsets.ModelViewSet):
             from .notifications import send_invitation_accepted_notification
             notification_sent = send_invitation_accepted_notification(invitation)
             
+            # Mark any related "invitation received" notifications as read for the accepting user
+            # This ensures their notification dropdown is cleaned up
+            if user:
+                from .models import SubscriptionNotification, NotificationType
+                related_notifications = SubscriptionNotification.objects.filter(
+                    user=user,
+                    notification_type=NotificationType.TEAM_INVITATION_RECEIVED,
+                    metadata__icontains=str(invitation.id),
+                    is_read=False
+                )
+                related_notifications.update(is_read=True)
+            
             # Return user data for frontend
             user_serializer = UserSerializer(user)
             return Response({
