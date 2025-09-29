@@ -386,10 +386,14 @@ class OrganizationMembership(models.Model):
     # Organization-scoped authentication credentials
     credential_username = models.CharField(
         max_length=150, 
+        null=True,
+        blank=True,
         help_text="Username for this organization (isolated per org)"
     )
     credential_password_hash = models.CharField(
         max_length=128,
+        null=True,
+        blank=True,
         help_text="Password hash for this organization"
     )
     requires_password_change = models.BooleanField(
