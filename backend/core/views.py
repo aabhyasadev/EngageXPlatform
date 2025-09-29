@@ -148,19 +148,45 @@ class UserViewSet(viewsets.ModelViewSet):
             expires_at=timezone.now() + timedelta(days=7)
         )
 
+        # Check if the invited email belongs to an existing user (platform-wide)
+        from .notifications import send_team_invitation_notification
+        existing_user = None
+        try:
+            existing_user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            existing_user = None
+        
+        # Send in-app notification to existing user
+        notification_sent = False
+        if existing_user:
+            notification_sent = send_team_invitation_notification(invitation, existing_user)
+        
         # Send invitation email
         email_sent = send_invitation_email(invitation)
         
-        if not email_sent:
+        # Determine response message based on notification and email status
+        message_parts = []
+        if existing_user and notification_sent:
+            message_parts.append(f'In-app notification sent to {email}')
+        
+        if email_sent:
+            message_parts.append(f'Email invitation sent to {email}')
+        elif not email_sent:
+            message_parts.append('Email could not be sent due to configuration issue')
+        
+        if not email_sent and not notification_sent:
             return Response({
                 'message': f'Invitation created successfully for {email}',
-                'warning': 'Email could not be sent due to configuration issue',
+                'warning': 'Neither email nor notification could be sent',
                 'invitation_id': invitation.id
             }, status=status.HTTP_201_CREATED)
 
         return Response({
-            'message': f'Invitation sent to {email}',
-            'invitation_id': invitation.id
+            'message': ' and '.join(message_parts) if message_parts else f'Invitation created for {email}',
+            'invitation_id': invitation.id,
+            'existing_user': existing_user is not None,
+            'notification_sent': notification_sent,
+            'email_sent': email_sent
         }, status=status.HTTP_201_CREATED)
 
 
