@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.hashers import make_password, check_password
 from django.core.validators import EmailValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -352,7 +353,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class OrganizationMembership(models.Model):
-    """Connects users to organizations with specific roles"""
+    """Connects users to organizations with specific roles and organization-scoped credentials"""
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
         User,
@@ -381,20 +382,90 @@ class OrganizationMembership(models.Model):
         blank=True,
         related_name='invited_memberships'
     )
+    
+    # Organization-scoped authentication credentials
+    credential_username = models.CharField(
+        max_length=150, 
+        help_text="Username for this organization (isolated per org)"
+    )
+    credential_password_hash = models.CharField(
+        max_length=128,
+        help_text="Password hash for this organization"
+    )
+    requires_password_change = models.BooleanField(
+        default=True,
+        help_text="Forces password change on next login"
+    )
+    
+    # Login security fields
+    login_attempts = models.IntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+    
+    # MFA fields
+    mfa_enabled = models.BooleanField(default=False)
+    mfa_secret = models.CharField(max_length=32, null=True, blank=True)
+    
+    # Timestamps
     joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'organization_memberships'
         unique_together = ['user', 'organization']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization', 'credential_username'],
+                name='unique_org_username'
+            ),
+        ]
         indexes = [
             models.Index(fields=['user', 'status']),
             models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'credential_username']),
             models.Index(fields=['role']),
         ]
     
+    def set_password(self, raw_password):
+        """Set the password for this organization membership"""
+        self.credential_password_hash = make_password(raw_password)
+        
+    def check_password(self, raw_password):
+        """Check if the given password matches"""
+        return check_password(raw_password, self.credential_password_hash)
+    
+    def is_locked(self):
+        """Check if account is currently locked"""
+        if self.locked_until:
+            return timezone.now() < self.locked_until
+        return False
+    
+    def lock_account(self, minutes=30):
+        """Lock account for specified minutes"""
+        self.locked_until = timezone.now() + timedelta(minutes=minutes)
+        self.save(update_fields=['locked_until'])
+    
+    def unlock_account(self):
+        """Unlock account and reset login attempts"""
+        self.locked_until = None
+        self.login_attempts = 0
+        self.save(update_fields=['locked_until', 'login_attempts'])
+    
+    def record_login_attempt(self, success=False):
+        """Record login attempt and handle locking"""
+        if success:
+            self.login_attempts = 0
+            self.last_login_at = timezone.now()
+            self.save(update_fields=['login_attempts', 'last_login_at'])
+        else:
+            self.login_attempts += 1
+            if self.login_attempts >= 5:  # Lock after 5 failed attempts
+                self.lock_account()
+            else:
+                self.save(update_fields=['login_attempts'])
+    
     def __str__(self):
-        return f"{self.user.email} - {self.organization.name} ({self.role})"
+        return f"{self.credential_username}@{self.organization.name} ({self.role})"
 
 
 class Invitation(models.Model):
