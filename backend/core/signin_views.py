@@ -69,18 +69,14 @@ def organization_login(request):
         # Password is correct - record successful login
         membership.record_login_attempt(success=True)
         
-        # Set session data for organization-scoped access
-        request.session['current_organization_id'] = str(organization.id)
-        request.session['current_membership_id'] = str(membership.id)
-        request.session['current_user_id'] = str(membership.user.id)
-        
-        # Log in the underlying Django user for DRF compatibility
-        login(request, membership.user)
-        
         # Check if password change is required
         if membership.requires_password_change:
+            # Store pending authentication data (DO NOT LOGIN YET)
+            request.session['pending_auth_membership_id'] = str(membership.id)
+            request.session['pending_auth_organization_id'] = str(organization.id)
+            request.session['pending_auth_user_id'] = str(membership.user.id)
             return Response({
-                'message': 'Login successful',
+                'message': 'Password change required',
                 'requires_password_change': True,
                 'organization': organization.name,
                 'user': {
@@ -94,11 +90,23 @@ def organization_login(request):
         
         # Check if MFA is enabled
         if membership.mfa_enabled:
+            # Store pending authentication data (DO NOT LOGIN YET)
+            request.session['pending_auth_membership_id'] = str(membership.id)
+            request.session['pending_auth_organization_id'] = str(organization.id)
+            request.session['pending_auth_user_id'] = str(membership.user.id)
             return Response({
                 'message': 'MFA verification required',
                 'requires_mfa': True,
                 'organization': organization.name
             })
+        
+        # No additional verification needed - complete login now
+        request.session['current_organization_id'] = str(organization.id)
+        request.session['current_membership_id'] = str(membership.id)
+        request.session['current_user_id'] = str(membership.user.id)
+        
+        # Log in the underlying Django user for DRF compatibility
+        login(request, membership.user)
         
         # Full login success
         return Response({
