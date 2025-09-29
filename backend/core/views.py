@@ -263,12 +263,17 @@ class InvitationViewSet(viewsets.ModelViewSet):
             invitation.accepted_at = timezone.now()
             invitation.save()
             
+            # Send notification to the inviter about acceptance
+            from .notifications import send_invitation_accepted_notification
+            notification_sent = send_invitation_accepted_notification(invitation)
+            
             # Return user data for frontend
             user_serializer = UserSerializer(user)
             return Response({
                 'message': 'Invitation accepted successfully',
                 'user': user_serializer.data,
-                'organization': invitation.organization.name
+                'organization': invitation.organization.name,
+                'inviter_notified': notification_sent
             }, status=status.HTTP_200_OK)
             
         except Invitation.DoesNotExist:
