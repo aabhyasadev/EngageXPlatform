@@ -238,24 +238,39 @@ class InvitationViewSet(viewsets.ModelViewSet):
                     'error': 'Invitation has expired'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
+            from .models import OrganizationMembership, MembershipStatus
+            
             # Check if user already exists
             existing_user = User.objects.filter(email=invitation.email).first()
             
             if existing_user:
-                # If user exists but not in this organization, add them
-                if existing_user.organization != invitation.organization:
-                    existing_user.organization = invitation.organization
-                    existing_user.role = invitation.role
-                    existing_user.save()
-                
                 user = existing_user
             else:
-                # Create new user
+                # Create new user without organization assignment
                 user = User.objects.create_user(
                     email=invitation.email,
+                    is_active=True
+                )
+            
+            # Check if membership already exists (shouldn't happen but safety check)
+            existing_membership = OrganizationMembership.objects.filter(
+                user=user,
+                organization=invitation.organization
+            ).first()
+            
+            if existing_membership:
+                # Update existing membership
+                existing_membership.role = invitation.role
+                existing_membership.status = MembershipStatus.ACTIVE
+                existing_membership.save()
+            else:
+                # Create new membership
+                OrganizationMembership.objects.create(
+                    user=user,
                     organization=invitation.organization,
                     role=invitation.role,
-                    is_active=True
+                    status=MembershipStatus.ACTIVE,
+                    invited_by=invitation.invited_by
                 )
             
             # Mark invitation as accepted
