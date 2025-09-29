@@ -274,22 +274,48 @@ class ContactViewSet(BaseOrganizationViewSet):
         serializer = ContactImportSerializer(data=request.data)
         if serializer.is_valid():
             file = serializer.validated_data['file']
+            content = None  # Initialize content to prevent UnboundLocalError
             
-            # Read file content
+            # Validate file type and read content
             if file.name.lower().endswith('.csv'):
-                content = file.read().decode('utf-8')
+                try:
+                    content = file.read().decode('utf-8')
+                except UnicodeDecodeError:
+                    return Response({
+                        'error': 'Invalid CSV file encoding. Please use UTF-8.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             elif file.name.lower().endswith('.xlsx'):
-                workbook = openpyxl.load_workbook(file)
-                sheet = workbook.active
-                
-                # Convert Excel to CSV format
-                output = io.StringIO()
-                writer = csv.writer(output)
-                
-                for row in sheet.iter_rows(values_only=True):
-                    writer.writerow(row)
-                
-                content = output.getvalue()
+                try:
+                    workbook = openpyxl.load_workbook(file)
+                    sheet = workbook.active
+                    
+                    if not sheet:
+                        return Response({
+                            'error': 'Excel file has no active worksheet.'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # Convert Excel to CSV format
+                    output = io.StringIO()
+                    writer = csv.writer(output)
+                    
+                    for row in sheet.iter_rows(values_only=True):
+                        if row:  # Skip empty rows
+                            writer.writerow(row)
+                    
+                    content = output.getvalue()
+                except Exception as e:
+                    return Response({
+                        'error': f'Error reading Excel file: {str(e)}'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({
+                    'error': 'Unsupported file format. Please upload .csv or .xlsx files only.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not content:
+                return Response({
+                    'error': 'File is empty or could not be read.'
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             # Start background task
             task = import_contacts_from_csv.delay(
@@ -314,15 +340,34 @@ class ContactViewSet(BaseOrganizationViewSet):
         contact_ids = request.data.get('contact_ids', [])
         update_data = request.data.get('data', {})
         
+        # Security: Whitelist allowed fields to prevent unauthorized updates
+        allowed_fields = {
+            'first_name', 'last_name', 'phone', 'language', 
+            'is_subscribed', 'tags', 'company', 'position'
+        }
+        
+        # Filter update_data to only include allowed fields
+        filtered_update_data = {
+            key: value for key, value in update_data.items() 
+            if key in allowed_fields
+        }
+        
+        if not filtered_update_data:
+            return Response({
+                'error': 'No valid fields to update',
+                'allowed_fields': list(allowed_fields)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         contacts = Contact.objects.filter(
             id__in=contact_ids,
             organization=self.request.user.organization
         )
         
-        updated_count = contacts.update(**update_data)
+        updated_count = contacts.update(**filtered_update_data)
         
         return Response({
-            'message': f'Updated {updated_count} contacts'
+            'message': f'Updated {updated_count} contacts',
+            'updated_fields': list(filtered_update_data.keys())
         })
 
     @action(detail=False, methods=['get'])
