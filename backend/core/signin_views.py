@@ -75,7 +75,8 @@ def validate_organization_email(request):
         request.session['signin_organization_id'] = organization_id
         request.session['signin_email'] = email
         request.session['signin_user_id'] = str(user.id)
-        request.session['signin_membership_id'] = str(membership.id)
+        if membership:
+            request.session['signin_membership_id'] = str(membership.id)
         
         return Response({
             'message': 'Validation successful - please proceed to next step',
@@ -155,8 +156,7 @@ def authenticate_credentials(request):
                 })
             else:
                 # Login user directly if no additional verification needed
-                user.backend = 'django.contrib.auth.backends.ModelBackend'
-                login(request, user)
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 
                 # Get membership information for the response
                 from .models import OrganizationMembership
@@ -235,8 +235,7 @@ def verify_mfa_otp_sso(request):
         # Simple verification - accept any 6-digit code for demo
         if verification_code.isdigit() and len(verification_code) == 6:
             # Login user after successful verification
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             
             # Get membership information for the response
             from .models import OrganizationMembership
