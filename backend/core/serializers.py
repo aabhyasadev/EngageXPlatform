@@ -24,34 +24,52 @@ class UserSerializer(serializers.ModelSerializer):
     organization = OrganizationSerializer(read_only=True)
     full_name = serializers.ReadOnlyField()
     role = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()  # Organization-scoped activity status
+    membership_status = serializers.SerializerMethodField()  # Explicit membership status
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'profile_image_url',
-            'organization', 'role', 'is_active', 'created_at', 'updated_at',
-            'full_name'
+            'organization', 'role', 'is_active', 'membership_status', 
+            'created_at', 'updated_at', 'full_name'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
-    def get_role(self, obj):
-        """Get the user's role in the current organization context"""
+    def _get_membership(self, obj):
+        """Helper method to get organization membership"""
         request = self.context.get('request')
         if not request:
-            return obj.role
+            return None
         
         current_organization_id = request.session.get('current_organization_id')
         if not current_organization_id:
-            return obj.role
+            return None
         
-        from .models import OrganizationMembership, MembershipStatus
-        membership = OrganizationMembership.objects.filter(
+        from .models import OrganizationMembership
+        return OrganizationMembership.objects.filter(
             user=obj,
-            organization_id=current_organization_id,
-            status=MembershipStatus.ACTIVE
+            organization_id=current_organization_id
         ).first()
-        
+
+    def get_role(self, obj):
+        """Get the user's role in the current organization context"""
+        membership = self._get_membership(obj)
         return membership.role if membership else obj.role
+
+    def get_is_active(self, obj):
+        """Get organization-scoped activity status (NOT global User.is_active)"""
+        membership = self._get_membership(obj)
+        if not membership:
+            return False
+        
+        from .models import MembershipStatus
+        return membership.status == MembershipStatus.ACTIVE
+
+    def get_membership_status(self, obj):
+        """Get explicit membership status for clarity"""
+        membership = self._get_membership(obj)
+        return membership.status if membership else 'none'
 
 
 class InvitationSerializer(serializers.ModelSerializer):
