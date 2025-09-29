@@ -43,6 +43,19 @@ type TeamMember = {
   full_name: string;
 };
 
+type PendingInvitation = {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+  organization_name: string;
+  invited_by_name: string;
+  role_display: string;
+  is_expired: boolean;
+};
+
 type PaginatedResponse<T> = {
   count: number;
   next: string | null;
@@ -74,6 +87,12 @@ export default function Team() {
     retry: 3,
   });
 
+  const { data: pendingInvitationsResponse, isLoading: isLoadingInvitations } = useQuery<PaginatedResponse<PendingInvitation>>({
+    queryKey: ["/api/invitations/"],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 3,
+  });
+
   const inviteUserMutation = useMutation({
     mutationFn: async (userData: InviteFormData) => {
       const response = await apiRequest("POST", "/api/users/", {
@@ -88,6 +107,7 @@ export default function Team() {
         description: "Team member invited successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invitations/"] });
       setShowInviteModal(false);
       form.reset();
     },
@@ -212,17 +232,18 @@ export default function Team() {
   };
 
 
-  // Extract members from paginated response
+  // Extract members and pending invitations from paginated responses
   const members = teamMembersResponse?.results || [];
+  const pendingInvitations = pendingInvitationsResponse?.results?.filter(inv => inv.status === 'pending' && !inv.is_expired) || [];
 
-  // Calculate statistics
-  const totalMembers = members.length;
-  const adminCount = members.filter(m => m.role === 'admin').length;
-  const managerCount = members.filter(m => m.role === 'campaign_manager').length;
-  const activeCount = members.filter(m => m.is_active).length;
+  // Calculate statistics including pending invitations
+  const totalMembers = members.length + pendingInvitations.length;
+  const adminCount = members.filter(m => m.role === 'admin').length + pendingInvitations.filter(inv => inv.role === 'admin').length;
+  const managerCount = members.filter(m => m.role === 'campaign_manager').length + pendingInvitations.filter(inv => inv.role === 'campaign_manager').length;
+  const activeCount = members.filter(m => m.is_active).length; // Only count active existing members
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || isLoadingInvitations) {
     return (
       <div className="p-6 space-y-8">
         <div className="animate-pulse space-y-6">
@@ -403,7 +424,7 @@ export default function Team() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {members.length === 0 ? (
+          {members.length === 0 && pendingInvitations.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">No team members yet</h3>
@@ -430,6 +451,7 @@ export default function Team() {
                   </tr>
                 </thead>
                 <tbody>
+                  {/* Existing team members */}
                   {members.map((member) => (
                     <tr key={member.id} className="border-b border-border last:border-0" data-testid={`row-member-${member.id}`}>
                       <td className="py-4">
@@ -505,6 +527,45 @@ export default function Team() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {/* Pending invitations */}
+                  {pendingInvitations.map((invitation) => (
+                    <tr key={`invitation-${invitation.id}`} className="border-b border-border last:border-0 bg-orange-50 dark:bg-orange-950/20" data-testid={`row-invitation-${invitation.id}`}>
+                      <td className="py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center">
+                            <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-foreground" data-testid={`text-invitation-email-${invitation.id}`}>
+                              {invitation.email}
+                            </div>
+                            <div className="text-sm text-orange-600 dark:text-orange-400" data-testid={`text-invitation-status-${invitation.id}`}>
+                              Invitation pending
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4">
+                        <Badge className={getRoleColor(invitation.role)} data-testid={`badge-invitation-role-${invitation.id}`}>
+                          {invitation.role_display}
+                        </Badge>
+                      </td>
+                      <td className="py-4">
+                        <Badge variant="outline" className="text-orange-600 border-orange-600" data-testid={`badge-invitation-status-${invitation.id}`}>
+                          Pending
+                        </Badge>
+                      </td>
+                      <td className="py-4 text-muted-foreground" data-testid={`text-invitation-sent-date-${invitation.id}`}>
+                        Invited {new Date(invitation.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 text-right">
+                        <div className="text-xs text-muted-foreground">
+                          Expires {new Date(invitation.expires_at).toLocaleDateString()}
+                        </div>
                       </td>
                     </tr>
                   ))}
