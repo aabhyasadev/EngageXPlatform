@@ -25,8 +25,12 @@ def validate_organization_email(request):
     """
     Step 1: Validate Organization ID and Email
     """
+    logger.info(f"validate_organization_email called with data: {request.data}")
+    
     organization_id = request.data.get('organization_id', '').strip()
     email = request.data.get('email', '').lower().strip()
+    
+    logger.info(f"Parsed - Organization ID: {organization_id}, Email: {email}")
     
     if not organization_id or not email:
         return Response({
@@ -37,19 +41,48 @@ def validate_organization_email(request):
         from .models import OrganizationMembership, MembershipStatus
         
         # Validate organization exists
+        logger.info(f"Looking up organization: {organization_id}")
         organization = Organization.objects.get(id=organization_id)
+        logger.info(f"Organization found: {organization.name}")
         
         # Find user by email regardless of organization
+        logger.info(f"Looking up user: {email}")
         user = User.objects.get(email=email)
+        logger.info(f"User found: {user.username}, organization_id: {user.organization_id}")
         
-        # Check if user has active membership in this organization
+        # Check for user access to organization using both old and new patterns
+        membership = None
+        has_access = False
+        
+        # First check if user has active membership (new multi-org pattern)
+        logger.info("Checking for active membership...")
         membership = OrganizationMembership.objects.filter(
             user=user,
             organization=organization,
             status=MembershipStatus.ACTIVE
         ).first()
         
-        if not membership:
+        if membership:
+            logger.info(f"Active membership found: {membership.id}, role: {membership.role}")
+            has_access = True
+        else:
+            logger.info("No active membership found, checking old pattern...")
+            # Fallback to old pattern: user.organization matches
+            if user.organization and user.organization.id == organization.id:
+                logger.info("Old pattern match found, creating membership...")
+                has_access = True
+                # Create membership record for future use (migration)
+                membership = OrganizationMembership.objects.create(
+                    user=user,
+                    organization=organization,
+                    role=user.role,
+                    status=MembershipStatus.ACTIVE
+                )
+            else:
+                logger.info(f"No access - user.organization: {user.organization_id}, target: {organization.id}")
+        
+        if not has_access:
+            logger.info("Access denied - raising User.DoesNotExist")
             # User exists but not in this organization
             raise User.DoesNotExist()
         
@@ -78,6 +111,10 @@ def authenticate_credentials(request):
     """
     Step 2: Authenticate with Username and Password
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"authenticate_credentials called with data: {request.data}")
+    
     username = request.data.get('username', '').strip()
     password = request.data.get('password', '')
     
@@ -110,13 +147,22 @@ def authenticate_credentials(request):
         
         # Authenticate user - support both username and email-based login
         # Check if provided username matches either the user's username or email
+        logger.info(f"User found - email: {user.email}, username: {user.username}, provided username: {username}")
+        
         is_valid_credential = False
         if user.username and user.username == username:
+            logger.info("Username matches user.username")
             is_valid_credential = True
         elif not user.username and user.email == username:
-            # Fallback for users without username - allow email as username
+            logger.info("Username matches user.email (fallback)")
             is_valid_credential = True
         
+        logger.info(f"Is valid credential: {is_valid_credential}")
+        
+        if is_valid_credential:
+            password_check = user.check_password(password)
+            logger.info(f"Password check result: {password_check}")
+            
         if is_valid_credential and user.check_password(password):
             # Reset login attempts on successful login
             user.login_attempts = 0
