@@ -169,8 +169,8 @@ export default function InvitationPage() {
   };
 
   const confirmAccept = () => {
-    // For existing users, accept directly
-    acceptMutation.mutate();
+    // For existing users, accept directly (no profile data needed)
+    acceptMutation.mutate(undefined);
   };
 
   const handleProfileSubmit = (data: ProfileSetupData) => {
