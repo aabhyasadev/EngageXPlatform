@@ -398,14 +398,32 @@ class InvitationViewSet(viewsets.ModelViewSet):
                         'error': 'Password must be at least 8 characters long'
                     }, status=status.HTTP_400_BAD_REQUEST)
                 
-                # Create new user with complete profile
+                # Create new organization for the new user
+                from datetime import timedelta
+                from .models import SubscriptionPlan, UserRole
+                
+                new_organization = Organization.objects.create(
+                    name=f"{first_name} {last_name}'s Organization",
+                    subscription_plan=SubscriptionPlan.FREE_TRIAL,
+                    trial_ends_at=timezone.now() + timedelta(days=14),  # 14-day trial
+                    industry='Not specified',  # Default value
+                    employees_range='1-10',  # Default value
+                    contacts_range='0-1000'  # Default value
+                )
+                
+                # Create new user with complete profile and their own organization
                 user = User.objects.create_user(
                     email=invitation.email,
                     first_name=first_name,
                     last_name=last_name,
                     password=password,
+                    organization=new_organization,  # Assign to their new organization
+                    role=UserRole.ORGANIZER,  # They become the organizer of their own org
                     is_active=True
                 )
+                
+                # Send welcome/confirmation email to the new user
+                self._send_new_user_confirmation_email(user, new_organization)
             
             # Check if membership already exists (shouldn't happen but safety check)
             existing_membership = OrganizationMembership.objects.filter(
@@ -480,6 +498,75 @@ class InvitationViewSet(viewsets.ModelViewSet):
             return Response({
                 'error': 'Invalid invitation token'
             }, status=status.HTTP_404_NOT_FOUND)
+    
+    def _send_new_user_confirmation_email(self, user, organization):
+        """Send confirmation email to new users who created an account via invitation"""
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
+        try:
+            first_name = user.first_name or 'New User'
+            
+            html_message = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #007bff;">Welcome to EngageX, {first_name}! 🎉</h2>
+                <p style="font-size: 16px; color: #333;">
+                    Your account has been successfully created after accepting an invitation, and you're all set to start your email marketing journey!
+                </p>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #333; margin-top: 0;">Your Account Details:</h3>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> {user.email}</p>
+                    <p style="margin: 5px 0;"><strong>Your Organization:</strong> {organization.name}</p>
+                    <p style="margin: 5px 0;"><strong>Organization ID:</strong> {organization.id}</p>
+                </div>
+                <p style="color: #666;">
+                    We've automatically created your own organization account with a 14-day free trial. 
+                    You can now log in and start creating powerful email campaigns.
+                </p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')}/signin" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Log In to Your Account
+                    </a>
+                </div>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #999; font-size: 12px;">
+                    EngageX - Professional Email Marketing Platform
+                </p>
+            </div>
+            """
+            
+            plain_message = f"""
+            Welcome to EngageX, {first_name}!
+            
+            Your account has been successfully created after accepting an invitation, and you're all set to start your email marketing journey!
+            
+            Your Account Details:
+            Email: {user.email}
+            Your Organization: {organization.name}
+            Organization ID: {organization.id}
+            
+            We've automatically created your own organization account with a 14-day free trial. 
+            You can now log in and start creating powerful email campaigns.
+            
+            EngageX - Professional Email Marketing Platform
+            """
+            
+            send_mail(
+                subject=f'Welcome to EngageX, {first_name}!',
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            
+            return True
+            
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send confirmation email to {user.email}: {str(e)}")
+            return False
 
 
 class DomainViewSet(BaseOrganizationViewSet):
