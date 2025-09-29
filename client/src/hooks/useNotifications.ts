@@ -110,6 +110,8 @@ export function getNotificationIcon(type: string): string {
     'payment_succeeded': 'check',
     'limit_warning': 'alert-triangle',
     'limit_reached': 'alert-circle',
+    'team_invitation_received': 'user-plus',
+    'team_invitation_accepted': 'check-circle',
   };
   
   return iconMap[type] || 'bell';
@@ -126,6 +128,8 @@ export function getNotificationColor(type: string): string {
     'payment_succeeded': 'text-green-600',
     'limit_warning': 'text-yellow-600',
     'limit_reached': 'text-red-600',
+    'team_invitation_received': 'text-blue-600',
+    'team_invitation_accepted': 'text-green-600',
   };
   
   return colorMap[type] || 'text-gray-600';
@@ -152,6 +156,10 @@ export function getNotificationMessage(notification: Notification): string {
       return `Approaching ${metadata.resource} limit (${metadata.percentage?.toFixed(0)}% used)`;
     case 'limit_reached':
       return `${metadata.resource} limit reached`;
+    case 'team_invitation_received':
+      return `${metadata.invited_by_name} invited you to join ${metadata.organization_name} as ${metadata.role_display}`;
+    case 'team_invitation_accepted':
+      return `${metadata.accepted_by_email} accepted your invitation to join ${metadata.organization_name}`;
     default:
       return 'New notification';
   }

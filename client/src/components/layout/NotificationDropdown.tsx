@@ -49,6 +49,16 @@ export function NotificationDropdown() {
     // Navigate based on notification type
     if (notification.type.includes('payment') || notification.type.includes('subscription')) {
       window.location.href = '/subscription';
+    } else if (notification.type === 'team_invitation_received') {
+      // Navigate to the invitation page with the token from metadata
+      if (notification.metadata?.invitation_url) {
+        window.location.href = notification.metadata.invitation_url;
+      } else {
+        window.location.href = '/team';
+      }
+    } else if (notification.type === 'team_invitation_accepted') {
+      // Navigate to team management page
+      window.location.href = '/team';
     }
     setIsOpen(false);
   };
@@ -70,6 +80,7 @@ export function NotificationDropdown() {
       'clock': Icons.Clock,
       'check': Icons.Check,
       'bell': Icons.Bell,
+      'user-plus': Icons.UserPlus,
     };
     
     const IconComponent = iconMap[iconName] || Icons.Bell;
