@@ -320,6 +320,29 @@ class InvitationViewSet(viewsets.ModelViewSet):
                 'error': 'Invalid invitation token'
             }, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def check_user(self, request, token=None):
+        """Check if the invited email belongs to an existing user"""
+        try:
+            invitation = Invitation.objects.get(token=token, status='pending')
+            
+            if invitation.is_expired():
+                return Response({
+                    'error': 'Invitation has expired'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            existing_user = User.objects.filter(email=invitation.email).first()
+            
+            return Response({
+                'user_exists': existing_user is not None,
+                'email': invitation.email
+            })
+            
+        except Invitation.DoesNotExist:
+            return Response({
+                'error': 'Invalid invitation token'
+            }, status=status.HTTP_404_NOT_FOUND)
+
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def accept(self, request, token=None):
         """Accept an invitation and create user account"""
@@ -344,9 +367,27 @@ class InvitationViewSet(viewsets.ModelViewSet):
             if existing_user:
                 user = existing_user
             else:
-                # Create new user without organization assignment
+                # For new users, profile data is required
+                first_name = request.data.get('first_name', '').strip()
+                last_name = request.data.get('last_name', '').strip()
+                password = request.data.get('password', '')
+                
+                if not first_name or not last_name or not password:
+                    return Response({
+                        'error': 'First name, last name, and password are required for new users'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                if len(password) < 8:
+                    return Response({
+                        'error': 'Password must be at least 8 characters long'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Create new user with complete profile
                 user = User.objects.create_user(
                     email=invitation.email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=password,
                     is_active=True
                 )
             

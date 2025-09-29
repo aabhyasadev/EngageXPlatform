@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { CheckCircle, XCircle, Clock, Mail, Building, UserCheck } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Mail, Building, UserCheck, User } from "lucide-react";
 
 interface InvitationData {
   id: string;
@@ -20,14 +25,40 @@ interface InvitationData {
   is_expired: boolean;
 }
 
+// Form schema for new user profile setup
+const profileSetupSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirm_password: z.string().min(1, "Please confirm your password"),
+}).refine((data) => data.password === data.confirm_password, {
+  message: "Passwords don't match",
+  path: ["confirm_password"],
+});
+
+type ProfileSetupData = z.infer<typeof profileSetupSchema>;
+
 export default function InvitationPage() {
   const [match, params] = useRoute("/invite/:token");
   const [showModal, setShowModal] = useState(false);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [existingUser, setExistingUser] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const token = params?.token;
+
+  // Form for new user profile setup
+  const profileForm = useForm<ProfileSetupData>({
+    resolver: zodResolver(profileSetupSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      password: "",
+      confirm_password: "",
+    },
+  });
 
   // Query to fetch invitation details
   const { data: invitation, isLoading, error } = useQuery<InvitationData>({
@@ -43,14 +74,45 @@ export default function InvitationPage() {
     retry: false,
   });
 
+  // Check if user exists mutation
+  const checkUserMutation = useMutation({
+    mutationFn: async () => {
+      // Check if the invited email belongs to an existing user
+      const response = await fetch(`/api/invitations/${token}/check-user/`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setExistingUser(data.user_exists);
+      if (data.user_exists) {
+        // Existing user - accept directly
+        acceptMutation.mutate();
+      } else {
+        // New user - show profile setup
+        setShowProfileSetup(true);
+        setShowModal(false);
+      }
+    },
+    onError: () => {
+      // If check fails, assume existing user and proceed
+      acceptMutation.mutate();
+    }
+  });
+
   // Mutation to accept invitation
   const acceptMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', `/api/invitations/${token}/accept/`);
+    mutationFn: async (profileData?: ProfileSetupData) => {
+      const requestData = profileData ? {
+        first_name: profileData.first_name,
+        last_name: profileData.last_name,
+        password: profileData.password
+      } : {};
+      
+      const response = await apiRequest('POST', `/api/invitations/${token}/accept/`, requestData);
       return response.json();
     },
     onSuccess: (data) => {
       setAccepted(true);
+      setShowProfileSetup(false);
       
       // Show success toast
       toast({
@@ -59,20 +121,9 @@ export default function InvitationPage() {
       });
 
       // Invalidate relevant queries to update UI for all users in the organization
-      // This ensures the team page shows the new member immediately
       queryClient.invalidateQueries({ queryKey: ['/api/users/'] });
       queryClient.invalidateQueries({ queryKey: ['/api/invitations/'] });
-      
-      // Invalidate notifications to update the notification dropdown
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/notifications'] });
-      
-      // Show a secondary toast for team members who might be viewing the team page
-      setTimeout(() => {
-        toast({
-          title: "Team Updated",
-          description: "A new member has joined your organization!",
-        });
-      }, 1000);
     },
     onError: (error: Error) => {
       toast({
@@ -118,8 +169,12 @@ export default function InvitationPage() {
   };
 
   const confirmAccept = () => {
-    acceptMutation.mutate();
-    setShowModal(false);
+    // Check if user exists first, then decide flow
+    checkUserMutation.mutate();
+  };
+
+  const handleProfileSubmit = (data: ProfileSetupData) => {
+    acceptMutation.mutate(data);
   };
 
   const handleDecline = () => {
@@ -314,6 +369,113 @@ export default function InvitationPage() {
               Accept & Join
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Setup Dialog for New Users */}
+      <Dialog open={showProfileSetup} onOpenChange={setShowProfileSetup}>
+        <DialogContent data-testid="modal-profile-setup" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Your Profile</DialogTitle>
+            <DialogDescription>
+              Since this is your first time joining EngageX, please set up your profile and create a password.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...profileForm}>
+            <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
+              <div className="space-y-4">
+                <FormField
+                  control={profileForm.control}
+                  name="first_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your first name" 
+                          {...field} 
+                          data-testid="input-first-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={profileForm.control}
+                  name="last_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your last name" 
+                          {...field} 
+                          data-testid="input-last-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={profileForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="Create a password (min 8 characters)" 
+                          {...field} 
+                          data-testid="input-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={profileForm.control}
+                  name="confirm_password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="Confirm your password" 
+                          {...field} 
+                          data-testid="input-confirm-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowProfileSetup(false)}
+                  className="flex-1"
+                  data-testid="button-cancel-profile-setup"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={acceptMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-complete-profile"
+                >
+                  {acceptMutation.isPending ? "Setting up..." : "Complete & Join"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
