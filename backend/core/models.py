@@ -496,6 +496,21 @@ class Invitation(models.Model):
         on_delete=models.CASCADE,
         related_name='sent_invitations'
     )
+    
+    # Organization-scoped credential proposal
+    credential_username = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        help_text="Proposed username for this organization"
+    )
+    proposed_password_hash = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text="Optional initial password hash set by inviter"
+    )
+    
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
