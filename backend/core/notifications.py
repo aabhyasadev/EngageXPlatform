@@ -891,3 +891,130 @@ def send_usage_limit_warning(organization, warning_details):
     except Exception as e:
         logger.error(f"Error sending usage limit warning: {str(e)}")
         return False
+
+
+def send_invitation_email(invitation):
+    """Send email invitation to a new team member"""
+    import logging
+    from django.conf import settings
+    from django.utils import timezone
+    from django.core.mail import send_mail
+    from django.template.loader import render_to_string
+    
+    logger = logging.getLogger('django')
+    
+    try:
+        # Generate invitation URL
+        invitation_url = f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')}/invite/{invitation.token}"
+        
+        # Email context
+        context = {
+            'invitation': invitation,
+            'invitation_url': invitation_url,
+            'organization_name': invitation.organization.name,
+            'invited_by_name': invitation.invited_by.full_name,
+            'role_display': invitation.get_role_display(),
+            'expires_at': invitation.expires_at,
+        }
+        
+        # Create HTML content
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }}
+                .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; }}
+                .header {{ background-color: #4F46E5; color: white; padding: 20px; text-align: center; }}
+                .content {{ padding: 30px; }}
+                .button {{ display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                .footer {{ background-color: #f4f4f4; padding: 20px; text-align: center; color: #666; font-size: 12px; }}
+                .role-badge {{ background-color: #e5e7eb; color: #374151; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>EngageX</h1>
+                </div>
+                <div class="content">
+                    <h2>You're invited to join {context['organization_name']}!</h2>
+                    <p>Hi there,</p>
+                    <p><strong>{context['invited_by_name']}</strong> has invited you to join the <strong>{context['organization_name']}</strong> team on EngageX as a <span class="role-badge">{context['role_display']}</span>.</p>
+                    
+                    <p>EngageX is a comprehensive email marketing platform that helps teams create, manage, and track email campaigns with enterprise-grade features.</p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{invitation_url}" class="button">Accept Invitation</a>
+                    </div>
+                    
+                    <p><strong>What you'll get access to:</strong></p>
+                    <ul>
+                        <li>Professional email campaign management</li>
+                        <li>Advanced analytics and tracking</li>
+                        <li>Team collaboration tools</li>
+                        <li>Custom domain verification</li>
+                        <li>Contact management system</li>
+                    </ul>
+                    
+                    <p style="font-size: 14px; color: #666;">
+                        This invitation will expire on <strong>{context['expires_at'].strftime('%B %d, %Y at %I:%M %p')}</strong>. 
+                        If you don't wish to join this organization, you can safely ignore this email.
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>© 2025 EngageX. All rights reserved.</p>
+                    <p>This invitation was sent to {invitation.email}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text version
+        text_content = f"""
+        You're invited to join {context['organization_name']}!
+        
+        {context['invited_by_name']} has invited you to join the {context['organization_name']} team on EngageX as a {context['role_display']}.
+        
+        EngageX is a comprehensive email marketing platform that helps teams create, manage, and track email campaigns with enterprise-grade features.
+        
+        Accept your invitation: {invitation_url}
+        
+        What you'll get access to:
+        - Professional email campaign management
+        - Advanced analytics and tracking  
+        - Team collaboration tools
+        - Custom domain verification
+        - Contact management system
+        
+        This invitation will expire on {context['expires_at'].strftime('%B %d, %Y at %I:%M %p')}.
+        If you don't wish to join this organization, you can safely ignore this email.
+        
+        © 2025 EngageX. All rights reserved.
+        This invitation was sent to {invitation.email}
+        """
+        
+        subject = f"You're invited to join {context['organization_name']} on EngageX"
+        
+        # Check if email service is configured
+        if not settings.EMAIL_HOST_USER:
+            logger.warning("Email service not configured. Cannot send invitation email.")
+            return False
+            
+        # Send the email
+        success = send_mail(
+            subject=subject,
+            message=text_content,
+            html_message=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[invitation.email],
+            fail_silently=False,
+        )
+        
+        logger.info(f"Invitation email sent successfully to {invitation.email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error sending invitation email: {str(e)}")
+        return False

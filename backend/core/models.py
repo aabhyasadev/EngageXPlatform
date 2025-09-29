@@ -109,6 +109,13 @@ class NotificationStatus(models.TextChoices):
     DELIVERED = 'delivered', 'Delivered'
 
 
+class InvitationStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    ACCEPTED = 'accepted', 'Accepted'
+    EXPIRED = 'expired', 'Expired'
+    REVOKED = 'revoked', 'Revoked'
+
+
 class Organization(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
@@ -309,6 +316,57 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
         return self.email
+
+
+class Invitation(models.Model):
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='invitations'
+    )
+    email = models.EmailField(max_length=255, validators=[EmailValidator()])
+    role = models.CharField(
+        max_length=20,
+        choices=UserRole.choices,
+        default=UserRole.CAMPAIGN_MANAGER
+    )
+    token = models.CharField(max_length=64, unique=True)
+    status = models.CharField(
+        max_length=20,
+        choices=InvitationStatus.choices,
+        default=InvitationStatus.PENDING
+    )
+    invited_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_invitations'
+    )
+    expires_at = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'invitations'
+        unique_together = [['organization', 'email']]
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['email']),
+            models.Index(fields=['status']),
+            models.Index(fields=['expires_at']),
+        ]
+
+    def __str__(self):
+        return f"Invitation to {self.email} for {self.organization.name}"
+
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+
+    def generate_token(self):
+        import secrets
+        self.token = secrets.token_urlsafe(32)
 
 
 class Domain(models.Model):

@@ -20,7 +20,7 @@ import openpyxl
 from .models import (
     Organization, User, Domain, ContactGroup, Contact, 
     ContactGroupMembership, EmailTemplate, Campaign, 
-    CampaignRecipient, AnalyticsEvent, Card
+    CampaignRecipient, AnalyticsEvent, Card, Invitation
 )
 from .serializers import (
     OrganizationSerializer, UserSerializer, DomainSerializer,
@@ -28,7 +28,7 @@ from .serializers import (
     EmailTemplateSerializer, CampaignSerializer, CampaignRecipientSerializer,
     AnalyticsEventSerializer, DashboardStatsSerializer, ContactImportSerializer,
     CampaignSendSerializer, CardSerializer, CardCreateSerializer,
-    CardUpdateSerializer
+    CardUpdateSerializer, InvitationSerializer
 )
 from .tasks import send_campaign_emails, verify_domain_dns, import_contacts_from_csv
 from .subscription_views import (
@@ -89,6 +89,185 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def create(self, request, *args, **kwargs):
+        """Create invitation instead of directly creating user"""
+        from datetime import timedelta
+        from django.utils import timezone
+        from .notifications import send_invitation_email
+        
+        if not request.user.organization:
+            return Response({
+                'error': 'No organization found'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Check if user has permission to invite (admin or organizer)
+        if request.user.role not in ['admin', 'organizer']:
+            return Response({
+                'error': 'Only admin and organizer can invite team members'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        email = request.data.get('email')
+        role = request.data.get('role', 'campaign_manager')
+
+        if not email:
+            return Response({
+                'error': 'Email is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if user already exists in organization
+        if User.objects.filter(email=email, organization=request.user.organization).exists():
+            return Response({
+                'error': 'User already exists in this organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if invitation already exists and is pending
+        existing_invitation = Invitation.objects.filter(
+            email=email,
+            organization=request.user.organization,
+            status='pending'
+        ).first()
+
+        if existing_invitation and not existing_invitation.is_expired():
+            return Response({
+                'error': 'Invitation already sent to this email address'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Revoke any existing pending invitations for this email
+        Invitation.objects.filter(
+            email=email,
+            organization=request.user.organization,
+            status='pending'
+        ).update(status='revoked')
+
+        # Create new invitation
+        invitation = Invitation.objects.create(
+            organization=request.user.organization,
+            email=email,
+            role=role,
+            invited_by=request.user,
+            expires_at=timezone.now() + timedelta(days=7)
+        )
+        invitation.generate_token()
+        invitation.save()
+
+        # Send invitation email
+        email_sent = send_invitation_email(invitation)
+        
+        if not email_sent:
+            return Response({
+                'error': 'Invitation created but email could not be sent'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({
+            'message': f'Invitation sent to {email}',
+            'invitation_id': invitation.id
+        }, status=status.HTTP_201_CREATED)
+
+
+class InvitationViewSet(viewsets.ModelViewSet):
+    queryset = Invitation.objects.all()
+    serializer_class = InvitationSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'token'
+    
+    def get_queryset(self):
+        if not self.request.user.organization:
+            return Invitation.objects.none()
+        return Invitation.objects.filter(organization=self.request.user.organization)
+
+    @action(detail=True, methods=['get'], permission_classes=[])
+    def verify(self, request, token=None):
+        """Verify invitation token and return invitation details"""
+        try:
+            invitation = Invitation.objects.get(token=token, status='pending')
+            
+            if invitation.is_expired():
+                invitation.status = 'expired'
+                invitation.save()
+                return Response({
+                    'error': 'Invitation has expired'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer = self.get_serializer(invitation)
+            return Response(serializer.data)
+            
+        except Invitation.DoesNotExist:
+            return Response({
+                'error': 'Invalid invitation token'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], permission_classes=[])
+    def accept(self, request, token=None):
+        """Accept an invitation and create user account"""
+        from django.utils import timezone
+        from django.contrib.auth import authenticate, login
+        
+        try:
+            invitation = Invitation.objects.get(token=token, status='pending')
+            
+            if invitation.is_expired():
+                invitation.status = 'expired'
+                invitation.save()
+                return Response({
+                    'error': 'Invitation has expired'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if user already exists
+            existing_user = User.objects.filter(email=invitation.email).first()
+            
+            if existing_user:
+                # If user exists but not in this organization, add them
+                if existing_user.organization != invitation.organization:
+                    existing_user.organization = invitation.organization
+                    existing_user.role = invitation.role
+                    existing_user.save()
+                
+                user = existing_user
+            else:
+                # Create new user
+                user = User.objects.create_user(
+                    email=invitation.email,
+                    organization=invitation.organization,
+                    role=invitation.role,
+                    is_active=True
+                )
+            
+            # Mark invitation as accepted
+            invitation.status = 'accepted'
+            invitation.accepted_at = timezone.now()
+            invitation.save()
+            
+            # Return user data for frontend
+            user_serializer = UserSerializer(user)
+            return Response({
+                'message': 'Invitation accepted successfully',
+                'user': user_serializer.data,
+                'organization': invitation.organization.name
+            }, status=status.HTTP_200_OK)
+            
+        except Invitation.DoesNotExist:
+            return Response({
+                'error': 'Invalid invitation token'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], permission_classes=[])
+    def decline(self, request, token=None):
+        """Decline an invitation"""
+        try:
+            invitation = Invitation.objects.get(token=token, status='pending')
+            
+            invitation.status = 'revoked'
+            invitation.save()
+            
+            return Response({
+                'message': 'Invitation declined'
+            }, status=status.HTTP_200_OK)
+            
+        except Invitation.DoesNotExist:
+            return Response({
+                'error': 'Invalid invitation token'
+            }, status=status.HTTP_404_NOT_FOUND)
 
 
 class DomainViewSet(BaseOrganizationViewSet):

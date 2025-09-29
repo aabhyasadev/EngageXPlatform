@@ -5,7 +5,7 @@ from .views import (
     OrganizationViewSet, UserViewSet, DomainViewSet,
     ContactGroupViewSet, ContactViewSet, EmailTemplateViewSet,
     CampaignViewSet, AnalyticsEventViewSet, DashboardViewSet,
-    CardViewSet
+    CardViewSet, InvitationViewSet
 )
 from .auth_views import (
     auth_user, dashboard_stats, logout_view, get_csrf_token, test_connection
@@ -54,6 +54,7 @@ router.register(r'templates', EmailTemplateViewSet)
 router.register(r'campaigns', CampaignViewSet)
 router.register(r'analytics/events', AnalyticsEventViewSet)
 router.register(r'cards', CardViewSet)
+router.register(r'invitations', InvitationViewSet)
 
 urlpatterns = [
     # Health check for startup verification
