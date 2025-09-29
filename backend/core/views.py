@@ -3,12 +3,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-
-
-class DefaultPagination(PageNumberPagination):
-    page_size = 20
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Sum
 from django.db import transaction
@@ -36,6 +30,11 @@ from .subscription_views import (
     check_usage_limit, get_current_usage, update_usage_tracking
 )
 from .middleware import requires_active_subscription, requires_plan_feature, track_usage
+
+class DefaultPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class BaseOrganizationViewSet(viewsets.ModelViewSet):
