@@ -1353,10 +1353,10 @@ class CampaignViewSet(BaseOrganizationViewSet):
                 # Send to all subscribed contacts
                 pass
             elif data.get('contact_ids'):
-                contacts = contacts.filter(id__in=data['contact_ids'])
+                contacts = contacts.filter(id__in=data.get('contact_ids', []))
             elif data.get('group_ids'):
                 contacts = contacts.filter(
-                    group_memberships__group_id__in=data['group_ids']
+                    group_memberships__group_id__in=data.get('group_ids', [])
                 ).distinct()
             
             # Check monthly email limit before sending
@@ -1786,16 +1786,17 @@ class InvitationViewSet(viewsets.ModelViewSet):
                     
                     # Add names if provided
                     if serializer.validated_data.get('first_name'):
-                        user_data['first_name'] = serializer.validated_data['first_name']
+                        user_data['first_name'] = serializer.validated_data.get('first_name')
                     if serializer.validated_data.get('last_name'):
-                        user_data['last_name'] = serializer.validated_data['last_name']
+                        user_data['last_name'] = serializer.validated_data.get('last_name')
 
                     # Create user
                     user = User.objects.create_user(**user_data)
                     
                     # Set password if provided
-                    if serializer.validated_data.get('password'):
-                        user.set_password(serializer.validated_data['password'])
+                    password = serializer.validated_data.get('password')
+                    if password:
+                        user.set_password(password)
                         user.save()
 
                     # Mark invitation as accepted
