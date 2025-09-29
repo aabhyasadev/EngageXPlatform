@@ -8,7 +8,7 @@ from .views import (
     CardViewSet, InvitationViewSet
 )
 from .auth_views import (
-    auth_user, dashboard_stats, logout_view, get_csrf_token, test_connection
+    auth_user, dashboard_stats, logout_view, get_csrf_token, test_connection, switch_organization
 )
 from .signup_views import (
     check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account
@@ -69,6 +69,7 @@ urlpatterns = [
     path('auth/user', auth_user, name='auth_user'),
     # Replit auth login route removed
     path('auth/logout', logout_view, name='logout'),
+    path('auth/switch-organization', switch_organization, name='switch_organization'),
     path('auth/csrf', get_csrf_token, name='csrf_token'),
     path('dashboard/stats', dashboard_stats, name='dashboard_stats'),
     

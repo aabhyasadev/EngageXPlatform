@@ -38,7 +38,7 @@ def test_connection(request):
 @permission_classes([AllowAny])  # Allow anonymous to return proper 401 response
 def auth_user(request):
     """
-    Get current authenticated user - matches Express /api/auth/user endpoint
+    Get current authenticated user with multi-organization support
     """
     # Check if user is authenticated first
     if not request.user.is_authenticated:
@@ -47,39 +47,119 @@ def auth_user(request):
         }, status=status.HTTP_401_UNAUTHORIZED)
     
     try:
-        user = request.user
-        # Use getattr to safely access organization attribute
-        organization = getattr(user, 'organization', None)
+        from .models import OrganizationMembership, MembershipStatus
         
-        # Manual serialization to avoid UserSerializer issues with organization field
+        user = request.user
+        
+        # Get all available organizations for this user
+        available_memberships = OrganizationMembership.objects.filter(
+            user=user,
+            status=MembershipStatus.ACTIVE
+        ).select_related('organization')
+        
+        # Get current organization from session
+        current_organization_id = request.session.get('current_organization_id')
+        current_membership = None
+        current_organization = None
+        
+        if current_organization_id:
+            current_membership = available_memberships.filter(
+                organization_id=current_organization_id
+            ).first()
+            
+        # If no current org in session or invalid, use the first available
+        if not current_membership and available_memberships.exists():
+            current_membership = available_memberships.first()
+            request.session['current_organization_id'] = str(current_membership.organization.id)
+            request.session['current_membership_id'] = str(current_membership.id)
+        
+        if current_membership:
+            current_organization = current_membership.organization
+        
+        # Manual serialization to avoid UserSerializer issues
         user_data = {
             'id': str(user.id) if hasattr(user, 'id') else None,
             'email': getattr(user, 'email', ''),
             'first_name': getattr(user, 'first_name', ''),
             'last_name': getattr(user, 'last_name', ''),
             'profile_image_url': getattr(user, 'profile_image_url', ''),
-            'role': getattr(user, 'role', 'user'),
+            'role': current_membership.role if current_membership else 'user',
             'is_active': getattr(user, 'is_active', True),
         }
         
-        # Add organization info in the same format as Express
-        if organization:
+        # Add current organization info
+        if current_organization:
             user_data['organization'] = {
-                'id': str(organization.id),
-                'name': organization.name,
-                'industry': organization.industry,
-                'employeesRange': organization.employees_range,
-                'contactsRange': organization.contacts_range,
-                'trialEndsAt': organization.trial_ends_at.isoformat() if organization.trial_ends_at else None,
+                'id': str(current_organization.id),
+                'name': current_organization.name,
+                'industry': current_organization.industry,
+                'employeesRange': current_organization.employees_range,
+                'contactsRange': current_organization.contacts_range,
+                'trialEndsAt': current_organization.trial_ends_at.isoformat() if current_organization.trial_ends_at else None,
             }
         else:
             user_data['organization'] = None
+        
+        # Add available organizations for switching
+        user_data['availableOrganizations'] = []
+        for membership in available_memberships:
+            user_data['availableOrganizations'].append({
+                'id': str(membership.organization.id),
+                'name': membership.organization.name,
+                'role': membership.role,
+                'isCurrent': current_organization and membership.organization.id == current_organization.id
+            })
             
         return Response(user_data, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({
             'error': f'Failed to get user: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def switch_organization(request):
+    """Switch to a different organization"""
+    organization_id = request.data.get('organization_id')
+    
+    if not organization_id:
+        return Response({
+            'error': 'Organization ID is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        from .models import OrganizationMembership, MembershipStatus
+        
+        # Verify user has active membership in the requested organization
+        membership = OrganizationMembership.objects.filter(
+            user=request.user,
+            organization_id=organization_id,
+            status=MembershipStatus.ACTIVE
+        ).select_related('organization').first()
+        
+        if not membership:
+            return Response({
+                'error': 'You do not have access to this organization'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Update session with new organization context
+        request.session['current_organization_id'] = organization_id
+        request.session['current_membership_id'] = str(membership.id)
+        
+        return Response({
+            'message': 'Organization switched successfully',
+            'organization': {
+                'id': str(membership.organization.id),
+                'name': membership.organization.name,
+                'role': membership.role
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': f'Failed to switch organization: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
