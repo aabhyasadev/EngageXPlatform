@@ -76,16 +76,16 @@ export default function Team() {
 
   const inviteUserMutation = useMutation({
     mutationFn: async (userData: InviteFormData) => {
-      const response = await apiRequest("POST", "/api/invitations/invite/", {
+      const response = await apiRequest("POST", "/api/users/", {
         email: userData.email,
         role: userData.role,
       });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
-        title: "Invitation Sent!",
-        description: `Invitation email sent to ${form.getValues('email')}. They will receive an email with instructions to join your team.`,
+        title: "Success",
+        description: "Team member invited successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
       setShowInviteModal(false);
@@ -94,7 +94,7 @@ export default function Team() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to send invitation",
+        description: error.message || "Failed to invite team member",
         variant: "destructive",
       });
     },

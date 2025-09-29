@@ -1,10 +1,14 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
+
+
+class DefaultPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Sum
 from django.db import transaction
@@ -16,7 +20,7 @@ import openpyxl
 from .models import (
     Organization, User, Domain, ContactGroup, Contact, 
     ContactGroupMembership, EmailTemplate, Campaign, 
-    CampaignRecipient, AnalyticsEvent, Card, Invitation, InvitationStatus
+    CampaignRecipient, AnalyticsEvent, Card
 )
 from .serializers import (
     OrganizationSerializer, UserSerializer, DomainSerializer,
@@ -24,8 +28,7 @@ from .serializers import (
     EmailTemplateSerializer, CampaignSerializer, CampaignRecipientSerializer,
     AnalyticsEventSerializer, DashboardStatsSerializer, ContactImportSerializer,
     CampaignSendSerializer, CardSerializer, CardCreateSerializer,
-    CardUpdateSerializer, InvitationSerializer, InvitationCreateSerializer,
-    InvitationAcceptSerializer
+    CardUpdateSerializer
 )
 from .tasks import send_campaign_emails, verify_domain_dns, import_contacts_from_csv
 from .subscription_views import (
@@ -33,13 +36,6 @@ from .subscription_views import (
     check_usage_limit, get_current_usage, update_usage_tracking
 )
 from .middleware import requires_active_subscription, requires_plan_feature, track_usage
-from .notifications import send_invitation_email
-
-
-class DefaultPagination(PageNumberPagination):
-    page_size = 20
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 
 
 class BaseOrganizationViewSet(viewsets.ModelViewSet):
@@ -48,8 +44,8 @@ class BaseOrganizationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if not self.request.user.organization:
-            return super().get_queryset().none()
-        return super().get_queryset().filter(organization=self.request.user.organization)
+            return self.queryset.none()
+        return self.queryset.filter(organization=self.request.user.organization)
 
     def perform_create(self, serializer):
         if self.request.user.organization:
@@ -274,48 +270,22 @@ class ContactViewSet(BaseOrganizationViewSet):
         serializer = ContactImportSerializer(data=request.data)
         if serializer.is_valid():
             file = serializer.validated_data['file']
-            content = None  # Initialize content to prevent UnboundLocalError
             
-            # Validate file type and read content
+            # Read file content
             if file.name.lower().endswith('.csv'):
-                try:
-                    content = file.read().decode('utf-8')
-                except UnicodeDecodeError:
-                    return Response({
-                        'error': 'Invalid CSV file encoding. Please use UTF-8.'
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                content = file.read().decode('utf-8')
             elif file.name.lower().endswith('.xlsx'):
-                try:
-                    workbook = openpyxl.load_workbook(file)
-                    sheet = workbook.active
-                    
-                    if not sheet:
-                        return Response({
-                            'error': 'Excel file has no active worksheet.'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    # Convert Excel to CSV format
-                    output = io.StringIO()
-                    writer = csv.writer(output)
-                    
-                    for row in sheet.iter_rows(values_only=True):
-                        if row:  # Skip empty rows
-                            writer.writerow(row)
-                    
-                    content = output.getvalue()
-                except Exception as e:
-                    return Response({
-                        'error': f'Error reading Excel file: {str(e)}'
-                    }, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({
-                    'error': 'Unsupported file format. Please upload .csv or .xlsx files only.'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            if not content:
-                return Response({
-                    'error': 'File is empty or could not be read.'
-                }, status=status.HTTP_400_BAD_REQUEST)
+                workbook = openpyxl.load_workbook(file)
+                sheet = workbook.active
+                
+                # Convert Excel to CSV format
+                output = io.StringIO()
+                writer = csv.writer(output)
+                
+                for row in sheet.iter_rows(values_only=True):
+                    writer.writerow(row)
+                
+                content = output.getvalue()
             
             # Start background task
             task = import_contacts_from_csv.delay(
@@ -340,34 +310,15 @@ class ContactViewSet(BaseOrganizationViewSet):
         contact_ids = request.data.get('contact_ids', [])
         update_data = request.data.get('data', {})
         
-        # Security: Whitelist allowed fields to prevent unauthorized updates
-        allowed_fields = {
-            'first_name', 'last_name', 'phone', 'language', 
-            'is_subscribed', 'tags', 'company', 'position'
-        }
-        
-        # Filter update_data to only include allowed fields
-        filtered_update_data = {
-            key: value for key, value in update_data.items() 
-            if key in allowed_fields
-        }
-        
-        if not filtered_update_data:
-            return Response({
-                'error': 'No valid fields to update',
-                'allowed_fields': list(allowed_fields)
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
         contacts = Contact.objects.filter(
             id__in=contact_ids,
             organization=self.request.user.organization
         )
         
-        updated_count = contacts.update(**filtered_update_data)
+        updated_count = contacts.update(**update_data)
         
         return Response({
-            'message': f'Updated {updated_count} contacts',
-            'updated_fields': list(filtered_update_data.keys())
+            'message': f'Updated {updated_count} contacts'
         })
 
     @action(detail=False, methods=['get'])
@@ -485,12 +436,12 @@ class EmailTemplateViewSet(BaseOrganizationViewSet):
         
         # Handle category filtering - ignore empty strings
         category = self.request.query_params.get('category', None)
-        if category and isinstance(category, str) and category.strip():  # Only filter if category is not empty
+        if category and category.strip():  # Only filter if category is not empty
             queryset = queryset.filter(category=category)
             
         # Handle is_default filtering
         is_default = self.request.query_params.get('is_default', None)
-        if is_default is not None and isinstance(is_default, str):
+        if is_default is not None:
             queryset = queryset.filter(is_default=is_default.lower() == 'true')
             
         return queryset
@@ -1353,10 +1304,10 @@ class CampaignViewSet(BaseOrganizationViewSet):
                 # Send to all subscribed contacts
                 pass
             elif data.get('contact_ids'):
-                contacts = contacts.filter(id__in=data.get('contact_ids', []))
+                contacts = contacts.filter(id__in=data['contact_ids'])
             elif data.get('group_ids'):
                 contacts = contacts.filter(
-                    group_memberships__group_id__in=data.get('group_ids', [])
+                    group_memberships__group_id__in=data['group_ids']
                 ).distinct()
             
             # Check monthly email limit before sending
@@ -1646,213 +1597,3 @@ class CardViewSet(BaseOrganizationViewSet):
             }, status=status.HTTP_404_NOT_FOUND)
 
         return Response(CardSerializer(default_card).data)
-
-
-class InvitationViewSet(viewsets.ModelViewSet):
-    """ViewSet for managing invitations"""
-    queryset = Invitation.objects.all()
-    serializer_class = InvitationSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        """Filter invitations by organization"""
-        if not self.request.user.organization:
-            return Invitation.objects.none()
-        return Invitation.objects.filter(organization=self.request.user.organization)
-
-    @action(detail=False, methods=['get'], permission_classes=[AllowAny], authentication_classes=[])
-    def validate(self, request):
-        """Validate invitation token and return invitation details"""
-        token = request.query_params.get('token')
-        
-        if not token:
-            return Response({
-                'error': 'Token parameter is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            invitation = Invitation.objects.get(token=token)
-            
-            # Check if invitation is still valid
-            if invitation.status != InvitationStatus.PENDING:
-                return Response({
-                    'valid': False,
-                    'status': 'used',
-                    'message': 'This invitation has already been used'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            if invitation.is_expired():
-                return Response({
-                    'valid': False,
-                    'status': 'expired',
-                    'message': 'This invitation has expired'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Return invitation details
-            return Response({
-                'valid': True,
-                'email': invitation.email,
-                'role': invitation.role,
-                'organization_name': invitation.organization.name,
-                'invited_by_name': invitation.invited_by.full_name if invitation.invited_by else 'System',
-                'expires_at': invitation.expires_at.isoformat(),
-            }, status=status.HTTP_200_OK)
-            
-        except Invitation.DoesNotExist:
-            return Response({
-                'valid': False,
-                'status': 'invalid',
-                'message': 'Invalid invitation token'
-            }, status=status.HTTP_404_NOT_FOUND)
-
-    @action(detail=False, methods=['post'])
-    def invite(self, request):
-        """Create and send invitation"""
-        if not request.user.organization:
-            return Response({
-                'error': 'User not associated with organization'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Check permissions - only admin and organizer can invite
-        if request.user.role not in ['admin', 'organizer']:
-            return Response({
-                'error': 'Insufficient permissions to send invitations'
-            }, status=status.HTTP_403_FORBIDDEN)
-
-        serializer = InvitationCreateSerializer(
-            data=request.data, 
-            context={'request': request}
-        )
-        
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    # Create invitation
-                    invitation = Invitation.objects.create(
-                        email=serializer.validated_data['email'],
-                        role=serializer.validated_data['role'],
-                        organization=request.user.organization,
-                        invited_by=request.user
-                    )
-
-                    # Send invitation email
-                    success, error = send_invitation_email(invitation, request)
-                    
-                    if not success:
-                        # Log error but don't fail the invitation creation
-                        import logging
-                        logger = logging.getLogger(__name__)
-                        logger.error(f"Failed to send invitation email: {error}")
-
-                    # Return success response
-                    return Response({
-                        'message': 'Invitation sent successfully',
-                        'invitation_id': invitation.id,
-                        'email_sent': success
-                    }, status=status.HTTP_201_CREATED)
-                    
-            except Exception as e:
-                return Response({
-                    'error': f'Failed to create invitation: {str(e)}'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny], authentication_classes=[])
-    @csrf_exempt
-    def accept(self, request):
-        """Accept invitation and create user account"""
-        serializer = InvitationAcceptSerializer(data=request.data)
-        
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    invitation = serializer.invitation
-                    
-                    # Check if user already exists
-                    existing_user = User.objects.filter(email=invitation.email).first()
-                    if existing_user:
-                        return Response({
-                            'error': 'A user with this email already exists'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-
-                    # Create new user
-                    user_data = {
-                        'email': invitation.email,
-                        'role': invitation.role,
-                        'organization': invitation.organization,
-                        'is_active': True
-                    }
-                    
-                    # Add names if provided
-                    if serializer.validated_data.get('first_name'):
-                        user_data['first_name'] = serializer.validated_data.get('first_name')
-                    if serializer.validated_data.get('last_name'):
-                        user_data['last_name'] = serializer.validated_data.get('last_name')
-
-                    # Create user
-                    user = User.objects.create_user(**user_data)
-                    
-                    # Set password if provided
-                    password = serializer.validated_data.get('password')
-                    if password:
-                        user.set_password(password)
-                        user.save()
-
-                    # Mark invitation as accepted
-                    invitation.status = InvitationStatus.ACCEPTED
-                    invitation.accepted_at = timezone.now()
-                    invitation.save()
-
-                    return Response({
-                        'message': 'Invitation accepted successfully',
-                        'user_id': user.id,
-                        'redirect_to': '/login'
-                    }, status=status.HTTP_201_CREATED)
-                    
-            except Exception as e:
-                return Response({
-                    'error': f'Failed to accept invitation: {str(e)}'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def resend(self, request, pk=None):
-        """Resend invitation email"""
-        try:
-            invitation = self.get_object()
-            
-            # Check permissions
-            if request.user.role not in ['admin', 'organizer']:
-                return Response({
-                    'error': 'Insufficient permissions to resend invitations'
-                }, status=status.HTTP_403_FORBIDDEN)
-
-            # Check if invitation is still valid
-            if invitation.status != InvitationStatus.PENDING:
-                return Response({
-                    'error': 'Invitation is no longer pending'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            if invitation.is_expired():
-                return Response({
-                    'error': 'Invitation has expired'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Resend email
-            success, error = send_invitation_email(invitation, request)
-            
-            if success:
-                return Response({
-                    'message': 'Invitation email resent successfully'
-                })
-            else:
-                return Response({
-                    'error': f'Failed to resend invitation: {error}'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                
-        except Exception as e:
-            return Response({
-                'error': f'Error resending invitation: {str(e)}'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

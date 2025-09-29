@@ -9,10 +9,10 @@ from django.template.loader import render_to_string
 from .models import (
     SubscriptionNotification, Organization, User, 
     NotificationType, NotificationChannel, NotificationStatus,
-    SubscriptionPlan, Invitation
+    SubscriptionPlan
 )
-from django.core.mail import EmailMultiAlternatives
-from django.urls import reverse
+import sendgrid
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 logger = logging.getLogger(__name__)
 
@@ -75,39 +75,43 @@ PLAN_NAMES = {
 
 
 def send_email_notification(to_email, subject, html_content, text_content=None, metadata=None):
-    """Send email notification using Django's email backend (SMTP with console fallback)"""
+    """Send email notification using SendGrid"""
     try:
-        # Check if email credentials are configured
-        if not settings.EMAIL_HOST_USER and not settings.DEBUG:
-            logger.error("Email host user not configured for production")
-            return False, "Email credentials not configured"
+        if not settings.SENDGRID_API_KEY:
+            logger.error("SendGrid API key not configured")
+            return False, "SendGrid API key not configured"
         
-        # If no email credentials in development, fallback to console
-        if not settings.EMAIL_HOST_USER and settings.DEBUG:
-            logger.info(f"Development mode: Email would be sent to {to_email}")
-            logger.info(f"Subject: {subject}")
-            logger.info(f"Content: {html_content[:200]}...")
-            return True, None
+        sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+        
+        from_email = Email(settings.DEFAULT_FROM_EMAIL or 'noreply@engagex.com')
+        to_email = To(to_email)
         
         if not text_content:
-            # Strip HTML tags for basic text content
-            import re
-            text_content = re.sub('<[^<]+?>', '', html_content)
+            text_content = html_content  # Fallback to HTML content
         
-        # Create email message
-        msg = EmailMultiAlternatives(
+        mail = Mail(
+            from_email=from_email,
+            to_emails=to_email,
             subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[to_email]
+            html_content=Content("text/html", html_content),
+            plain_text_content=Content("text/plain", text_content)
         )
-        msg.attach_alternative(html_content, "text/html")
         
-        # Send email
-        msg.send(fail_silently=False)
+        # Add unsubscribe link
+        mail.asm = {
+            'group_id': 12345,  # Replace with actual unsubscribe group ID
+            'groups_to_display': [12345]
+        }
         
-        logger.info(f"Email sent successfully to {to_email}")
-        return True, None
+        response = sg.send(mail)
+        
+        if response.status_code in [200, 202]:
+            logger.info(f"Email sent successfully to {to_email}")
+            return True, None
+        else:
+            error_msg = f"Failed to send email. Status code: {response.status_code}"
+            logger.error(error_msg)
+            return False, error_msg
             
     except Exception as e:
         error_msg = f"Error sending email: {str(e)}"
@@ -887,118 +891,3 @@ def send_usage_limit_warning(organization, warning_details):
     except Exception as e:
         logger.error(f"Error sending usage limit warning: {str(e)}")
         return False
-
-
-def send_invitation_email(invitation, request=None):
-    """
-    Send invitation email using Django SMTP
-    """
-    try:
-        # Build invitation link
-        if hasattr(settings, 'FRONTEND_BASE_URL'):
-            invite_url = f"{settings.FRONTEND_BASE_URL}/accept-invite?token={invitation.token}"
-        elif request:
-            invite_url = request.build_absolute_uri(f"/accept-invite?token={invitation.token}")
-        else:
-            invite_url = f"http://localhost:5000/accept-invite?token={invitation.token}"
-
-        # Email context
-        context = {
-            'invitation': invitation,
-            'organization_name': invitation.organization.name,
-            'inviter_name': invitation.invited_by.full_name,
-            'invite_url': invite_url,
-            'role_display': invitation.get_role_display(),
-            'expires_at': invitation.expires_at,
-            'days_until_expiry': (invitation.expires_at - timezone.now()).days,
-        }
-
-        # HTML email content
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                .container {{ max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }}
-                .header {{ background: #2563eb; color: white; padding: 20px; text-align: center; }}
-                .content {{ padding: 30px; background: #f9fafb; }}
-                .button {{ 
-                    display: inline-block; 
-                    background: #2563eb; 
-                    color: white; 
-                    padding: 12px 24px; 
-                    text-decoration: none; 
-                    border-radius: 6px; 
-                    margin: 20px 0; 
-                }}
-                .footer {{ padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>EngageX</h1>
-                </div>
-                <div class="content">
-                    <h2>You're invited to join {context['organization_name']}!</h2>
-                    <p>Hi there,</p>
-                    <p>{context['inviter_name']} has invited you to join <strong>{context['organization_name']}</strong> as a <strong>{context['role_display']}</strong>.</p>
-                    <p>Click the button below to accept your invitation:</p>
-                    <p style="text-align: center;">
-                        <a href="{context['invite_url']}" class="button">Accept Invitation</a>
-                    </p>
-                    <p>Or copy and paste this link into your browser:</p>
-                    <p style="word-break: break-all; color: #6b7280;">{context['invite_url']}</p>
-                    <p><strong>Note:</strong> This invitation expires on {context['expires_at'].strftime('%B %d, %Y at %I:%M %p')} ({context['days_until_expiry']} days from now).</p>
-                    <p>Welcome to EngageX!</p>
-                </div>
-                <div class="footer">
-                    <p>© 2025 EngageX. All rights reserved.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-
-        # Plain text content
-        text_content = f"""
-        You're invited to join {context['organization_name']}!
-
-        Hi there,
-
-        {context['inviter_name']} has invited you to join {context['organization_name']} as a {context['role_display']}.
-
-        Please visit the following link to accept your invitation:
-        {context['invite_url']}
-
-        This invitation expires on {context['expires_at'].strftime('%B %d, %Y at %I:%M %p')} ({context['days_until_expiry']} days from now).
-
-        Welcome to EngageX!
-
-        © 2025 EngageX. All rights reserved.
-        """
-
-        # Create email
-        subject = f"You're invited to join {invitation.organization.name} on EngageX"
-        from_email = settings.DEFAULT_FROM_EMAIL
-        to_email = [invitation.email]
-
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=from_email,
-            to=to_email
-        )
-        msg.attach_alternative(html_content, "text/html")
-
-        # Send email
-        msg.send(fail_silently=False)
-        
-        logger.info(f"Invitation email sent successfully to {invitation.email}")
-        return True, None
-
-    except Exception as e:
-        error_msg = f"Failed to send invitation email: {str(e)}"
-        logger.error(error_msg)
-        return False, error_msg

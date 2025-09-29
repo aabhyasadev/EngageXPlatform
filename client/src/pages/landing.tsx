@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { Mail, Users, Globe, BarChart3, Edit3, Code, Upload, Shield } from "lucide-react";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -21,7 +20,7 @@ export default function Landing() {
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
             <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-              <Mail className="text-primary-foreground" size={24} />
+              <i className="fas fa-envelope text-primary-foreground text-2xl"></i>
             </div>
           </div>
           <h1 className="text-5xl font-bold text-foreground mb-4">EngageX</h1>
@@ -53,7 +52,7 @@ export default function Landing() {
           <Card>
             <CardHeader>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <Users className="text-blue-600" size={20} />
+                <i className="fas fa-users text-blue-600 text-xl"></i>
               </div>
               <CardTitle>Multi-Tenant Organizations</CardTitle>
               <CardDescription>
@@ -65,7 +64,7 @@ export default function Landing() {
           <Card>
             <CardHeader>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <Globe className="text-green-600" size={20} />
+                <i className="fas fa-globe text-green-600 text-xl"></i>
               </div>
               <CardTitle>Domain Verification</CardTitle>
               <CardDescription>
@@ -77,7 +76,7 @@ export default function Landing() {
           <Card>
             <CardHeader>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <BarChart3 className="text-purple-600" size={20} />
+                <i className="fas fa-chart-bar text-purple-600 text-xl"></i>
               </div>
               <CardTitle>Advanced Analytics</CardTitle>
               <CardDescription>
@@ -92,28 +91,28 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Edit3 className="text-blue-600" size={24} />
+                <i className="fas fa-edit text-blue-600 text-2xl"></i>
               </div>
               <h3 className="font-semibold text-foreground mb-2">Drag & Drop Editor</h3>
               <p className="text-sm text-muted-foreground">Create beautiful emails with our intuitive drag-and-drop interface</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Code className="text-purple-600" size={24} />
+                <i className="fas fa-code text-purple-600 text-2xl"></i>
               </div>
               <h3 className="font-semibold text-foreground mb-2">HTML Editor</h3>
               <p className="text-sm text-muted-foreground">Advanced customization with full HTML and CSS control</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Upload className="text-green-600" size={24} />
+                <i className="fas fa-upload text-green-600 text-2xl"></i>
               </div>
               <h3 className="font-semibold text-foreground mb-2">Excel Import</h3>
               <p className="text-sm text-muted-foreground">Bulk import contacts from Excel files with smart validation</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="text-yellow-600" size={24} />
+                <i className="fas fa-shield-alt text-yellow-600 text-2xl"></i>
               </div>
               <h3 className="font-semibold text-foreground mb-2">Enterprise Security</h3>
               <p className="text-sm text-muted-foreground">Role-based access, MFA, and complete data isolation</p>

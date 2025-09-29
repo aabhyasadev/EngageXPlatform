@@ -6,6 +6,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
+import json
 
 
 class UserRole(models.TextChoices):
@@ -260,9 +261,6 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """Custom User model with explicit type annotations for better type checking."""
-    
-    # Primary fields
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     replit_id = models.CharField(max_length=100, unique=True, null=True, blank=True)  # External Replit Auth ID
     username = models.CharField(max_length=150, unique=True, null=True, blank=True)  # For new sign-in flow
@@ -283,8 +281,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=UserRole.choices,
         default=UserRole.CAMPAIGN_MANAGER
     )
-    
-    # Authentication and permission fields
+    # New fields for enhanced authentication
     mfa_enabled = models.BooleanField(default=False)
     otp_secret = models.CharField(max_length=32, null=True, blank=True)
     sso_enabled = models.BooleanField(default=False)
@@ -293,15 +290,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     locked_until = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # Explicit type annotations for PermissionsMixin fields (helps type checker)
-    is_superuser: bool
-    groups: models.ManyToManyField
-    user_permissions: models.ManyToManyField
 
     objects = CustomUserManager()
 
@@ -319,65 +309,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
         return self.email
-
-
-class InvitationStatus(models.TextChoices):
-    PENDING = 'pending', 'Pending'
-    ACCEPTED = 'accepted', 'Accepted'
-    EXPIRED = 'expired', 'Expired'
-    REVOKED = 'revoked', 'Revoked'
-
-
-class Invitation(models.Model):
-    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='invitations'
-    )
-    email = models.EmailField(validators=[EmailValidator()])
-    role = models.CharField(
-        max_length=20,
-        choices=UserRole.choices,
-        default=UserRole.CAMPAIGN_MANAGER
-    )
-    token = models.CharField(max_length=36, unique=True, default=uuid.uuid4)
-    status = models.CharField(
-        max_length=20,
-        choices=InvitationStatus.choices,
-        default=InvitationStatus.PENDING
-    )
-    invited_by = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='sent_invitations'
-    )
-    expires_at = models.DateTimeField()
-    accepted_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'invitations'
-        unique_together = [['organization', 'email']]  # Prevent duplicate invitations
-        indexes = [
-            models.Index(fields=['token']),
-            models.Index(fields=['email']),
-            models.Index(fields=['status']),
-            models.Index(fields=['expires_at']),
-        ]
-
-    def __str__(self):
-        return f"Invitation for {self.email} to {self.organization.name}"
-
-    def is_expired(self):
-        return timezone.now() > self.expires_at
-
-    def save(self, *args, **kwargs):
-        # Set expiration to 7 days from creation if not set
-        if not self.expires_at:
-            self.expires_at = timezone.now() + timedelta(days=7)
-        super().save(*args, **kwargs)
 
 
 class Domain(models.Model):
