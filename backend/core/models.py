@@ -100,6 +100,8 @@ class NotificationType(models.TextChoices):
     PAYMENT_SUCCEEDED = 'payment_succeeded', 'Payment Succeeded'
     LIMIT_WARNING = 'limit_warning', 'Limit Warning'
     LIMIT_REACHED = 'limit_reached', 'Limit Reached'
+    TEAM_INVITATION_RECEIVED = 'team_invitation_received', 'Team Invitation Received'
+    TEAM_INVITATION_ACCEPTED = 'team_invitation_accepted', 'Team Invitation Accepted'
 
 
 class NotificationChannel(models.TextChoices):
