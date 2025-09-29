@@ -16,7 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsGrid, StatCard } from "@/components/ui/stats-grid";
-import { Users, UserPlus, Shield, Activity, MoreHorizontal, Edit, Trash2, UserCheck, UserX } from "lucide-react";
+import { Users, UserPlus, Shield, Activity, MoreHorizontal, Edit, Trash2, UserCheck, UserX, Clock } from "lucide-react";
 
 // Zod schemas
 const inviteSchema = z.object({
