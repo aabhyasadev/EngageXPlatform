@@ -137,10 +137,26 @@ class UserViewSet(viewsets.ModelViewSet):
                 membership.role = request.data['role']
                 membership.save()
             
-            # Update user status if provided
+            # Update membership status if provided (organization-scoped, not global user account)
             if 'is_active' in request.data:
-                instance.is_active = request.data['is_active']
-                instance.save()
+                new_status = MembershipStatus.ACTIVE if request.data['is_active'] else MembershipStatus.INACTIVE
+                
+                # Prevent deactivating the last active admin in the organization
+                if new_status == MembershipStatus.INACTIVE and membership.role in ['admin', 'organizer']:
+                    active_admins = OrganizationMembership.objects.filter(
+                        organization_id=current_organization_id,
+                        role__in=['admin', 'organizer'],
+                        status=MembershipStatus.ACTIVE
+                    ).exclude(id=membership.id).count()
+                    
+                    if active_admins == 0:
+                        return Response({
+                            'error': 'Cannot deactivate the last admin in the organization'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Update membership status (NOT global user status)
+                membership.status = new_status
+                membership.save()
         
         # For other user fields, use default serializer
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
