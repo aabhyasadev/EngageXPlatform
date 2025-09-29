@@ -54,10 +54,7 @@ export function useMarkNotificationRead() {
   
   return useMutation({
     mutationFn: async (data: { notification_ids?: string[], mark_all?: boolean }) => {
-      return apiRequest('/api/subscription/mark-notification-read', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      return apiRequest('POST', '/api/subscription/mark-notification-read', data);
     },
     onSuccess: () => {
       // Invalidate notification queries to refresh the counts
@@ -88,10 +85,7 @@ export function useUpdateNotificationPreferences() {
   
   return useMutation({
     mutationFn: async (preferences: Record<string, any>) => {
-      return apiRequest('/api/subscription/notification-preferences', {
-        method: 'POST',
-        body: JSON.stringify({ preferences })
-      });
+      return apiRequest('POST', '/api/subscription/notification-preferences', { preferences });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/get-notification-preferences'] });
