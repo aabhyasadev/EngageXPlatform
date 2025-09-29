@@ -62,6 +62,18 @@ EMAIL_TEMPLATES = {
         'action_button': 'Upgrade Plan',
         'action_url': '/subscription',
     },
+    NotificationType.TEAM_INVITATION_RECEIVED: {
+        'subject': 'Team invitation received',
+        'template_name': 'team_invitation_received',
+        'action_button': 'View Invitation',
+        'action_url': '/team',
+    },
+    NotificationType.TEAM_INVITATION_ACCEPTED: {
+        'subject': 'Team invitation accepted',
+        'template_name': 'team_invitation_accepted',
+        'action_button': 'View Team',
+        'action_url': '/team',
+    },
 }
 
 # Plan display names
@@ -989,4 +1001,68 @@ def send_invitation_email(invitation):
         
     except Exception as e:
         logger.error(f"Error sending invitation email: {str(e)}")
+        return False
+
+
+def send_team_invitation_notification(invitation, existing_user):
+    """Send in-app notification to existing user about team invitation"""
+    try:
+        from .models import User
+        
+        # Check if the invited email belongs to an existing user
+        if not existing_user:
+            return False
+            
+        # Create in-app notification for the invited user
+        metadata = {
+            'invitation_id': str(invitation.id),
+            'organization_name': invitation.organization.name,
+            'invited_by_name': invitation.invited_by.full_name,
+            'role': invitation.role,
+            'role_display': invitation.get_role_display(),
+            'invitation_url': f"/invite/{invitation.token}"
+        }
+        
+        notification = create_notification(
+            organization=invitation.organization,
+            notification_type=NotificationType.TEAM_INVITATION_RECEIVED,
+            channel=NotificationChannel.IN_APP,
+            user=existing_user,
+            metadata=metadata
+        )
+        
+        logger.info(f"Team invitation notification sent to existing user {existing_user.email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error sending team invitation notification: {str(e)}")
+        return False
+
+
+def send_invitation_accepted_notification(invitation):
+    """Send in-app notification to inviter when invitation is accepted"""
+    try:
+        # Create in-app notification for the user who sent the invitation
+        metadata = {
+            'invitation_id': str(invitation.id),
+            'accepted_by_email': invitation.email,
+            'organization_name': invitation.organization.name,
+            'role': invitation.role,
+            'role_display': invitation.get_role_display(),
+            'accepted_at': invitation.accepted_at.isoformat() if invitation.accepted_at else None
+        }
+        
+        notification = create_notification(
+            organization=invitation.organization,
+            notification_type=NotificationType.TEAM_INVITATION_ACCEPTED,
+            channel=NotificationChannel.IN_APP,
+            user=invitation.invited_by,
+            metadata=metadata
+        )
+        
+        logger.info(f"Invitation accepted notification sent to {invitation.invited_by.email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error sending invitation accepted notification: {str(e)}")
         return False
