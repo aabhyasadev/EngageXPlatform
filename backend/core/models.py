@@ -6,7 +6,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
-import json
 
 
 class UserRole(models.TextChoices):
@@ -261,6 +260,9 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """Custom User model with explicit type annotations for better type checking."""
+    
+    # Primary fields
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     replit_id = models.CharField(max_length=100, unique=True, null=True, blank=True)  # External Replit Auth ID
     username = models.CharField(max_length=150, unique=True, null=True, blank=True)  # For new sign-in flow
@@ -281,7 +283,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=UserRole.choices,
         default=UserRole.CAMPAIGN_MANAGER
     )
-    # New fields for enhanced authentication
+    
+    # Authentication and permission fields
     mfa_enabled = models.BooleanField(default=False)
     otp_secret = models.CharField(max_length=32, null=True, blank=True)
     sso_enabled = models.BooleanField(default=False)
@@ -290,8 +293,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     locked_until = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Explicit type annotations for PermissionsMixin fields (helps type checker)
+    is_superuser: bool
+    groups: models.ManyToManyField
+    user_permissions: models.ManyToManyField
 
     objects = CustomUserManager()
 
