@@ -485,12 +485,12 @@ class EmailTemplateViewSet(BaseOrganizationViewSet):
         
         # Handle category filtering - ignore empty strings
         category = self.request.query_params.get('category', None)
-        if category and category.strip():  # Only filter if category is not empty
+        if category and isinstance(category, str) and category.strip():  # Only filter if category is not empty
             queryset = queryset.filter(category=category)
             
         # Handle is_default filtering
         is_default = self.request.query_params.get('is_default', None)
-        if is_default is not None:
+        if is_default is not None and isinstance(is_default, str):
             queryset = queryset.filter(is_default=is_default.lower() == 'true')
             
         return queryset
