@@ -154,8 +154,10 @@ class UserViewSet(viewsets.ModelViewSet):
         
         if not email_sent:
             return Response({
-                'error': 'Invitation created but email could not be sent'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                'message': f'Invitation created successfully for {email}',
+                'warning': 'Email could not be sent due to configuration issue',
+                'invitation_id': invitation.id
+            }, status=status.HTTP_201_CREATED)
 
         return Response({
             'message': f'Invitation sent to {email}',
