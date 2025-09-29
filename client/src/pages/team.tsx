@@ -149,7 +149,7 @@ export default function Team() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Member status updated successfully!",
+        description: "Member status updated for this organization!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users/"] });
     },
@@ -481,7 +481,7 @@ export default function Team() {
                           variant={member.is_active ? "default" : "secondary"}
                           data-testid={`badge-status-${member.id}`}
                         >
-                          {member.is_active ? "Active" : "Inactive"}
+                          {member.is_active ? "Active in Org" : "Inactive in Org"}
                         </Badge>
                       </td>
                       <td className="py-4 text-foreground" data-testid={`text-joined-date-${member.id}`}>
@@ -505,7 +505,7 @@ export default function Team() {
                                 data-testid={`menu-toggle-status-${member.id}`}
                               >
                                 {member.is_active ? <UserX className="h-4 w-4 mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
-                                {member.is_active ? "Deactivate" : "Activate"}
+                                {member.is_active ? "Deactivate in Organization" : "Reactivate in Organization"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => confirmDeleteMember(member)}
