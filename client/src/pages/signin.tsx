@@ -13,11 +13,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Step 1: Organization ID, Username & Password (Single-step login)
+// Step 1: Organization ID & Email validation
 const step1Schema = z.object({
   organization_id: z.string().min(1, "Organization ID is required"),
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required")
+  email: z.string().email("Please enter a valid email address")
 });
 
 // Step 2: Username & Password authentication  
@@ -51,16 +50,15 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // Form data for login process
-  const [step1Data, setStep1Data] = useState({ organization_id: "", username: "", password: "" });
+  // Form data for multi-step process
+  const [step1Data, setStep1Data] = useState({ organization_id: "", email: "" });
   const [organizationName, setOrganizationName] = useState("");
   const [verificationInfo, setVerificationInfo] = useState({ mfa_enabled: false, sso_enabled: false });
-  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
 
   // Form instances
   const step1Form = useForm({
     resolver: zodResolver(step1Schema),
-    defaultValues: { organization_id: "", username: "", password: "" }
+    defaultValues: { organization_id: "", email: "" }
   });
 
   const step2Form = useForm({
@@ -116,30 +114,16 @@ export default function SignInPage() {
     setError("");
     
     try {
-      const response = await apiRequest("POST", "/api/signin/organization-login/", values);
+      const response = await apiRequest("POST", "/api/signin/validate-org-email/", values);
       
       if (response.ok) {
         const data = await response.json();
         setStep1Data(values);
-        setOrganizationName(data.organization || "your organization");
-        
-        if (data.requires_password_change) {
-          // User needs to change password
-          setRequiresPasswordChange(true);
-          setCurrentStep(2); // Show password change form
-        } else if (data.requires_mfa) {
-          // MFA verification required
-          setVerificationInfo({ mfa_enabled: true, sso_enabled: false });
-          setCurrentStep(3);
-        } else {
-          // Login successful - invalidate auth cache and redirect to home
-          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-          toast({ title: "Login successful", description: `Welcome to ${data.organization}!` });
-          navigate("/");
-        }
+        setOrganizationName("your organization"); // Generic name for security
+        setCurrentStep(2);
       } else {
         const error = await response.json();
-        setError(error.error || "Login failed");
+        setError(error.error || "Validation failed");
       }
     } catch (err) {
       setError("Network error. Please check your connection and try again.");
@@ -364,7 +348,7 @@ export default function SignInPage() {
             <CardHeader className="space-y-1 text-center">
               <CardTitle className="text-2xl font-bold">Sign In to EngageX</CardTitle>
               <CardDescription>
-                Enter your organization credentials to access your account
+                Step 1 of {currentStep === 1 ? "2 or 3" : "3"}: Enter your organization and email
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -401,55 +385,20 @@ export default function SignInPage() {
                   
                   <FormField
                     control={step1Form.control}
-                    name="username"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                              data-testid="input-username"
-                              placeholder="Enter your organization username"
+                              data-testid="input-email"
+                              placeholder="your.email@company.com"
                               className="pl-10"
+                              type="email"
                               {...field}
                             />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={step1Form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              data-testid="input-password"
-                              placeholder="Enter your password"
-                              type={showPassword ? "text" : "password"}
-                              className="pr-10"
-                              {...field}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                              onClick={() => setShowPassword(!showPassword)}
-                              data-testid="button-toggle-password"
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -458,12 +407,12 @@ export default function SignInPage() {
                   />
                   
                   <Button 
-                    data-testid="button-signin"
+                    data-testid="button-validate-step1"
                     type="submit" 
                     className="w-full" 
                     disabled={isLoading}
                   >
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? "Validating..." : "Continue"}
                   </Button>
                 </form>
               </Form>

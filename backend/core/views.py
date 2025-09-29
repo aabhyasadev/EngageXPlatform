@@ -135,13 +135,12 @@ class UserViewSet(viewsets.ModelViewSet):
             # Update role in membership if provided
             if 'role' in request.data:
                 membership.role = request.data['role']
+                membership.save()
             
-            # Update membership status if provided (organization-scoped, not global user)
+            # Update user status if provided
             if 'is_active' in request.data:
-                membership.status = MembershipStatus.ACTIVE if request.data['is_active'] else MembershipStatus.INACTIVE
-            
-            # Save membership changes
-            membership.save()
+                instance.is_active = request.data['is_active']
+                instance.save()
         
         # For other user fields, use default serializer
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -207,29 +206,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
         email = request.data.get('email')
         role = request.data.get('role', 'campaign_manager')
-        credential_username = request.data.get('credential_username', '').strip()
-        initial_password = request.data.get('initial_password', '').strip()
 
         if not email:
             return Response({
                 'error': 'Email is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not credential_username:
-            return Response({
-                'error': 'Organization username is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate username is unique within organization
-        from .models import OrganizationMembership
-        existing_membership = OrganizationMembership.objects.filter(
-            organization=request.user.organization,
-            credential_username=credential_username
-        ).first()
-        
-        if existing_membership:
-            return Response({
-                'error': f'Username "{credential_username}" is already taken in this organization'
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if user already exists in organization
@@ -257,20 +237,12 @@ class UserViewSet(viewsets.ModelViewSet):
             status='pending'
         ).update(status='revoked')
 
-        # Hash initial password if provided
-        proposed_password_hash = None
-        if initial_password:
-            from django.contrib.auth.hashers import make_password
-            proposed_password_hash = make_password(initial_password)
-
         # Create new invitation (token is auto-generated via model default)
         invitation = Invitation.objects.create(
             organization=request.user.organization,
             email=email,
             role=role,
             invited_by=request.user,
-            credential_username=credential_username,
-            proposed_password_hash=proposed_password_hash,
             expires_at=timezone.now() + timedelta(days=7)
         )
 
@@ -395,48 +367,29 @@ class InvitationViewSet(viewsets.ModelViewSet):
             if existing_user:
                 user = existing_user
             else:
-                # For new users, profile data may be required depending on invitation setup
-                if invitation.proposed_password_hash:
-                    # Inviter set credentials - minimal profile needed
-                    first_name = request.data.get('first_name', '').strip()
-                    last_name = request.data.get('last_name', '').strip()
-                    
-                    if not first_name or not last_name:
-                        return Response({
-                            'error': 'First name and last name are required'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    # Create user with minimal profile (password set via membership)
-                    user = User.objects.create_user(
-                        email=invitation.email,
-                        first_name=first_name,
-                        last_name=last_name,
-                        is_active=True
-                    )
-                else:
-                    # No credentials provided - require full profile setup
-                    first_name = request.data.get('first_name', '').strip()
-                    last_name = request.data.get('last_name', '').strip()
-                    password = request.data.get('password', '')
-                    
-                    if not first_name or not last_name or not password:
-                        return Response({
-                            'error': 'First name, last name, and password are required for new users'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    if len(password) < 8:
-                        return Response({
-                            'error': 'Password must be at least 8 characters long'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    # Create new user with complete profile
-                    user = User.objects.create_user(
-                        email=invitation.email,
-                        first_name=first_name,
-                        last_name=last_name,
-                        password=password,
-                        is_active=True
-                    )
+                # For new users, profile data is required
+                first_name = request.data.get('first_name', '').strip()
+                last_name = request.data.get('last_name', '').strip()
+                password = request.data.get('password', '')
+                
+                if not first_name or not last_name or not password:
+                    return Response({
+                        'error': 'First name, last name, and password are required for new users'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                if len(password) < 8:
+                    return Response({
+                        'error': 'Password must be at least 8 characters long'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Create new user with complete profile
+                user = User.objects.create_user(
+                    email=invitation.email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=password,
+                    is_active=True
+                )
             
             # Check if membership already exists (shouldn't happen but safety check)
             existing_membership = OrganizationMembership.objects.filter(
@@ -444,39 +397,19 @@ class InvitationViewSet(viewsets.ModelViewSet):
                 organization=invitation.organization
             ).first()
             
-            # Determine credentials for membership
-            membership_username = invitation.credential_username or user.email.split('@')[0]
-            membership_password_hash = invitation.proposed_password_hash
-            requires_password_change = bool(invitation.proposed_password_hash)  # If inviter set password, user must change it
-            
-            # If no proposed password, use the one from user creation (for new users who set their own)
-            if not membership_password_hash and not existing_user:
-                # New user set their own password during acceptance
-                user_password = request.data.get('password', '')
-                if user_password:
-                    from django.contrib.auth.hashers import make_password
-                    membership_password_hash = make_password(user_password)
-                    requires_password_change = False  # They set it themselves
-
             if existing_membership:
-                # Update existing membership with new credentials
+                # Update existing membership
                 existing_membership.role = invitation.role
                 existing_membership.status = MembershipStatus.ACTIVE
-                existing_membership.credential_username = membership_username
-                existing_membership.credential_password_hash = membership_password_hash
-                existing_membership.requires_password_change = requires_password_change
                 existing_membership.save()
             else:
-                # Create new membership with organization-scoped credentials
+                # Create new membership
                 OrganizationMembership.objects.create(
                     user=user,
                     organization=invitation.organization,
                     role=invitation.role,
                     status=MembershipStatus.ACTIVE,
-                    invited_by=invitation.invited_by,
-                    credential_username=membership_username,
-                    credential_password_hash=membership_password_hash,
-                    requires_password_change=requires_password_change
+                    invited_by=invitation.invited_by
                 )
             
             # Mark invitation as accepted
