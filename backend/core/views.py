@@ -75,11 +75,11 @@ class UserViewSet(viewsets.ModelViewSet):
         if not current_organization_id:
             return User.objects.none()
         
-        # Get all users who are members of the current organization through OrganizationMembership
+        # Get all users who are members of the current organization (both active and inactive)
         from .models import OrganizationMembership, MembershipStatus
         member_user_ids = OrganizationMembership.objects.filter(
-            organization_id=current_organization_id,
-            status=MembershipStatus.ACTIVE
+            organization_id=current_organization_id
+            # Remove status filter to show both active and inactive members
         ).values_list('user_id', flat=True)
         
         return User.objects.filter(id__in=member_user_ids)
@@ -123,8 +123,8 @@ class UserViewSet(viewsets.ModelViewSet):
             
             membership = OrganizationMembership.objects.filter(
                 user=instance,
-                organization_id=current_organization_id,
-                status=MembershipStatus.ACTIVE
+                organization_id=current_organization_id
+                # Remove status filter to allow updating inactive members (for reactivation)
             ).first()
             
             if not membership:
