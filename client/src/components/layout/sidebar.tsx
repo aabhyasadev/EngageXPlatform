@@ -3,8 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import UserModal from "./user-modal";
+import { NavigationItem, canAccessNavItem } from "@/lib/permissions";
 import { 
   Home, 
   Users, 
@@ -27,17 +28,81 @@ export default function Sidebar() {
   const { prefetchRoute } = useRoutePrefetch();
   const [showUserModal, setShowUserModal] = useState(false);
 
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: Home },
-    { name: "Contacts", href: "/contacts", icon: Users },
-    { name: "Campaigns", href: "/campaigns", icon: Send },
-    { name: "Templates", href: "/templates", icon: FileText },
-    { name: "Domains", href: "/domains", icon: Globe },
-    { name: "Analytics", href: "/analytics", icon: BarChart3 },
-    { name: "Team", href: "/team", icon: UserCog },
-    { name: "Subscription", href: "/subscription", icon: CreditCard },
-    { name: "Settings", href: "/settings", icon: Settings },
+  // Define all navigation items with their required permissions
+  const allNavigationItems: NavigationItem[] = [
+    { 
+      name: "Dashboard", 
+      href: "/", 
+      icon: Home, 
+      permissions: ['dashboard'],
+      description: "Overview of your email marketing activities"
+    },
+    { 
+      name: "Contacts", 
+      href: "/contacts", 
+      icon: Users, 
+      permissions: ['contacts:read'],
+      description: "Manage your contact lists and segments"
+    },
+    { 
+      name: "Campaigns", 
+      href: "/campaigns", 
+      icon: Send, 
+      permissions: ['campaigns:read'],
+      description: "Create and manage email campaigns"
+    },
+    { 
+      name: "Templates", 
+      href: "/templates", 
+      icon: FileText, 
+      permissions: ['templates:read'],
+      description: "Design and manage email templates"
+    },
+    { 
+      name: "Domains", 
+      href: "/domains", 
+      icon: Globe, 
+      permissions: ['domains:read'],
+      description: "Configure and verify sending domains"
+    },
+    { 
+      name: "Analytics", 
+      href: "/analytics", 
+      icon: BarChart3, 
+      permissions: ['analytics:read'],
+      description: "Track campaign performance and insights"
+    },
+    { 
+      name: "Team", 
+      href: "/team", 
+      icon: UserCog, 
+      permissions: ['team:read'],
+      description: "Manage team members and permissions"
+    },
+    { 
+      name: "Subscription", 
+      href: "/subscription", 
+      icon: CreditCard, 
+      permissions: ['subscription:read'],
+      description: "View and manage your subscription plan"
+    },
+    { 
+      name: "Settings", 
+      href: "/settings", 
+      icon: Settings, 
+      permissions: ['settings:read'],
+      description: "Configure organization settings"
+    },
   ];
+
+  // Filter navigation items based on user permissions
+  const navigation = useMemo(() => {
+    if (!user?.role) return [];
+    
+    return allNavigationItems.filter(item => 
+      canAccessNavItem(user.role, item)
+    );
+  }, [user?.role]);
 
   const isActive = (href: string) => {
     if (href === "/") return location === "/";

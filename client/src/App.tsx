@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import MainLayout from "@/components/layout/main-layout";
 import RedirectToSignIn from "@/components/auth/redirect-to-signin";
 import LoadingFallback from "@/components/ui/loading-fallback";
+import PermissionRoute from "@/components/auth/permission-route";
 
 // Lazy load pages for better performance
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -74,16 +75,56 @@ function Router() {
     <MainLayout>
       <Suspense fallback={<LoadingFallback message="Loading page..." />}>
         <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/contacts" component={Contacts} />
-          <Route path="/campaigns" component={Campaigns} />
-          <Route path="/templates" component={Templates} />
-          <Route path="/domains" component={Domains} />
-          <Route path="/analytics" component={Analytics} />
-          <Route path="/team" component={Team} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/subscription" component={SubscriptionPage} />
+          <Route path="/" >
+            <PermissionRoute permissions={['dashboard']}>
+              <Dashboard />
+            </PermissionRoute>
+          </Route>
+          <Route path="/dashboard" >
+            <PermissionRoute permissions={['dashboard']}>
+              <Dashboard />
+            </PermissionRoute>
+          </Route>
+          <Route path="/contacts" >
+            <PermissionRoute permissions={['contacts:read']}>
+              <Contacts />
+            </PermissionRoute>
+          </Route>
+          <Route path="/campaigns" >
+            <PermissionRoute permissions={['campaigns:read']}>
+              <Campaigns />
+            </PermissionRoute>
+          </Route>
+          <Route path="/templates" >
+            <PermissionRoute permissions={['templates:read']}>
+              <Templates />
+            </PermissionRoute>
+          </Route>
+          <Route path="/domains" >
+            <PermissionRoute permissions={['domains:read']}>
+              <Domains />
+            </PermissionRoute>
+          </Route>
+          <Route path="/analytics" >
+            <PermissionRoute permissions={['analytics:read']}>
+              <Analytics />
+            </PermissionRoute>
+          </Route>
+          <Route path="/team" >
+            <PermissionRoute permissions={['team:read']}>
+              <Team />
+            </PermissionRoute>
+          </Route>
+          <Route path="/settings" >
+            <PermissionRoute permissions={['settings:read']}>
+              <Settings />
+            </PermissionRoute>
+          </Route>
+          <Route path="/subscription" >
+            <PermissionRoute permissions={['subscription:read']}>
+              <SubscriptionPage />
+            </PermissionRoute>
+          </Route>
           <Route path="/invite/:token" component={InvitationPage} />
           <Route component={NotFound} />
         </Switch>
