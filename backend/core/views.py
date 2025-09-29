@@ -48,8 +48,8 @@ class BaseOrganizationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if not self.request.user.organization:
-            return self.queryset.none()
-        return self.queryset.filter(organization=self.request.user.organization)
+            return super().get_queryset().none()
+        return super().get_queryset().filter(organization=self.request.user.organization)
 
     def perform_create(self, serializer):
         if self.request.user.organization:
