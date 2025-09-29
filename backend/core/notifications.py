@@ -1024,7 +1024,7 @@ def send_team_invitation_notification(invitation, existing_user):
         }
         
         notification = create_notification(
-            organization=invitation.organization,
+            organization=existing_user.organization,  # Use the invited user's organization
             notification_type=NotificationType.TEAM_INVITATION_RECEIVED,
             channel=NotificationChannel.IN_APP,
             user=existing_user,
