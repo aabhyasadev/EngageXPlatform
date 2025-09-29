@@ -7,6 +7,12 @@ from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
 import json
+import secrets
+
+
+def generate_invitation_token():
+    """Generate a secure token for invitations"""
+    return secrets.token_urlsafe(32)
 
 
 class UserRole(models.TextChoices):
@@ -331,7 +337,7 @@ class Invitation(models.Model):
         choices=UserRole.choices,
         default=UserRole.CAMPAIGN_MANAGER
     )
-    token = models.CharField(max_length=64, unique=True)
+    token = models.CharField(max_length=64, unique=True, default=generate_invitation_token)
     status = models.CharField(
         max_length=20,
         choices=InvitationStatus.choices,
@@ -349,8 +355,8 @@ class Invitation(models.Model):
 
     class Meta:
         db_table = 'invitations'
-        unique_together = [['organization', 'email']]
         indexes = [
+            models.Index(fields=['organization', 'email', 'status']),
             models.Index(fields=['token']),
             models.Index(fields=['email']),
             models.Index(fields=['status']),

@@ -894,18 +894,17 @@ def send_usage_limit_warning(organization, warning_details):
 
 
 def send_invitation_email(invitation):
-    """Send email invitation to a new team member"""
+    """Send email invitation to a new team member using SendGrid"""
     import logging
     from django.conf import settings
     from django.utils import timezone
-    from django.core.mail import send_mail
-    from django.template.loader import render_to_string
     
     logger = logging.getLogger('django')
     
     try:
-        # Generate invitation URL
-        invitation_url = f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')}/invite/{invitation.token}"
+        # Generate invitation URL from configured FRONTEND_URL
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
+        invitation_url = f"{frontend_url}/invite/{invitation.token}"
         
         # Email context
         context = {
@@ -914,7 +913,7 @@ def send_invitation_email(invitation):
             'organization_name': invitation.organization.name,
             'invited_by_name': invitation.invited_by.full_name,
             'role_display': invitation.get_role_display(),
-            'expires_at': invitation.expires_at,
+            'expires_at': invitation.expires_at.strftime('%B %d, %Y at %I:%M %p'),
         }
         
         # Create HTML content
@@ -958,7 +957,7 @@ def send_invitation_email(invitation):
                     </ul>
                     
                     <p style="font-size: 14px; color: #666;">
-                        This invitation will expire on <strong>{context['expires_at'].strftime('%B %d, %Y at %I:%M %p')}</strong>. 
+                        This invitation will expire on <strong>{context['expires_at']}</strong>. 
                         If you don't wish to join this organization, you can safely ignore this email.
                     </p>
                 </div>
@@ -971,49 +970,26 @@ def send_invitation_email(invitation):
         </html>
         """
         
-        # Plain text version
-        text_content = f"""
-        You're invited to join {context['organization_name']}!
-        
-        {context['invited_by_name']} has invited you to join the {context['organization_name']} team on EngageX as a {context['role_display']}.
-        
-        EngageX is a comprehensive email marketing platform that helps teams create, manage, and track email campaigns with enterprise-grade features.
-        
-        Accept your invitation: {invitation_url}
-        
-        What you'll get access to:
-        - Professional email campaign management
-        - Advanced analytics and tracking  
-        - Team collaboration tools
-        - Custom domain verification
-        - Contact management system
-        
-        This invitation will expire on {context['expires_at'].strftime('%B %d, %Y at %I:%M %p')}.
-        If you don't wish to join this organization, you can safely ignore this email.
-        
-        © 2025 EngageX. All rights reserved.
-        This invitation was sent to {invitation.email}
-        """
-        
         subject = f"You're invited to join {context['organization_name']} on EngageX"
         
-        # Check if email service is configured
-        if not settings.EMAIL_HOST_USER:
-            logger.warning("Email service not configured. Cannot send invitation email.")
-            return False
-            
-        # Send the email
-        success = send_mail(
+        # Use SendGrid-based email sending for consistency
+        success, error = send_email_notification(
+            to_email=invitation.email,
             subject=subject,
-            message=text_content,
-            html_message=html_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[invitation.email],
-            fail_silently=False,
+            html_content=html_content,
+            metadata={
+                'invitation_id': invitation.id,
+                'organization_id': invitation.organization.id,
+                'type': 'team_invitation'
+            }
         )
         
-        logger.info(f"Invitation email sent successfully to {invitation.email}")
-        return True
+        if success:
+            logger.info(f"Invitation email sent successfully to {invitation.email}")
+        else:
+            logger.error(f"Failed to send invitation email to {invitation.email}: {error}")
+        
+        return success
         
     except Exception as e:
         logger.error(f"Error sending invitation email: {str(e)}")

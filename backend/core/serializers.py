@@ -43,11 +43,33 @@ class InvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invitation
         fields = [
-            'id', 'email', 'role', 'status', 'token', 'expires_at',
+            'id', 'email', 'role', 'status', 'expires_at',
             'created_at', 'updated_at', 'organization_name', 'invited_by_name',
             'role_display', 'is_expired'
         ]
-        read_only_fields = ['id', 'token', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_organization_name(self, obj):
+        return obj.organization.name
+
+    def get_invited_by_name(self, obj):
+        return obj.invited_by.full_name
+
+
+class InvitationVerifySerializer(serializers.ModelSerializer):
+    organization_name = serializers.SerializerMethodField()
+    invited_by_name = serializers.SerializerMethodField()
+    role_display = serializers.ReadOnlyField(source='get_role_display')
+    is_expired = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Invitation
+        fields = [
+            'id', 'email', 'role', 'status', 'expires_at',
+            'created_at', 'updated_at', 'organization_name', 'invited_by_name',
+            'role_display', 'is_expired'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
     def get_organization_name(self, obj):
         return obj.organization.name

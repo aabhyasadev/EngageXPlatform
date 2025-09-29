@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -28,7 +28,7 @@ from .serializers import (
     EmailTemplateSerializer, CampaignSerializer, CampaignRecipientSerializer,
     AnalyticsEventSerializer, DashboardStatsSerializer, ContactImportSerializer,
     CampaignSendSerializer, CardSerializer, CardCreateSerializer,
-    CardUpdateSerializer, InvitationSerializer
+    CardUpdateSerializer, InvitationSerializer, InvitationVerifySerializer
 )
 from .tasks import send_campaign_emails, verify_domain_dns, import_contacts_from_csv
 from .subscription_views import (
@@ -140,7 +140,7 @@ class UserViewSet(viewsets.ModelViewSet):
             status='pending'
         ).update(status='revoked')
 
-        # Create new invitation
+        # Create new invitation (token is auto-generated via model default)
         invitation = Invitation.objects.create(
             organization=request.user.organization,
             email=email,
@@ -148,8 +148,6 @@ class UserViewSet(viewsets.ModelViewSet):
             invited_by=request.user,
             expires_at=timezone.now() + timedelta(days=7)
         )
-        invitation.generate_token()
-        invitation.save()
 
         # Send invitation email
         email_sent = send_invitation_email(invitation)
@@ -176,7 +174,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
             return Invitation.objects.none()
         return Invitation.objects.filter(organization=self.request.user.organization)
 
-    @action(detail=True, methods=['get'], permission_classes=[])
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def verify(self, request, token=None):
         """Verify invitation token and return invitation details"""
         try:
@@ -189,7 +187,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
                     'error': 'Invitation has expired'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            serializer = self.get_serializer(invitation)
+            serializer = InvitationVerifySerializer(invitation)
             return Response(serializer.data)
             
         except Invitation.DoesNotExist:
@@ -197,7 +195,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
                 'error': 'Invalid invitation token'
             }, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['post'], permission_classes=[])
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def accept(self, request, token=None):
         """Accept an invitation and create user account"""
         from django.utils import timezone
@@ -251,7 +249,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
                 'error': 'Invalid invitation token'
             }, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['post'], permission_classes=[])
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def decline(self, request, token=None):
         """Decline an invitation"""
         try:
