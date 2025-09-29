@@ -84,6 +84,7 @@ function Router() {
           <Route path="/team" component={Team} />
           <Route path="/settings" component={Settings} />
           <Route path="/subscription" component={SubscriptionPage} />
+          <Route path="/invite/:token" component={InvitationPage} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
