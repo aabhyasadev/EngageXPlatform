@@ -23,6 +23,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     organization = OrganizationSerializer(read_only=True)
     full_name = serializers.ReadOnlyField()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -32,6 +33,25 @@ class UserSerializer(serializers.ModelSerializer):
             'full_name'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_role(self, obj):
+        """Get the user's role in the current organization context"""
+        request = self.context.get('request')
+        if not request:
+            return obj.role
+        
+        current_organization_id = request.session.get('current_organization_id')
+        if not current_organization_id:
+            return obj.role
+        
+        from .models import OrganizationMembership, MembershipStatus
+        membership = OrganizationMembership.objects.filter(
+            user=obj,
+            organization_id=current_organization_id,
+            status=MembershipStatus.ACTIVE
+        ).first()
+        
+        return membership.role if membership else obj.role
 
 
 class InvitationSerializer(serializers.ModelSerializer):

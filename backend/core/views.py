@@ -70,9 +70,19 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if not self.request.user.organization:
+        # Get current organization from session (set by auth system)
+        current_organization_id = self.request.session.get('current_organization_id')
+        if not current_organization_id:
             return User.objects.none()
-        return User.objects.filter(organization=self.request.user.organization)
+        
+        # Get all users who are members of the current organization through OrganizationMembership
+        from .models import OrganizationMembership, MembershipStatus
+        member_user_ids = OrganizationMembership.objects.filter(
+            organization_id=current_organization_id,
+            status=MembershipStatus.ACTIVE
+        ).values_list('user_id', flat=True)
+        
+        return User.objects.filter(id__in=member_user_ids)
 
     @action(detail=False, methods=['get'])
     def me(self, request):
@@ -88,6 +98,94 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        """Update user role/status in current organization"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Get current organization from session
+        current_organization_id = request.session.get('current_organization_id')
+        if not current_organization_id:
+            return Response({
+                'error': 'No organization context found'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user has permission to update (admin or organizer)
+        if request.user.role not in ['admin', 'organizer']:
+            return Response({
+                'error': 'Only admin and organizer can update team members'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Handle role or status updates through membership
+        if 'role' in request.data or 'is_active' in request.data:
+            from .models import OrganizationMembership, MembershipStatus
+            
+            membership = OrganizationMembership.objects.filter(
+                user=instance,
+                organization_id=current_organization_id,
+                status=MembershipStatus.ACTIVE
+            ).first()
+            
+            if not membership:
+                return Response({
+                    'error': 'User is not a member of this organization'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Update role in membership if provided
+            if 'role' in request.data:
+                membership.role = request.data['role']
+                membership.save()
+            
+            # Update user status if provided
+            if 'is_active' in request.data:
+                instance.is_active = request.data['is_active']
+                instance.save()
+        
+        # For other user fields, use default serializer
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """Remove user from current organization (not delete user)"""
+        instance = self.get_object()
+        
+        # Get current organization from session
+        current_organization_id = request.session.get('current_organization_id')
+        if not current_organization_id:
+            return Response({
+                'error': 'No organization context found'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user has permission to remove members (admin or organizer)
+        if request.user.role not in ['admin', 'organizer']:
+            return Response({
+                'error': 'Only admin and organizer can remove team members'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Cannot remove yourself
+        if instance.id == request.user.id:
+            return Response({
+                'error': 'Cannot remove yourself from the organization'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        from .models import OrganizationMembership
+        
+        # Remove membership (don't delete user)
+        deleted_count = OrganizationMembership.objects.filter(
+            user=instance,
+            organization_id=current_organization_id
+        ).delete()
+        
+        if deleted_count[0] == 0:
+            return Response({
+                'error': 'User is not a member of this organization'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def create(self, request, *args, **kwargs):
         """Create invitation instead of directly creating user"""
