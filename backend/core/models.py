@@ -23,6 +23,12 @@ class UserRole(models.TextChoices):
     EDITOR = 'editor', 'Editor'
 
 
+class MembershipStatus(models.TextChoices):
+    ACTIVE = 'active', 'Active'
+    INACTIVE = 'inactive', 'Inactive'
+    PENDING = 'pending', 'Pending'
+
+
 class SubscriptionPlan(models.TextChoices):
     FREE_TRIAL = 'free_trial', 'Free Trial'
     BASIC_MONTHLY = 'basic_monthly', 'Basic Monthly'
@@ -324,6 +330,71 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
         return self.email
+    
+    def get_organizations(self):
+        """Get all organizations this user has access to"""
+        return Organization.objects.filter(
+            memberships__user=self,
+            memberships__status=MembershipStatus.ACTIVE
+        ).distinct()
+    
+    def get_membership(self, organization):
+        """Get user's membership for a specific organization"""
+        try:
+            return self.memberships.get(organization=organization, status=MembershipStatus.ACTIVE)
+        except OrganizationMembership.DoesNotExist:
+            return None
+    
+    def get_role_in_organization(self, organization):
+        """Get user's role in a specific organization"""
+        membership = self.get_membership(organization)
+        return membership.role if membership else None
+
+
+class OrganizationMembership(models.Model):
+    """Connects users to organizations with specific roles"""
+    id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='memberships'
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='memberships'
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=UserRole.choices,
+        default=UserRole.CAMPAIGN_MANAGER
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=MembershipStatus.choices,
+        default=MembershipStatus.ACTIVE
+    )
+    invited_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invited_memberships'
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'organization_memberships'
+        unique_together = ['user', 'organization']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['role']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.organization.name} ({self.role})"
 
 
 class Invitation(models.Model):
