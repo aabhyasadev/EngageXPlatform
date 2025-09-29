@@ -1023,13 +1023,17 @@ def send_team_invitation_notification(invitation, existing_user):
             'invitation_url': f"/invite/{invitation.token}"
         }
         
-        notification = create_notification(
-            organization=existing_user.organization,  # Use the invited user's organization
-            notification_type=NotificationType.TEAM_INVITATION_RECEIVED,
-            channel=NotificationChannel.IN_APP,
-            user=existing_user,
-            metadata=metadata
-        )
+        # Only create notification if the invited user has an organization
+        if existing_user.organization:
+            notification = create_notification(
+                organization=existing_user.organization,  # Use the invited user's organization
+                notification_type=NotificationType.TEAM_INVITATION_RECEIVED,
+                channel=NotificationChannel.IN_APP,
+                user=existing_user,
+                metadata=metadata
+            )
+        else:
+            logger.info(f"Invited user {existing_user.email} has no organization - skipping in-app notification")
         
         logger.info(f"Team invitation notification sent to existing user {existing_user.email}")
         return True
