@@ -232,9 +232,11 @@ export default function Team() {
   };
 
 
-  // Extract members and pending invitations from paginated responses
-  const members = teamMembersResponse?.results || [];
-  const pendingInvitations = pendingInvitationsResponse?.results?.filter(inv => inv.status === 'pending' && !inv.is_expired) || [];
+  // Handle API responses - Django returns arrays directly, not paginated responses
+  const members = Array.isArray(teamMembersResponse) ? teamMembersResponse : teamMembersResponse?.results || [];
+  const pendingInvitations = Array.isArray(pendingInvitationsResponse) 
+    ? pendingInvitationsResponse.filter(inv => inv.status === 'pending' && !inv.is_expired)
+    : (pendingInvitationsResponse?.results?.filter(inv => inv.status === 'pending' && !inv.is_expired) || []);
 
   // Calculate statistics including pending invitations
   const totalMembers = members.length + pendingInvitations.length;
