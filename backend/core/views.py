@@ -135,12 +135,13 @@ class UserViewSet(viewsets.ModelViewSet):
             # Update role in membership if provided
             if 'role' in request.data:
                 membership.role = request.data['role']
-                membership.save()
             
-            # Update user status if provided
+            # Update membership status if provided (organization-scoped, not global user)
             if 'is_active' in request.data:
-                instance.is_active = request.data['is_active']
-                instance.save()
+                membership.status = MembershipStatus.ACTIVE if request.data['is_active'] else MembershipStatus.INACTIVE
+            
+            # Save membership changes
+            membership.save()
         
         # For other user fields, use default serializer
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
