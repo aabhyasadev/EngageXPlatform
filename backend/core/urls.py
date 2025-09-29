@@ -14,6 +14,7 @@ from .signup_views import (
     check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account
 )
 from .signin_views import (
+    organization_login,
     validate_organization_email,
     authenticate_credentials, 
     verify_mfa_otp_sso,
@@ -84,7 +85,10 @@ urlpatterns = [
     path('signup/verify-otp', verify_otp, name='signup_verify_otp'),
     path('signup/create-account', create_account, name='signup_create_account'),
     
-    # New sign-in flow endpoints (proxy strips /api prefix)
+    # Organization-scoped sign-in flow (proxy strips /api prefix)
+    path('signin/organization-login/', organization_login, name='organization_login'),
+    
+    # Legacy sign-in flow endpoints (proxy strips /api prefix) 
     path('signin/validate-org-email/', validate_organization_email, name='signin_validate_org_email'),
     path('signin/authenticate/', authenticate_credentials, name='signin_authenticate'),
     path('signin/verify/', verify_mfa_otp_sso, name='signin_verify'),

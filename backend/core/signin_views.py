@@ -14,9 +14,114 @@ import random
 import string
 import logging
 
-from .models import User, Organization
+from .models import User, Organization, OrganizationMembership, MembershipStatus
 
 logger = logging.getLogger(__name__)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def organization_login(request):
+    """
+    New organization-scoped login flow
+    Uses organization + username + password (instead of global email)
+    """
+    organization_id = request.data.get('organization_id', '').strip()
+    username = request.data.get('username', '').strip()
+    password = request.data.get('password', '')
+    
+    if not organization_id or not username or not password:
+        return Response({
+            'error': 'Organization ID, username, and password are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Validate organization exists
+        organization = Organization.objects.get(id=organization_id)
+        
+        # Find membership by organization + username
+        membership = OrganizationMembership.objects.filter(
+            organization=organization,
+            credential_username=username,
+            status=MembershipStatus.ACTIVE
+        ).first()
+        
+        if not membership:
+            # Generic error to prevent username enumeration
+            return Response({
+                'error': 'Invalid credentials'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if account is locked
+        if membership.is_locked():
+            return Response({
+                'error': 'Account is temporarily locked due to multiple failed login attempts'
+            }, status=status.HTTP_423_LOCKED)
+        
+        # Verify password
+        if not membership.check_password(password):
+            # Record failed attempt
+            membership.record_login_attempt(success=False)
+            return Response({
+                'error': 'Invalid credentials'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Password is correct - record successful login
+        membership.record_login_attempt(success=True)
+        
+        # Set session data for organization-scoped access
+        request.session['current_organization_id'] = str(organization.id)
+        request.session['current_membership_id'] = str(membership.id)
+        request.session['current_user_id'] = str(membership.user.id)
+        
+        # Log in the underlying Django user for DRF compatibility
+        login(request, membership.user)
+        
+        # Check if password change is required
+        if membership.requires_password_change:
+            return Response({
+                'message': 'Login successful',
+                'requires_password_change': True,
+                'organization': organization.name,
+                'user': {
+                    'id': str(membership.user.id),
+                    'email': membership.user.email,
+                    'first_name': membership.user.first_name,
+                    'last_name': membership.user.last_name,
+                    'role': membership.role
+                }
+            })
+        
+        # Check if MFA is enabled
+        if membership.mfa_enabled:
+            return Response({
+                'message': 'MFA verification required',
+                'requires_mfa': True,
+                'organization': organization.name
+            })
+        
+        # Full login success
+        return Response({
+            'message': 'Login successful',
+            'organization': organization.name,
+            'user': {
+                'id': str(membership.user.id),
+                'email': membership.user.email,
+                'first_name': membership.user.first_name,
+                'last_name': membership.user.last_name,
+                'role': membership.role
+            }
+        })
+        
+    except Organization.DoesNotExist:
+        return Response({
+            'error': 'Organization not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Organization login error: {str(e)}")
+        return Response({
+            'error': 'Login failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
