@@ -34,14 +34,30 @@ def validate_organization_email(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        # Validate organization exists and user exists in organization
+        from .models import OrganizationMembership, MembershipStatus
+        
+        # Validate organization exists
         organization = Organization.objects.get(id=organization_id)
-        user = User.objects.get(email=email, organization=organization)
+        
+        # Find user by email regardless of organization
+        user = User.objects.get(email=email)
+        
+        # Check if user has active membership in this organization
+        membership = OrganizationMembership.objects.filter(
+            user=user,
+            organization=organization,
+            status=MembershipStatus.ACTIVE
+        ).first()
+        
+        if not membership:
+            # User exists but not in this organization
+            raise User.DoesNotExist()
         
         # Store validation in session for next step
         request.session['signin_organization_id'] = organization_id
         request.session['signin_email'] = email
         request.session['signin_user_id'] = str(user.id)
+        request.session['signin_membership_id'] = str(membership.id)
         
         return Response({
             'message': 'Validation successful - please proceed to next step',
@@ -69,8 +85,9 @@ def authenticate_credentials(request):
     signin_email = request.session.get('signin_email')
     signin_user_id = request.session.get('signin_user_id')
     signin_organization_id = request.session.get('signin_organization_id')
+    signin_membership_id = request.session.get('signin_membership_id')
     
-    if not signin_email or not signin_user_id:
+    if not signin_email or not signin_user_id or not signin_membership_id:
         return Response({
             'error': 'Session expired. Please start the sign-in process again',
             'code': 'SESSION_EXPIRED'
@@ -123,10 +140,19 @@ def authenticate_credentials(request):
                 user.backend = 'django.contrib.auth.backends.ModelBackend'
                 login(request, user)
                 
+                # Get membership information for the response
+                from .models import OrganizationMembership
+                membership = OrganizationMembership.objects.get(id=signin_membership_id)
+                
+                # Set current organization context in session
+                request.session['current_organization_id'] = signin_organization_id
+                request.session['current_membership_id'] = signin_membership_id
+                
                 # Clear signin session data
                 request.session.pop('signin_organization_id', None)
                 request.session.pop('signin_email', None)
                 request.session.pop('signin_user_id', None)
+                request.session.pop('signin_membership_id', None)
                 
                 return Response({
                     'message': 'Login successful',
@@ -134,8 +160,8 @@ def authenticate_credentials(request):
                         'id': str(user.id),
                         'email': user.email,
                         'full_name': user.full_name,
-                        'organization': user.organization.name,
-                        'role': user.role
+                        'organization': membership.organization.name,
+                        'role': membership.role
                     }
                 })
         else:
@@ -167,9 +193,11 @@ def verify_mfa_otp_sso(request):
     
     # Get validated data from session
     signin_user_id = request.session.get('signin_user_id')
+    signin_organization_id = request.session.get('signin_organization_id')
+    signin_membership_id = request.session.get('signin_membership_id')
     credentials_validated = request.session.get('signin_credentials_validated')
     
-    if not signin_user_id or not credentials_validated:
+    if not signin_user_id or not credentials_validated or not signin_membership_id:
         return Response({
             'error': 'Session expired. Please start the sign-in process again',
             'code': 'SESSION_EXPIRED'
@@ -192,10 +220,19 @@ def verify_mfa_otp_sso(request):
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
             
+            # Get membership information for the response
+            from .models import OrganizationMembership
+            membership = OrganizationMembership.objects.get(id=signin_membership_id)
+            
+            # Set current organization context in session
+            request.session['current_organization_id'] = signin_organization_id
+            request.session['current_membership_id'] = signin_membership_id
+            
             # Clear all signin session data
             request.session.pop('signin_organization_id', None)
             request.session.pop('signin_email', None)
             request.session.pop('signin_user_id', None)
+            request.session.pop('signin_membership_id', None)
             request.session.pop('signin_credentials_validated', None)
             
             return Response({
@@ -204,8 +241,8 @@ def verify_mfa_otp_sso(request):
                     'id': str(user.id),
                     'email': user.email,
                     'full_name': user.full_name,
-                    'organization': user.organization.name,
-                    'role': user.role
+                    'organization': membership.organization.name,
+                    'role': membership.role
                 }
             })
         else:
@@ -235,30 +272,54 @@ def forgot_account(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
+        from .models import OrganizationMembership, MembershipStatus
+        
         user = User.objects.get(email=email)
         
-        if user.organization:
-            # Send email with organization ID
+        # Get all active memberships for this user
+        memberships = OrganizationMembership.objects.filter(
+            user=user,
+            status=MembershipStatus.ACTIVE
+        ).select_related('organization')
+        
+        if memberships.exists():
+            # Send email with organization IDs
             try:
+                # Build organization list
+                org_list_html = ""
+                org_list_plain = ""
+                
+                for membership in memberships:
+                    org_list_html += f"""
+                    <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                        <h3 style="color: #007bff; font-size: 24px; margin: 0; letter-spacing: 1px;">
+                            {membership.organization.id}
+                        </h3>
+                        <p style="color: #666; font-size: 14px; margin: 5px 0;">
+                            Organization: {membership.organization.name} | Role: {membership.role.replace('_', ' ').title()}
+                        </p>
+                    </div>
+                    """
+                    
+                    org_list_plain += f"""
+                    Organization ID: {membership.organization.id}
+                    Organization: {membership.organization.name}
+                    Your Role: {membership.role.replace('_', ' ').title()}
+                    
+                    """
+                
                 html_message = f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #333;">Your EngageX Organization ID</h2>
+                    <h2 style="color: #333;">Your EngageX Organization IDs</h2>
                     <p style="font-size: 16px; color: #666;">
                         Hello {user.full_name},
                     </p>
                     <p style="font-size: 16px; color: #666;">
-                        Your organization ID is:
+                        You have access to the following organizations:
                     </p>
-                    <div style="background: #f8f9fa; padding: 20px; text-align: center; margin: 20px 0;">
-                        <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 2px;">
-                            {user.organization.id}
-                        </h1>
-                    </div>
+                    {org_list_html}
                     <p style="color: #666; font-size: 14px;">
-                        Organization: {user.organization.name}
-                    </p>
-                    <p style="color: #666; font-size: 14px;">
-                        Use this Organization ID to sign in to your EngageX account.
+                        Use any of these Organization IDs to sign in to your EngageX account.
                     </p>
                     <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
                     <p style="color: #999; font-size: 12px;">
@@ -268,20 +329,21 @@ def forgot_account(request):
                 """
                 
                 plain_message = f"""
-                Your EngageX Organization ID
+                Your EngageX Organization IDs
                 
                 Hello {user.full_name},
                 
-                Your organization ID is: {user.organization.id}
-                Organization: {user.organization.name}
+                You have access to the following organizations:
                 
-                Use this Organization ID to sign in to your EngageX account.
+                {org_list_plain}
+                
+                Use any of these Organization IDs to sign in to your EngageX account.
                 
                 EngageX - Professional Email Marketing Platform
                 """
                 
                 email_sent = send_mail(
-                    subject='Your EngageX Organization ID',
+                    subject='Your EngageX Organization IDs',
                     message=plain_message,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
@@ -290,9 +352,11 @@ def forgot_account(request):
                 )
                 
                 if email_sent:
+                    org_count = memberships.count()
                     return Response({
-                        'message': f'Your Organization ID has been sent to {email}. Please check your email.',
-                        'email': email
+                        'message': f'Your Organization IDs ({org_count} organizations) have been sent to {email}. Please check your email.',
+                        'email': email,
+                        'organization_count': org_count
                     })
                 else:
                     return Response({
@@ -305,9 +369,9 @@ def forgot_account(request):
                     'error': 'Failed to send email. Please try again later.'
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
-            # User exists but has no organization
+            # User exists but has no organization memberships
             return Response({
-                'error': 'No organization found for this account.'
+                'error': 'No organization memberships found for this account.'
             }, status=status.HTTP_400_BAD_REQUEST)
                 
     except User.DoesNotExist:
