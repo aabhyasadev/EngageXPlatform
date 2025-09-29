@@ -22,4 +22,41 @@ dependencies = [
     "requests>=2.32.5",
     "stripe>=12.5.1",
     "schedule>=1.2.2",
+    "types-requests>=2.32.4.20250913",
+    "django-stubs>=5.2.5",
 ]
+
+[tool.django-stubs]
+django_settings_module = "backend.settings"
+
+[tool.pyright]
+# Basic configuration
+pythonVersion = "3.11"
+include = ["backend"]
+exclude = [
+    "**/__pycache__",
+    "**/node_modules",
+    "client",
+    "dist",
+    "build"
+]
+
+# Django-specific settings
+defineConstant = { DEBUG = true }
+pythonPlatform = "Linux"
+
+# Type checking settings
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportUnusedImport = true
+reportUnusedClass = "warning"
+reportUnusedFunction = "warning"
+reportUnusedVariable = "warning"
+
+# Django ORM specific - be more lenient to avoid false positives
+reportGeneralTypeIssues = "warning"
+reportOptionalMemberAccess = "warning"
+reportOptionalSubscript = "warning"
+reportPrivateImportUsage = "warning"
+reportUnknownMemberType = "warning"
