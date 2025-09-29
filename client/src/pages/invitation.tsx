@@ -84,17 +84,16 @@ export default function InvitationPage() {
     onSuccess: (data) => {
       setExistingUser(data.user_exists);
       if (data.user_exists) {
-        // Existing user - accept directly
-        acceptMutation.mutate();
+        // Existing user - show confirmation modal
+        setShowModal(true);
       } else {
-        // New user - show profile setup
+        // New user - show profile setup directly
         setShowProfileSetup(true);
-        setShowModal(false);
       }
     },
     onError: () => {
-      // If check fails, assume existing user and proceed
-      acceptMutation.mutate();
+      // If check fails, assume existing user and show confirmation modal
+      setShowModal(true);
     }
   });
 
@@ -165,12 +164,13 @@ export default function InvitationPage() {
   });
 
   const handleAccept = () => {
-    setShowModal(true);
+    // Check if user exists first to determine the flow
+    checkUserMutation.mutate();
   };
 
   const confirmAccept = () => {
-    // Check if user exists first, then decide flow
-    checkUserMutation.mutate();
+    // For existing users, accept directly
+    acceptMutation.mutate();
   };
 
   const handleProfileSubmit = (data: ProfileSetupData) => {
