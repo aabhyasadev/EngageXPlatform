@@ -3,8 +3,8 @@ from django.utils import timezone
 from django.db import transaction
 import dns.resolver
 import logging
-import sendgrid
-from sendgrid.helpers.mail import Mail
+from django.core.mail import EmailMessage
+import re
 from django.conf import settings
 from .models import (
     Domain, Campaign, CampaignRecipient, Contact, AnalyticsEvent,
@@ -105,11 +105,11 @@ def send_email_batch(campaign_id, recipient_ids):
             id__in=recipient_ids
         ).select_related('contact')
         
-        if not settings.SENDGRID_API_KEY:
-            logger.error("SendGrid API key not configured")
-            return "SendGrid API key not configured"
+        if not settings.EMAIL_HOST_USER:
+            logger.error("Email not configured - EMAIL_HOST_USER not set")
+            return "Email not configured - EMAIL_HOST_USER not set"
         
-        sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+        from_email = settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER
         
         success_count = 0
         error_count = 0
@@ -135,33 +135,30 @@ def send_email_batch(campaign_id, recipient_ids):
                     text_content = text_content.replace(placeholder, value)
                     subject = subject.replace(placeholder, value)
                 
-                # Create email
-                mail = Mail(
-                    from_email=campaign.from_email,
-                    to_emails=contact.email,
+                # Create and send email using Django's SMTP
+                email = EmailMessage(
                     subject=subject,
-                    html_content=html_content,
-                    plain_text_content=text_content
+                    body=html_content,
+                    from_email=campaign.from_email or from_email,
+                    to=[contact.email],
                 )
+                email.content_subtype = "html"  # Set as HTML email
                 
                 # Send email
-                response = sg.send(mail)
+                email.send()
                 
-                if response.status_code in [200, 202]:
-                    recipient.status = 'sent'
-                    recipient.sent_at = timezone.now()
-                    success_count += 1
-                    
-                    # Create analytics event
-                    AnalyticsEvent.objects.create(
-                        organization=campaign.organization,
-                        campaign=campaign,
-                        contact=contact,
-                        event_type='send'
-                    )
-                else:
-                    recipient.status = 'failed'
-                    error_count += 1
+                # Django's send() doesn't return status codes, so we assume success
+                recipient.status = 'sent'
+                recipient.sent_at = timezone.now()
+                success_count += 1
+                
+                # Create analytics event
+                AnalyticsEvent.objects.create(
+                    organization=campaign.organization,
+                    campaign=campaign,
+                    contact=contact,
+                    event_type='send'
+                )
                 
                 recipient.save()
                 

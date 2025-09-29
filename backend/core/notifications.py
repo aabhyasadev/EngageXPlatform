@@ -11,8 +11,10 @@ from .models import (
     NotificationType, NotificationChannel, NotificationStatus,
     SubscriptionPlan
 )
-import sendgrid
-from sendgrid.helpers.mail import Mail, Email, To, Content
+from django.core.mail import EmailMessage
+from django.core.exceptions import ValidationError
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger(__name__)
 
@@ -75,43 +77,37 @@ PLAN_NAMES = {
 
 
 def send_email_notification(to_email, subject, html_content, text_content=None, metadata=None):
-    """Send email notification using SendGrid"""
+    """Send email notification using Django's SMTP backend"""
     try:
-        if not settings.SENDGRID_API_KEY:
-            logger.error("SendGrid API key not configured")
-            return False, "SendGrid API key not configured"
+        # Check if SMTP is configured
+        if not settings.EMAIL_HOST_USER:
+            logger.error("Email not configured - EMAIL_HOST_USER not set")
+            return False, "Email not configured - EMAIL_HOST_USER not set"
         
-        sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
-        
-        from_email = Email(settings.DEFAULT_FROM_EMAIL or 'noreply@engagex.com')
-        to_email = To(to_email)
+        from_email = settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER
         
         if not text_content:
-            text_content = html_content  # Fallback to HTML content
+            # Create plain text version by stripping HTML tags
+            import re
+            text_content = re.sub('<[^<]+?>', '', html_content)
         
-        mail = Mail(
-            from_email=from_email,
-            to_emails=to_email,
+        # Create email message
+        email = EmailMessage(
             subject=subject,
-            html_content=Content("text/html", html_content),
-            plain_text_content=Content("text/plain", text_content)
+            body=text_content,  # Plain text body
+            from_email=from_email,
+            to=[to_email],
         )
         
-        # Add unsubscribe link
-        mail.asm = {
-            'group_id': 12345,  # Replace with actual unsubscribe group ID
-            'groups_to_display': [12345]
-        }
+        # Add HTML alternative
+        email.content_subtype = "html"  # Set main content as HTML
+        email.body = html_content
         
-        response = sg.send(mail)
+        # Send the email
+        email.send()
         
-        if response.status_code in [200, 202]:
-            logger.info(f"Email sent successfully to {to_email}")
-            return True, None
-        else:
-            error_msg = f"Failed to send email. Status code: {response.status_code}"
-            logger.error(error_msg)
-            return False, error_msg
+        logger.info(f"Email sent successfully to {to_email}")
+        return True, None
             
     except Exception as e:
         error_msg = f"Error sending email: {str(e)}"
