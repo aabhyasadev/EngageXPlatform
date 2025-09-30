@@ -1,33 +1,26 @@
 from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
-
-# Import viewsets from new app structure
-from apps.accounts.views import OrganizationViewSet, UserViewSet, InvitationViewSet
-from apps.domains.views import DomainViewSet
-from apps.contacts.views import ContactGroupViewSet, ContactViewSet
-from apps.templates.views import EmailTemplateViewSet
-from apps.campaigns.views import CampaignViewSet
-from apps.analytics.views import AnalyticsEventViewSet, DashboardViewSet
-from apps.subscriptions.views import CardViewSet
-
-# Import authentication views
-from apps.authentication.auth_views import (
+from .views import (
+    OrganizationViewSet, UserViewSet, DomainViewSet,
+    ContactGroupViewSet, ContactViewSet, EmailTemplateViewSet,
+    CampaignViewSet, AnalyticsEventViewSet, DashboardViewSet,
+    CardViewSet, InvitationViewSet
+)
+from .auth_views import (
     auth_user, dashboard_stats, logout_view, get_csrf_token, test_connection, switch_organization
 )
-from apps.authentication.signup_views import (
+from .signup_views import (
     check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account
 )
-from apps.authentication.signin_views import (
+from .signin_views import (
     validate_organization_email,
     authenticate_credentials, 
     verify_mfa_otp_sso,
     forgot_account,
     logout_user
 )
-
-# Import subscription views
-from apps.subscriptions.subscription_views import (
+from .subscription_views import (
     get_subscription_plans,
     get_plans_detailed,
     get_current_subscription,
@@ -70,12 +63,17 @@ urlpatterns = [
     # Test endpoint for Django-frontend connection
     path('api/test', test_connection, name='test_connection'),
     
+    # Replit OIDC authentication routes removed
+    
     # Express proxy routes (proxy strips /api prefix, so Django receives without /api)
     path('auth/user', auth_user, name='auth_user'),
+    # Replit auth login route removed
     path('auth/logout', logout_view, name='logout'),
     path('auth/switch-organization', switch_organization, name='switch_organization'),
     path('auth/csrf', get_csrf_token, name='csrf_token'),
     path('dashboard/stats', dashboard_stats, name='dashboard_stats'),
+    
+    # Domain routes handled by router.register(r'domains', DomainViewSet)
     
     # Signup flow endpoints (proxy strips /api prefix)
     path('signup/check-email', check_email, name='signup_check_email'),

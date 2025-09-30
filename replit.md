@@ -6,6 +6,38 @@ EngageX is a comprehensive multi-tenant email marketing platform built with a mo
 
 The application serves multiple organizations with secure isolation, role-based access control, and subscription management. It supports the complete email marketing workflow from contact import and segmentation to campaign creation, sending, and performance tracking.
 
+## Recent Changes (September 30, 2025)
+
+### Major Django Backend Restructuring Completed ✅
+
+Successfully completed a comprehensive restructuring of the Django backend from a monolithic `core` app to a modular, domain-driven architecture with 10 specialized apps:
+
+**New Architecture:**
+- `apps/accounts/` - User and organization management (User, Organization, OrganizationMembership, Invitation models)
+- `apps/authentication/` - Authentication flows (signin, signup, auth views, OIDC integration)
+- `apps/subscriptions/` - Billing and subscription management (Stripe integration, plan management, usage tracking)
+- `apps/contacts/` - Contact and contact group management
+- `apps/domains/` - Domain verification and DNS management
+- `apps/campaigns/` - Email campaign creation and sending
+- `apps/templates/` - Email template management
+- `apps/analytics/` - Analytics events and dashboard statistics
+- `apps/notifications/` - In-app notification system
+- `apps/common/` - Shared utilities, middleware, tasks, constants, and base viewsets
+
+**Migration Safety Approach:**
+- All moved models use `Meta.app_label = 'core'` to preserve database integrity
+- Original `core` app kept in INSTALLED_APPS for migration compatibility
+- No database migrations required - existing data remains intact
+- Backward-compatible with existing migration history
+
+**Configuration Updates:**
+- Settings split into base/development/production files in `backend/config/settings/`
+- Requirements organized into layered files (base/dev/prod/test)
+- Environment files created (.env.example, .env.development, .env.production)
+- ROOT_URLCONF updated to `config.urls`
+- WSGI_APPLICATION updated to `config.wsgi.application`
+- All imports updated to use new app structure
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

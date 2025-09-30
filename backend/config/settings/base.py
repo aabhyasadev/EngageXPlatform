@@ -36,7 +36,17 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'core',
+    'core',  # Keep for migrations compatibility
+    'apps.common',
+    'apps.accounts',
+    'apps.authentication',
+    'apps.subscriptions',
+    'apps.contacts',
+    'apps.domains',
+    'apps.campaigns',
+    'apps.templates',
+    'apps.analytics',
+    'apps.notifications',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -49,13 +59,13 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'core.middleware.SubscriptionAccessMiddleware',
-    'core.middleware.FeatureLimitMiddleware',
+    'apps.common.middleware.SubscriptionAccessMiddleware',
+    'apps.common.middleware.FeatureLimitMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'engagex.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -72,7 +82,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'engagex.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database configuration - Connect to existing PostgreSQL
 DATABASES = {
@@ -133,8 +143,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'core.authentication.SignedHeaderAuthentication',
-        'core.authentication.CSRFExemptSessionAuthentication',
+        'apps.authentication.authentication.SignedHeaderAuthentication',
+        'apps.authentication.authentication.CSRFExemptSessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -225,11 +235,11 @@ CELERY_ENABLE_UTC = True
 # Celery Beat Schedule for periodic tasks
 CELERY_BEAT_SCHEDULE = {
     'verify-domains': {
-        'task': 'core.tasks.verify_domains_task',
+        'task': 'apps.common.tasks.verify_domains_task',
         'schedule': 300.0,
     },
     'process-analytics': {
-        'task': 'core.tasks.process_analytics_task',
+        'task': 'apps.common.tasks.process_analytics_task',
         'schedule': 600.0,
     },
 }
