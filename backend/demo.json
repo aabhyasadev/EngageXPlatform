@@ -1,0 +1,619 @@
+[
+  {
+    "model": "core.organization",
+    "pk": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+    "fields": {
+      "name": "Abhishek Dubey's Organization",
+      "subscription_plan": "free_trial",
+      "subscription_status": "trialing",
+      "billing_cycle": null,
+      "trial_ends_at": "2025-10-13 10:10:10.918487",
+      "subscription_ends_at": null,
+      "current_period_end": null,
+      "cancel_at_period_end": false,
+      "stripe_customer_id": null,
+      "stripe_subscription_id": null,
+      "stripe_price_id": null,
+      "stripe_payment_method_id": null,
+      "contacts_limit": 1000,
+      "campaigns_limit": 10,
+      "emails_per_month_limit": 10000,
+      "is_subscription_active": true,
+      "industry": "Retail",
+      "employees_range": "201-500",
+      "contacts_range": "100-1,000",
+      "metadata": {},
+      "created_at": "2025-09-29 10:10:10.918884",
+      "updated_at": "2025-09-29 10:10:10.918895"
+    }
+  },
+  {
+    "model": "core.organization",
+    "pk": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+    "fields": {
+      "name": "Kaycee Mariya's Organization",
+      "subscription_plan": "free_trial",
+      "subscription_status": "trialing",
+      "billing_cycle": null,
+      "trial_ends_at": "2025-10-13 10:13:00.101836",
+      "subscription_ends_at": null,
+      "current_period_end": null,
+      "cancel_at_period_end": false,
+      "stripe_customer_id": null,
+      "stripe_subscription_id": null,
+      "stripe_price_id": null,
+      "stripe_payment_method_id": null,
+      "contacts_limit": 1000,
+      "campaigns_limit": 10,
+      "emails_per_month_limit": 10000,
+      "is_subscription_active": true,
+      "industry": "Marketing",
+      "employees_range": "51-200",
+      "contacts_range": "50,000+",
+      "metadata": {},
+      "created_at": "2025-09-29 10:13:00.102404",
+      "updated_at": "2025-09-29 10:13:00.102419"
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "d1c55166-ba90-4c93-9f06-e7902e4f617c",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$z68YZ2C6dz8f0kTXnvZqDt$wQK8YWkkAlNmRJisogPzyCGUFMKn/aozE4+KzSpM/Zs=",
+      "last_login": "2025-09-30 06:10:19.614744+00:00",
+      "is_superuser": false,
+      "replit_id": null,
+      "username": "abhishek1",
+      "email": "abhishek.dubey@aabhyasa.com",
+      "first_name": "Abhishek",
+      "last_name": "Dubey",
+      "phone": "+19876543210",
+      "profile_image_url": null,
+      "stripe_customer_id": null,
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "role": "organizer",
+      "mfa_enabled": false,
+      "otp_secret": null,
+      "sso_enabled": false,
+      "last_login_at": "2025-09-30 06:10:19.290651+00:00",
+      "login_attempts": 0,
+      "locked_until": null,
+      "is_active": true,
+      "is_staff": false,
+      "created_at": "2025-09-29 10:10:11.252302",
+      "updated_at": "2025-09-30 06:10:19.290918",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$o7p4h7UBrhoiPLudZGvEfU$rTKxC/L90nGUOnaxEUA/XaJ0k7I3DBg60Cl/Yv4iXHA=",
+      "last_login": "2025-09-29 11:57:11.839976+00:00",
+      "is_superuser": false,
+      "replit_id": null,
+      "username": "kaycee1",
+      "email": "kaycee01velarde@gmail.com",
+      "first_name": "Kaycee",
+      "last_name": "Mariya",
+      "phone": "+19876543210",
+      "profile_image_url": null,
+      "stripe_customer_id": null,
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "role": "organizer",
+      "mfa_enabled": false,
+      "otp_secret": null,
+      "sso_enabled": false,
+      "last_login_at": "2025-09-29 11:57:11.524407+00:00",
+      "login_attempts": 0,
+      "locked_until": null,
+      "is_active": true,
+      "is_staff": false,
+      "created_at": "2025-09-29 10:13:00.451547",
+      "updated_at": "2025-09-29 11:57:11.524607",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.organizationmembership",
+    "pk": "04bff7bb-5a34-4166-af33-fbe7f4a52250",
+    "fields": {
+      "user": "d1c55166-ba90-4c93-9f06-e7902e4f617c",
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "role": "organizer",
+      "status": "active",
+      "invited_by": null,
+      "joined_at": "2025-09-29 10:52:59.079735+00:00",
+      "updated_at": "2025-09-29 10:52:59.079751+00:00"
+    }
+  },
+  {
+    "model": "core.organizationmembership",
+    "pk": "71cfe4a0-86d0-4e0f-8b79-d46080e7dc14",
+    "fields": {
+      "user": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "role": "organizer",
+      "status": "active",
+      "invited_by": null,
+      "joined_at": "2025-09-29 10:53:46.294633+00:00",
+      "updated_at": "2025-09-29 10:53:46.294646+00:00"
+    }
+  },
+  {
+    "model": "core.organizationmembership",
+    "pk": "395a826c-75dc-446e-9b5e-0a90585516c9",
+    "fields": {
+      "user": "d1c55166-ba90-4c93-9f06-e7902e4f617c",
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "role": "campaign_manager",
+      "status": "inactive",
+      "invited_by": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+      "joined_at": "2025-09-29 10:55:09.168260+00:00",
+      "updated_at": "2025-09-29 12:11:28.943458+00:00"
+    }
+  },
+  {
+    "model": "core.invitation",
+    "pk": "56d052a1-abb8-44e2-b845-e26aad9c1133",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "email": "abhishek.dubey@aabhyasa.com",
+      "role": "campaign_manager",
+      "token": "aHrPqUVoNohNp7Nyp0WHTFxUZS1xsg97-kGWYfsaH8A",
+      "status": "accepted",
+      "invited_by": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+      "expires_at": "2025-10-06 10:54:12.991137+00:00",
+      "accepted_at": "2025-09-29 10:55:09.217650+00:00",
+      "created_at": "2025-09-29 10:54:12.991500+00:00",
+      "updated_at": "2025-09-29 10:55:09.217815+00:00"
+    }
+  },
+  {
+    "model": "core.invitation",
+    "pk": "a925036f-d53d-45ba-afa4-0698e8021b63",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "email": "bhavesh.singh@aabhyasa.com",
+      "role": "analyst",
+      "token": "szLIUAsxwxXWvUD4IMaJzsDfO-tdfU9mzxnYSZ0LFJc",
+      "status": "accepted",
+      "invited_by": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+      "expires_at": "2025-10-06 11:09:55.439231+00:00",
+      "accepted_at": "2025-09-29 11:11:46.441200+00:00",
+      "created_at": "2025-09-29 11:09:55.439687+00:00",
+      "updated_at": "2025-09-29 11:11:46.441449+00:00"
+    }
+  },
+  {
+    "model": "core.invitation",
+    "pk": "705176dd-2b21-418f-b8e1-a346accf4698",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "email": "bhavesh.singh@aabhyasa.com",
+      "role": "campaign_manager",
+      "token": "IKmGy1XnXmOWIA8yWFT4FKOsHEFIb_jINIcZpF_wXYI",
+      "status": "pending",
+      "invited_by": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+      "expires_at": "2025-10-06 12:23:54.507678+00:00",
+      "accepted_at": null,
+      "created_at": "2025-09-29 12:23:54.508170+00:00",
+      "updated_at": "2025-09-29 12:23:54.508176+00:00"
+    }
+  },
+  {
+    "model": "core.usagetracking",
+    "pk": "4fddf7be-cd24-4a2e-85a0-81e157bf2c77",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "month": "2025-09-01",
+      "emails_sent": 0,
+      "campaigns_created": 0,
+      "contacts_imported": 0,
+      "templates_created": 0,
+      "domains_verified": 0,
+      "api_calls": 0,
+      "ab_tests_created": 0,
+      "created_at": "2025-09-29 12:00:07.326311+00:00",
+      "updated_at": "2025-09-29 12:00:07.326328+00:00"
+    }
+  },
+  {
+    "model": "core.usagetracking",
+    "pk": "2202568f-6af5-4011-aca1-018def9249b2",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "month": "2025-09-01",
+      "emails_sent": 0,
+      "campaigns_created": 0,
+      "contacts_imported": 0,
+      "templates_created": 0,
+      "domains_verified": 0,
+      "api_calls": 0,
+      "ab_tests_created": 0,
+      "created_at": "2025-09-29 12:00:07.630507+00:00",
+      "updated_at": "2025-09-29 12:00:07.630521+00:00"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "885eed64-1fa9-4828-8337-d5ad28ce746e",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Exclusive Sale Announcement",
+      "subject": "\ud83d\udd25 Exclusive {{salePercentage}}% Off Sale - Limited Time!",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fef2f2;\">\n                    <div style=\"background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; position: relative; overflow: hidden;\">\n                        <div style=\"position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; transform: rotate(45deg);\"></div>\n                        <h1 style=\"margin: 0; font-size: 32px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);\">\ud83d\udd25 EXCLUSIVE SALE</h1>\n                        <p style=\"font-size: 24px; margin: 10px 0 0 0; font-weight: bold;\">{{salePercentage}}% OFF Everything!</p>\n                        <p style=\"font-size: 14px; margin: 10px 0 0 0; opacity: 0.9;\">Limited time offer - Don't miss out!</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n                        <h2 style=\"color: #7f1d1d;\">Hi {{firstName}},</h2>\n                        <p>We're thrilled to offer you an exclusive {{salePercentage}}% discount on our entire collection! This special sale is available for a limited time only.</p>\n                        \n                        <div style=\"background: #fee2e2; border: 2px dashed #dc2626; padding: 25px; border-radius: 8px; margin: 25px 0; text-align: center;\">\n                            <h3 style=\"color: #7f1d1d; margin-top: 0; font-size: 18px;\">\ud83c\udf9f\ufe0f Your Exclusive Code</h3>\n                            <div style=\"background: #7f1d1d; color: white; padding: 15px; border-radius: 6px; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 10px 0;\">\n                                {{promoCode}}\n                            </div>\n                            <p style=\"color: #7f1d1d; font-size: 14px; margin: 0;\">Valid until {{expiryDate}}</p>\n                        </div>\n                        \n                        <div style=\"display: flex; gap: 15px; margin: 25px 0;\">\n                            <div style=\"flex: 1; background: #f9fafb; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;\">\n                                <h4 style=\"color: #374151; margin: 0 0 10px 0;\">\ud83d\udc54 Men's Fashion</h4>\n                                <p style=\"font-size: 14px; color: #6b7280; margin: 0;\">Suits, shirts, accessories</p>\n                            </div>\n                            <div style=\"flex: 1; background: #f9fafb; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;\">\n                                <h4 style=\"color: #374151; margin: 0 0 10px 0;\">\ud83d\udc57 Women's Fashion</h4>\n                                <p style=\"font-size: 14px; color: #6b7280; margin: 0;\">Dresses, shoes, handbags</p>\n                            </div>\n                        </div>\n                        \n                        <div style=\"background: #fffbeb; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #92400e; margin-top: 0;\">\u26a1 Sale Highlights:</h3>\n                            <ul style=\"color: #92400e; margin: 0;\">\n                                <li>{{salePercentage}}% off sitewide - no minimum purchase</li>\n                                <li>Free shipping on orders over ${{freeShippingThreshold}}</li>\n                                <li>Easy returns within {{returnDays}} days</li>\n                                <li>New arrivals included in sale</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{shopUrl}}\" style=\"background: #dc2626; color: white; padding: 18px 35px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;\">Shop Now & Save</a>\n                        </div>\n                        \n                        <p style=\"text-align: center; font-size: 14px; color: #6b7280;\">\n                            Sale ends {{expiryDate}} at midnight. Cannot be combined with other offers.\n                        </p>\n                        \n                        <p>Don't let this amazing deal slip away!</p>\n                        <p>Happy shopping,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\udd25 EXCLUSIVE SALE - {{salePercentage}}% OFF Everything!\n\nWe're thrilled to offer you an exclusive {{salePercentage}}% discount on our entire collection! This special sale is available for a limited time only.\n\n\ud83c\udf9f\ufe0f Your Exclusive Code: {{promoCode}}\nValid until {{expiryDate}}\n\n\u26a1 Sale Highlights:\n- {{salePercentage}}% off sitewide - no minimum purchase\n- Free shipping on orders over ${{freeShippingThreshold}}\n- Easy returns within {{returnDays}} days\n- New arrivals included in sale\n\n\ud83d\udc54 Men's Fashion: Suits, shirts, accessories\n\ud83d\udc57 Women's Fashion: Dresses, shoes, handbags\n\nShop now and save: {{shopUrl}}\n\nSale ends {{expiryDate}} at midnight. Cannot be combined with other offers.\n\nDon't let this amazing deal slip away!\n\nHappy shopping,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "retail",
+      "created_at": "2025-09-29 10:37:39.598967",
+      "updated_at": "2025-09-29 10:37:39.598983"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "ef136b0a-20fe-4a6e-bcf6-77b49c236a29",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Order Confirmation",
+      "subject": "Order Confirmation #{{orderNumber}} - Thank You!",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fafafa;\">\n                    <div style=\"background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\u2705 Order Confirmed!</h1>\n                        <p style=\"font-size: 18px; margin: 10px 0 0 0;\">Thank you for shopping with us</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n                        <h2 style=\"color: #065f46;\">Hi {{firstName}},</h2>\n                        <p>Thank you for your order! We've received your purchase and are preparing it for shipment.</p>\n                        \n                        <div style=\"background: #ecfdf5; border: 1px solid #a7f3d0; padding: 20px; border-radius: 8px; margin: 25px 0;\">\n                            <h3 style=\"color: #065f46; margin-top: 0;\">\ud83d\udce6 Order Summary</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Order Number:</strong> #{{orderNumber}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Order Date:</strong> {{orderDate}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Total Amount:</strong> ${{orderTotal}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Payment Method:</strong> {{paymentMethod}}</p>\n                        </div>\n                        \n                        <div style=\"background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #374151; margin-top: 0;\">\ud83d\ude9a Shipping Information</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Shipping Address:</strong></p>\n                            <p style=\"margin: 0; color: #6b7280; line-height: 1.5;\">\n                                {{shippingAddress}}<br>\n                                {{shippingCity}}, {{shippingState}} {{shippingZip}}\n                            </p>\n                            <p style=\"margin: 15px 0 8px 0;\"><strong>Estimated Delivery:</strong> {{estimatedDelivery}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Tracking Number:</strong> {{trackingNumber}} (available when shipped)</p>\n                        </div>\n                        \n                        <div style=\"border-left: 4px solid #10b981; padding-left: 20px; margin: 25px 0;\">\n                            <h3 style=\"color: #065f46;\">\ud83d\udccb What's Next?</h3>\n                            <ul style=\"color: #047857; margin: 0;\">\n                                <li>We'll send you a shipping confirmation with tracking details</li>\n                                <li>Your order will be processed within 1-2 business days</li>\n                                <li>Contact us if you need to make changes (within 1 hour)</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{trackingUrl}}\" style=\"background: #059669; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 10px;\">Track Your Order</a>\n                            <a href=\"{{supportUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;\">Customer Support</a>\n                        </div>\n                        \n                        <p>We appreciate your business and can't wait for you to receive your order!</p>\n                        <p>Happy shopping,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\u2705 Order Confirmed! Thank you for shopping with us\n\nThank you for your order! We've received your purchase and are preparing it for shipment.\n\n\ud83d\udce6 Order Summary:\n- Order Number: #{{orderNumber}}\n- Order Date: {{orderDate}}\n- Total Amount: ${{orderTotal}}\n- Payment Method: {{paymentMethod}}\n\n\ud83d\ude9a Shipping Information:\nShipping Address:\n{{shippingAddress}}\n{{shippingCity}}, {{shippingState}} {{shippingZip}}\n\nEstimated Delivery: {{estimatedDelivery}}\nTracking Number: {{trackingNumber}} (available when shipped)\n\n\ud83d\udccb What's Next?\n- We'll send you a shipping confirmation with tracking details\n- Your order will be processed within 1-2 business days\n- Contact us if you need to make changes (within 1 hour)\n\nTrack your order: {{trackingUrl}}\nCustomer support: {{supportUrl}}\n\nWe appreciate your business and can't wait for you to receive your order!\n\nHappy shopping,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "retail",
+      "created_at": "2025-09-29 10:37:39.419498",
+      "updated_at": "2025-09-29 10:37:39.419513"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "d9956f38-e557-495d-b0b7-aaac3b814722",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Assignment Due Reminder",
+      "subject": "Reminder: {{assignmentName}} Due {{dueDate}}",
+      "html_content": "<div style=\"font-family: 'Open Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fef7ed;\">\n                    <div style=\"background: #ea580c; color: white; padding: 25px; border-radius: 8px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 24px;\">\u23f0 Assignment Reminder</h1>\n                        <p style=\"margin: 10px 0 0 0; font-size: 16px;\">Don't miss your deadline</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; border: 1px solid #fed7aa;\">\n                        <h2 style=\"color: #9a3412;\">Hi {{firstName}},</h2>\n                        <p>This is a friendly reminder that your assignment <strong>\"{{assignmentName}}\"</strong> is due soon.</p>\n                        \n                        <div style=\"background: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;\">\n                            <h3 style=\"color: #92400e; margin-top: 0;\">\ud83d\udcc5 Due Date</h3>\n                            <p style=\"font-size: 20px; font-weight: bold; color: #92400e; margin: 0;\">{{dueDate}} at {{dueTime}}</p>\n                        </div>\n                        \n                        <div style=\"background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                            <h3 style=\"color: #4b5563; margin-top: 0;\">\ud83d\udccb Assignment Details:</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Course:</strong> {{courseName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Assignment:</strong> {{assignmentName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Points:</strong> {{totalPoints}} points</p>\n                            <p style=\"margin: 8px 0;\"><strong>Submission Type:</strong> {{submissionType}}</p>\n                        </div>\n                        \n                        <div style=\"background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;\">\n                            <h4 style=\"color: #1d4ed8; margin-top: 0;\">\ud83d\udcdd Quick Tips:</h4>\n                            <ul style=\"color: #1e40af; margin: 0;\">\n                                <li>Review the assignment rubric</li>\n                                <li>Check your work before submitting</li>\n                                <li>Submit early to avoid technical issues</li>\n                                <li>Contact your instructor if you have questions</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{assignmentUrl}}\" style=\"background: #ea580c; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-right: 10px;\">Submit Assignment</a>\n                            <a href=\"{{helpUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Need Help?</a>\n                        </div>\n                        \n                        <p style=\"font-size: 14px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 20px;\">\n                            This is an automated reminder. If you've already submitted your assignment, please disregard this message.\n                        </p>\n                        \n                        <p>Good luck with your assignment!<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\u23f0 Assignment Reminder - Don't miss your deadline\n\nThis is a friendly reminder that your assignment \"{{assignmentName}}\" is due soon.\n\n\ud83d\udcc5 Due Date: {{dueDate}} at {{dueTime}}\n\n\ud83d\udccb Assignment Details:\n- Course: {{courseName}}\n- Assignment: {{assignmentName}}\n- Points: {{totalPoints}} points\n- Submission Type: {{submissionType}}\n\n\ud83d\udcdd Quick Tips:\n- Review the assignment rubric\n- Check your work before submitting\n- Submit early to avoid technical issues\n- Contact your instructor if you have questions\n\nSubmit your assignment: {{assignmentUrl}}\nNeed help? {{helpUrl}}\n\nThis is an automated reminder. If you've already submitted your assignment, please disregard this message.\n\nGood luck with your assignment!\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "education",
+      "created_at": "2025-09-29 10:37:39.240524",
+      "updated_at": "2025-09-29 10:37:39.240541"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "2b78f31a-b997-446a-9fc7-30ab5654898a",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Course Enrollment Confirmation",
+      "subject": "Welcome to {{courseName}} - Enrollment Confirmed",
+      "html_content": "<div style=\"font-family: 'Open Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fefefe;\">\n                    <div style=\"background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83c\udf93 Enrollment Confirmed!</h1>\n                        <p style=\"font-size: 18px; margin: 10px 0 0 0;\">Welcome to your learning journey</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;\">\n                        <h2 style=\"color: #374151;\">Hi {{firstName}},</h2>\n                        <p>Congratulations! You've successfully enrolled in <strong>{{courseName}}</strong>. We're excited to support your learning journey.</p>\n                        \n                        <div style=\"background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0;\">\n                            <h3 style=\"color: #4b5563; margin-top: 0;\">\ud83d\udcda Course Details:</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Course:</strong> {{courseName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Instructor:</strong> {{instructorName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Start Date:</strong> {{startDate}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Duration:</strong> {{courseDuration}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Schedule:</strong> {{classSchedule}}</p>\n                        </div>\n                        \n                        <div style=\"background: #ddd6fe; border-left: 4px solid #7c3aed; padding: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #5b21b6; margin-top: 0;\">\ud83d\ude80 Getting Started:</h3>\n                            <ul style=\"color: #6d28d9; margin: 0;\">\n                                <li>Access your course materials online</li>\n                                <li>Join the class discussion forum</li>\n                                <li>Download required reading materials</li>\n                                <li>Set up your study schedule</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 25px;\">\n                            <h3 style=\"color: #4b5563;\">\ud83d\udcbb Technical Requirements:</h3>\n                            <p>Make sure you have reliable internet access and the latest version of your web browser for the best learning experience.</p>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{courseUrl}}\" style=\"background: #7c3aed; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 10px;\">Access Course</a>\n                            <a href=\"{{supportUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;\">Get Support</a>\n                        </div>\n                        \n                        <p>We're here to help you succeed. If you have any questions, don't hesitate to reach out!</p>\n                        <p>Best of luck with your studies,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83c\udf93 Enrollment Confirmed! Welcome to your learning journey\n\nCongratulations! You've successfully enrolled in {{courseName}}. We're excited to support your learning journey.\n\n\ud83d\udcda Course Details:\n- Course: {{courseName}}\n- Instructor: {{instructorName}}\n- Start Date: {{startDate}}\n- Duration: {{courseDuration}}\n- Schedule: {{classSchedule}}\n\n\ud83d\ude80 Getting Started:\n- Access your course materials online\n- Join the class discussion forum\n- Download required reading materials\n- Set up your study schedule\n\n\ud83d\udcbb Technical Requirements:\nMake sure you have reliable internet access and the latest version of your web browser for the best learning experience.\n\nAccess your course: {{courseUrl}}\nGet support: {{supportUrl}}\n\nWe're here to help you succeed. If you have any questions, don't hesitate to reach out!\n\nBest of luck with your studies,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "education",
+      "created_at": "2025-09-29 10:37:39.062351",
+      "updated_at": "2025-09-29 10:37:39.062370"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "178be7b2-0c1d-4dc9-8bdc-571cd4dc311e",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Investment Portfolio Update",
+      "subject": "Portfolio Performance Update - {{updatePeriod}}",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;\">\n                    <div style=\"background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83d\udcc8 Portfolio Update</h1>\n                        <p style=\"font-size: 16px; margin: 10px 0 0 0;\">Your investment performance summary</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.07);\">\n                        <h2 style=\"color: #1e293b;\">Hello {{firstName}},</h2>\n                        <p>Here's your portfolio performance update for {{updatePeriod}}. Our team continues to monitor and optimize your investments.</p>\n                        \n                        <div style=\"display: flex; margin: 25px 0;\">\n                            <div style=\"flex: 1; background: #f0f9ff; padding: 20px; border-radius: 8px; margin-right: 10px; text-align: center;\">\n                                <h3 style=\"color: #0ea5e9; margin: 0 0 10px 0;\">Portfolio Value</h3>\n                                <p style=\"font-size: 24px; font-weight: bold; color: #0c4a6e; margin: 0;\">${{portfolioValue}}</p>\n                            </div>\n                            <div style=\"flex: 1; background: #f0fdf4; padding: 20px; border-radius: 8px; margin-left: 10px; text-align: center;\">\n                                <h3 style=\"color: #22c55e; margin: 0 0 10px 0;\">Period Return</h3>\n                                <p style=\"font-size: 24px; font-weight: bold; color: #15803d; margin: 0;\">{{periodReturn}}%</p>\n                            </div>\n                        </div>\n                        \n                        <div style=\"background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 25px 0;\">\n                            <h3 style=\"color: #92400e; margin-top: 0;\">\ud83d\udcca Key Highlights:</h3>\n                            <ul style=\"color: #92400e; margin: 0;\">\n                                <li>Diversified across {{assetClasses}} asset classes</li>\n                                <li>{{topPerformer}} was your top performing investment</li>\n                                <li>Risk level remains aligned with your goals</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 25px;\">\n                            <h3 style=\"color: #475569;\">\ud83d\udca1 Market Insights</h3>\n                            <p>{{marketInsight}}</p>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{portfolioUrl}}\" style=\"background: #1e40af; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-right: 10px;\">View Full Report</a>\n                            <a href=\"{{scheduleUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Schedule Review</a>\n                        </div>\n                        \n                        <p>Best regards,<br>Your {{organizationName}} Investment Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hello {{firstName}},\n\n\ud83d\udcc8 Portfolio Update - Your investment performance summary\n\nHere's your portfolio performance update for {{updatePeriod}}. Our team continues to monitor and optimize your investments.\n\nPortfolio Value: ${{portfolioValue}}\nPeriod Return: {{periodReturn}}%\n\n\ud83d\udcca Key Highlights:\n- Diversified across {{assetClasses}} asset classes\n- {{topPerformer}} was your top performing investment\n- Risk level remains aligned with your goals\n\n\ud83d\udca1 Market Insights:\n{{marketInsight}}\n\nView your full report: {{portfolioUrl}}\nSchedule a review: {{scheduleUrl}}\n\nBest regards,\nYour {{organizationName}} Investment Team",
+      "is_default": true,
+      "category": "finance",
+      "created_at": "2025-09-29 10:37:38.883928",
+      "updated_at": "2025-09-29 10:37:38.883941"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "ae66d4a2-b820-4d65-a5de-d8ee869db3b3",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Financial Statement Ready",
+      "subject": "Your {{statementType}} Statement is Ready",
+      "html_content": "<div style=\"font-family: 'Times New Roman', serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fafafa;\">\n                    <div style=\"background: white; border: 1px solid #e5e7eb; border-radius: 8px;\">\n                        <div style=\"background: #1f2937; color: white; padding: 25px; text-align: center;\">\n                            <h1 style=\"margin: 0; font-size: 24px;\">\ud83d\udcca Financial Statement Available</h1>\n                            <p style=\"margin: 10px 0 0 0;\">{{organizationName}}</p>\n                        </div>\n                        <div style=\"padding: 30px;\">\n                            <p>Dear {{firstName}},</p>\n                            <p>Your {{statementType}} statement for the period ending {{periodEnd}} is now available for review.</p>\n                            \n                            <div style=\"background: #f9fafb; border: 1px solid #d1d5db; padding: 20px; border-radius: 6px; margin: 25px 0;\">\n                                <h3 style=\"color: #374151; margin-top: 0;\">Statement Summary:</h3>\n                                <p style=\"margin: 8px 0;\"><strong>Account Number:</strong> {{accountNumber}}</p>\n                                <p style=\"margin: 8px 0;\"><strong>Statement Period:</strong> {{statementPeriod}}</p>\n                                <p style=\"margin: 8px 0;\"><strong>Statement Type:</strong> {{statementType}}</p>\n                            </div>\n                            \n                            <div style=\"background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;\">\n                                <h4 style=\"color: #1e40af; margin-top: 0;\">Important Notes:</h4>\n                                <ul style=\"color: #1e40af; margin: 5px 0;\">\n                                    <li>Review all transactions carefully</li>\n                                    <li>Report any discrepancies within 30 days</li>\n                                    <li>Keep statements for your records</li>\n                                </ul>\n                            </div>\n                            \n                            <div style=\"text-align: center; margin: 30px 0;\">\n                                <a href=\"{{statementUrl}}\" style=\"background: #1f2937; color: white; padding: 15px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;\">Download Statement</a>\n                            </div>\n                            \n                            <p style=\"font-size: 14px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 25px;\">\n                                For questions about your statement, please contact us at {{supportPhone}} or visit {{websiteUrl}}.\n                            </p>\n                            \n                            <p>Sincerely,<br>{{organizationName}} Customer Service</p>\n                        </div>\n                    </div>\n                </div>",
+      "text_content": "Dear {{firstName}},\n\n\ud83d\udcca Financial Statement Available - {{organizationName}}\n\nYour {{statementType}} statement for the period ending {{periodEnd}} is now available for review.\n\nStatement Summary:\n- Account Number: {{accountNumber}}\n- Statement Period: {{statementPeriod}}\n- Statement Type: {{statementType}}\n\nImportant Notes:\n- Review all transactions carefully\n- Report any discrepancies within 30 days\n- Keep statements for your records\n\nDownload your statement: {{statementUrl}}\n\nFor questions about your statement, please contact us at {{supportPhone}} or visit {{websiteUrl}}.\n\nSincerely,\n{{organizationName}} Customer Service",
+      "is_default": true,
+      "category": "finance",
+      "created_at": "2025-09-29 10:37:38.705503",
+      "updated_at": "2025-09-29 10:37:38.705524"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "3925f043-e585-4117-8c39-33e92101ee5f",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Healthcare Wellness Newsletter",
+      "subject": "Your Monthly Wellness Update from {{organizationName}}",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;\">\n                    <div style=\"background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83d\udc9a Wellness Update</h1>\n                        <p style=\"font-size: 16px; margin: 10px 0 0 0;\">Your health journey matters to us</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n                        <h2 style=\"color: #065f46;\">Hi {{firstName}},</h2>\n                        <p>Welcome to your monthly wellness update! Here are some health tips and updates from our team.</p>\n                        \n                        <div style=\"border-top: 2px solid #d1fae5; margin: 25px 0; padding-top: 20px;\">\n                            <h3 style=\"color: #047857;\">\ud83c\udf4e This Month's Health Tip</h3>\n                            <p>Stay hydrated! Aim for 8 glasses of water daily to support optimal body function and maintain energy levels throughout the day.</p>\n                        </div>\n                        \n                        <div style=\"background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                            <h3 style=\"color: #065f46; margin-top: 0;\">\ud83d\udcc5 Upcoming Health Screenings</h3>\n                            <ul style=\"color: #059669;\">\n                                <li>Annual physical exams - Schedule now</li>\n                                <li>Flu vaccinations available</li>\n                                <li>Blood pressure checks - Walk-ins welcome</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"border-left: 4px solid #10b981; padding-left: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #065f46;\">\ud83c\udfc3\u200d\u2640\ufe0f Wellness Challenge</h3>\n                            <p>Join our \"10,000 Steps Challenge\" this month! Track your daily steps and win prizes for reaching your goals.</p>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{portalUrl}}\" style=\"background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Access Health Portal</a>\n                        </div>\n                        \n                        <p>Stay healthy and take care,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\udc9a Wellness Update - Your health journey matters to us\n\nWelcome to your monthly wellness update! Here are some health tips and updates from our team.\n\n\ud83c\udf4e This Month's Health Tip:\nStay hydrated! Aim for 8 glasses of water daily to support optimal body function and maintain energy levels.\n\n\ud83d\udcc5 Upcoming Health Screenings:\n- Annual physical exams - Schedule now\n- Flu vaccinations available\n- Blood pressure checks - Walk-ins welcome\n\n\ud83c\udfc3\u200d\u2640\ufe0f Wellness Challenge:\nJoin our \"10,000 Steps Challenge\" this month! Track your daily steps and win prizes for reaching your goals.\n\nAccess your health portal: {{portalUrl}}\n\nStay healthy and take care,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "healthcare",
+      "created_at": "2025-09-29 10:37:38.524389",
+      "updated_at": "2025-09-29 10:37:38.524411"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "19e51329-9aa5-42e0-b4fb-cc93ad93c40e",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Healthcare Appointment Reminder",
+      "subject": "Appointment Reminder - {{appointmentDate}}",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f0f8ff;\">\n                    <div style=\"background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n                        <div style=\"background: #2563eb; color: white; padding: 25px; text-align: center;\">\n                            <h1 style=\"margin: 0; font-size: 24px;\">\ud83c\udfe5 Appointment Reminder</h1>\n                            <p style=\"margin: 10px 0 0 0; font-size: 16px;\">{{organizationName}}</p>\n                        </div>\n                        <div style=\"padding: 30px;\">\n                            <p>Dear {{firstName}},</p>\n                            <p>This is a friendly reminder about your upcoming appointment with our healthcare team.</p>\n                            <div style=\"background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                                <h3 style=\"color: #1e40af; margin-top: 0;\">Appointment Details:</h3>\n                                <p style=\"margin: 5px 0;\"><strong>Date:</strong> {{appointmentDate}}</p>\n                                <p style=\"margin: 5px 0;\"><strong>Time:</strong> {{appointmentTime}}</p>\n                                <p style=\"margin: 5px 0;\"><strong>Provider:</strong> {{providerName}}</p>\n                                <p style=\"margin: 5px 0;\"><strong>Location:</strong> {{clinicLocation}}</p>\n                            </div>\n                            <div style=\"background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;\">\n                                <h4 style=\"color: #92400e; margin-top: 0;\">Please Remember:</h4>\n                                <ul style=\"color: #92400e; margin: 0;\">\n                                    <li>Arrive 15 minutes early</li>\n                                    <li>Bring your insurance card</li>\n                                    <li>Bring a list of current medications</li>\n                                </ul>\n                            </div>\n                            <div style=\"text-align: center; margin: 25px 0;\">\n                                <a href=\"{{confirmUrl}}\" style=\"background: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; margin-right: 10px; display: inline-block;\">Confirm Appointment</a>\n                                <a href=\"{{rescheduleUrl}}\" style=\"background: #6b7280; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; display: inline-block;\">Reschedule</a>\n                            </div>\n                            <p>If you have any questions, please call us at {{clinicPhone}}.</p>\n                            <p>Best regards,<br>{{organizationName}}</p>\n                        </div>\n                    </div>\n                </div>",
+      "text_content": "Dear {{firstName}},\n\n\ud83c\udfe5 Appointment Reminder - {{organizationName}}\n\nThis is a friendly reminder about your upcoming appointment with our healthcare team.\n\nAppointment Details:\n- Date: {{appointmentDate}}\n- Time: {{appointmentTime}}\n- Provider: {{providerName}}\n- Location: {{clinicLocation}}\n\nPlease Remember:\n- Arrive 15 minutes early\n- Bring your insurance card\n- Bring a list of current medications\n\nConfirm: {{confirmUrl}}\nReschedule: {{rescheduleUrl}}\n\nIf you have any questions, please call us at {{clinicPhone}}.\n\nBest regards,\n{{organizationName}}",
+      "is_default": true,
+      "category": "healthcare",
+      "created_at": "2025-09-29 10:37:38.342853",
+      "updated_at": "2025-09-29 10:37:38.342868"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "f70b4c77-362d-4c6a-9af8-25516f398982",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Tech Security Alert",
+      "subject": "\ud83d\udd12 Important Security Update for Your Account",
+      "html_content": "<div style=\"font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\">\n                    <div style=\"background-color: #fed7d7; border-left: 4px solid #e53e3e; padding: 20px; border-radius: 4px; margin-bottom: 20px;\">\n                        <h1 style=\"color: #c53030; margin: 0;\">\ud83d\udd12 Security Update Required</h1>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; border: 1px solid #e2e8f0;\">\n                        <p>Hi {{firstName}},</p>\n                        <p>We've enhanced our security systems and need you to verify your account to ensure continued protection.</p>\n                        <div style=\"background-color: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4299e1;\">\n                            <h3 style=\"color: #2b6cb0; margin-top: 0;\">Action Required:</h3>\n                            <ul>\n                                <li>Update your password</li>\n                                <li>Enable two-factor authentication</li>\n                                <li>Review login activity</li>\n                            </ul>\n                        </div>\n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{securityUrl}}\" style=\"background: #e53e3e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Update Security Settings</a>\n                        </div>\n                        <p style=\"font-size: 14px; color: #718096;\">This is an automated security message from {{organizationName}}. Please do not reply to this email.</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\udd12 Security Update Required\n\nWe've enhanced our security systems and need you to verify your account to ensure continued protection.\n\nAction Required:\n- Update your password\n- Enable two-factor authentication\n- Review login activity\n\nUpdate your security settings: {{securityUrl}}\n\nThis is an automated security message from {{organizationName}}. Please do not reply to this email.",
+      "is_default": true,
+      "category": "technology",
+      "created_at": "2025-09-29 10:37:38.165270",
+      "updated_at": "2025-09-29 10:37:38.165284"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "e09b5419-c733-4099-b53d-2ccc67da5df9",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "name": "Tech Product Launch",
+      "subject": "Introducing Our Latest Innovation - {{productName}}",
+      "html_content": "<div style=\"font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fb;\">\n                    <div style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83d\ude80 {{productName}} is Here!</h1>\n                        <p style=\"font-size: 18px; margin: 10px 0 0 0;\">Revolutionary technology meets seamless user experience</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0;\">\n                        <h2 style=\"color: #2d3748;\">Hi {{firstName}},</h2>\n                        <p>We're excited to announce the launch of {{productName}}, designed to transform how you work and innovate.</p>\n                        <div style=\"background-color: #edf2f7; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                            <h3 style=\"color: #4a5568; margin-top: 0;\">Key Features:</h3>\n                            <ul style=\"color: #718096;\">\n                                <li>Advanced AI-powered automation</li>\n                                <li>Real-time collaboration tools</li>\n                                <li>Enterprise-grade security</li>\n                                <li>Seamless API integration</li>\n                            </ul>\n                        </div>\n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{productUrl}}\" style=\"background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Explore Now</a>\n                        </div>\n                        <p>Best regards,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\ude80 {{productName}} is Here!\n\nWe're excited to announce the launch of {{productName}}, designed to transform how you work and innovate.\n\nKey Features:\n- Advanced AI-powered automation\n- Real-time collaboration tools\n- Enterprise-grade security\n- Seamless API integration\n\nLearn more: {{productUrl}}\n\nBest regards,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "technology",
+      "created_at": "2025-09-29 10:37:37.980746",
+      "updated_at": "2025-09-29 10:37:37.980764"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "55d9bee9-34c7-437b-9481-99cf4517cb8b",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Exclusive Sale Announcement",
+      "subject": "\ud83d\udd25 Exclusive {{salePercentage}}% Off Sale - Limited Time!",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fef2f2;\">\n                    <div style=\"background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; position: relative; overflow: hidden;\">\n                        <div style=\"position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; transform: rotate(45deg);\"></div>\n                        <h1 style=\"margin: 0; font-size: 32px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);\">\ud83d\udd25 EXCLUSIVE SALE</h1>\n                        <p style=\"font-size: 24px; margin: 10px 0 0 0; font-weight: bold;\">{{salePercentage}}% OFF Everything!</p>\n                        <p style=\"font-size: 14px; margin: 10px 0 0 0; opacity: 0.9;\">Limited time offer - Don't miss out!</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n                        <h2 style=\"color: #7f1d1d;\">Hi {{firstName}},</h2>\n                        <p>We're thrilled to offer you an exclusive {{salePercentage}}% discount on our entire collection! This special sale is available for a limited time only.</p>\n                        \n                        <div style=\"background: #fee2e2; border: 2px dashed #dc2626; padding: 25px; border-radius: 8px; margin: 25px 0; text-align: center;\">\n                            <h3 style=\"color: #7f1d1d; margin-top: 0; font-size: 18px;\">\ud83c\udf9f\ufe0f Your Exclusive Code</h3>\n                            <div style=\"background: #7f1d1d; color: white; padding: 15px; border-radius: 6px; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 10px 0;\">\n                                {{promoCode}}\n                            </div>\n                            <p style=\"color: #7f1d1d; font-size: 14px; margin: 0;\">Valid until {{expiryDate}}</p>\n                        </div>\n                        \n                        <div style=\"display: flex; gap: 15px; margin: 25px 0;\">\n                            <div style=\"flex: 1; background: #f9fafb; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;\">\n                                <h4 style=\"color: #374151; margin: 0 0 10px 0;\">\ud83d\udc54 Men's Fashion</h4>\n                                <p style=\"font-size: 14px; color: #6b7280; margin: 0;\">Suits, shirts, accessories</p>\n                            </div>\n                            <div style=\"flex: 1; background: #f9fafb; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;\">\n                                <h4 style=\"color: #374151; margin: 0 0 10px 0;\">\ud83d\udc57 Women's Fashion</h4>\n                                <p style=\"font-size: 14px; color: #6b7280; margin: 0;\">Dresses, shoes, handbags</p>\n                            </div>\n                        </div>\n                        \n                        <div style=\"background: #fffbeb; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #92400e; margin-top: 0;\">\u26a1 Sale Highlights:</h3>\n                            <ul style=\"color: #92400e; margin: 0;\">\n                                <li>{{salePercentage}}% off sitewide - no minimum purchase</li>\n                                <li>Free shipping on orders over ${{freeShippingThreshold}}</li>\n                                <li>Easy returns within {{returnDays}} days</li>\n                                <li>New arrivals included in sale</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{shopUrl}}\" style=\"background: #dc2626; color: white; padding: 18px 35px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;\">Shop Now & Save</a>\n                        </div>\n                        \n                        <p style=\"text-align: center; font-size: 14px; color: #6b7280;\">\n                            Sale ends {{expiryDate}} at midnight. Cannot be combined with other offers.\n                        </p>\n                        \n                        <p>Don't let this amazing deal slip away!</p>\n                        <p>Happy shopping,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\udd25 EXCLUSIVE SALE - {{salePercentage}}% OFF Everything!\n\nWe're thrilled to offer you an exclusive {{salePercentage}}% discount on our entire collection! This special sale is available for a limited time only.\n\n\ud83c\udf9f\ufe0f Your Exclusive Code: {{promoCode}}\nValid until {{expiryDate}}\n\n\u26a1 Sale Highlights:\n- {{salePercentage}}% off sitewide - no minimum purchase\n- Free shipping on orders over ${{freeShippingThreshold}}\n- Easy returns within {{returnDays}} days\n- New arrivals included in sale\n\n\ud83d\udc54 Men's Fashion: Suits, shirts, accessories\n\ud83d\udc57 Women's Fashion: Dresses, shoes, handbags\n\nShop now and save: {{shopUrl}}\n\nSale ends {{expiryDate}} at midnight. Cannot be combined with other offers.\n\nDon't let this amazing deal slip away!\n\nHappy shopping,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "retail",
+      "created_at": "2025-09-29 10:10:46.197021",
+      "updated_at": "2025-09-29 10:10:46.197039"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "ff3e47ee-535e-4af6-85d0-5c9bba3efd77",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Order Confirmation",
+      "subject": "Order Confirmation #{{orderNumber}} - Thank You!",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fafafa;\">\n                    <div style=\"background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\u2705 Order Confirmed!</h1>\n                        <p style=\"font-size: 18px; margin: 10px 0 0 0;\">Thank you for shopping with us</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n                        <h2 style=\"color: #065f46;\">Hi {{firstName}},</h2>\n                        <p>Thank you for your order! We've received your purchase and are preparing it for shipment.</p>\n                        \n                        <div style=\"background: #ecfdf5; border: 1px solid #a7f3d0; padding: 20px; border-radius: 8px; margin: 25px 0;\">\n                            <h3 style=\"color: #065f46; margin-top: 0;\">\ud83d\udce6 Order Summary</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Order Number:</strong> #{{orderNumber}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Order Date:</strong> {{orderDate}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Total Amount:</strong> ${{orderTotal}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Payment Method:</strong> {{paymentMethod}}</p>\n                        </div>\n                        \n                        <div style=\"background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #374151; margin-top: 0;\">\ud83d\ude9a Shipping Information</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Shipping Address:</strong></p>\n                            <p style=\"margin: 0; color: #6b7280; line-height: 1.5;\">\n                                {{shippingAddress}}<br>\n                                {{shippingCity}}, {{shippingState}} {{shippingZip}}\n                            </p>\n                            <p style=\"margin: 15px 0 8px 0;\"><strong>Estimated Delivery:</strong> {{estimatedDelivery}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Tracking Number:</strong> {{trackingNumber}} (available when shipped)</p>\n                        </div>\n                        \n                        <div style=\"border-left: 4px solid #10b981; padding-left: 20px; margin: 25px 0;\">\n                            <h3 style=\"color: #065f46;\">\ud83d\udccb What's Next?</h3>\n                            <ul style=\"color: #047857; margin: 0;\">\n                                <li>We'll send you a shipping confirmation with tracking details</li>\n                                <li>Your order will be processed within 1-2 business days</li>\n                                <li>Contact us if you need to make changes (within 1 hour)</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{trackingUrl}}\" style=\"background: #059669; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 10px;\">Track Your Order</a>\n                            <a href=\"{{supportUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;\">Customer Support</a>\n                        </div>\n                        \n                        <p>We appreciate your business and can't wait for you to receive your order!</p>\n                        <p>Happy shopping,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\u2705 Order Confirmed! Thank you for shopping with us\n\nThank you for your order! We've received your purchase and are preparing it for shipment.\n\n\ud83d\udce6 Order Summary:\n- Order Number: #{{orderNumber}}\n- Order Date: {{orderDate}}\n- Total Amount: ${{orderTotal}}\n- Payment Method: {{paymentMethod}}\n\n\ud83d\ude9a Shipping Information:\nShipping Address:\n{{shippingAddress}}\n{{shippingCity}}, {{shippingState}} {{shippingZip}}\n\nEstimated Delivery: {{estimatedDelivery}}\nTracking Number: {{trackingNumber}} (available when shipped)\n\n\ud83d\udccb What's Next?\n- We'll send you a shipping confirmation with tracking details\n- Your order will be processed within 1-2 business days\n- Contact us if you need to make changes (within 1 hour)\n\nTrack your order: {{trackingUrl}}\nCustomer support: {{supportUrl}}\n\nWe appreciate your business and can't wait for you to receive your order!\n\nHappy shopping,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "retail",
+      "created_at": "2025-09-29 10:10:46.014858",
+      "updated_at": "2025-09-29 10:10:46.014876"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "75cf2692-3897-451e-9b4b-7016209950e3",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Assignment Due Reminder",
+      "subject": "Reminder: {{assignmentName}} Due {{dueDate}}",
+      "html_content": "<div style=\"font-family: 'Open Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fef7ed;\">\n                    <div style=\"background: #ea580c; color: white; padding: 25px; border-radius: 8px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 24px;\">\u23f0 Assignment Reminder</h1>\n                        <p style=\"margin: 10px 0 0 0; font-size: 16px;\">Don't miss your deadline</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; border: 1px solid #fed7aa;\">\n                        <h2 style=\"color: #9a3412;\">Hi {{firstName}},</h2>\n                        <p>This is a friendly reminder that your assignment <strong>\"{{assignmentName}}\"</strong> is due soon.</p>\n                        \n                        <div style=\"background: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;\">\n                            <h3 style=\"color: #92400e; margin-top: 0;\">\ud83d\udcc5 Due Date</h3>\n                            <p style=\"font-size: 20px; font-weight: bold; color: #92400e; margin: 0;\">{{dueDate}} at {{dueTime}}</p>\n                        </div>\n                        \n                        <div style=\"background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                            <h3 style=\"color: #4b5563; margin-top: 0;\">\ud83d\udccb Assignment Details:</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Course:</strong> {{courseName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Assignment:</strong> {{assignmentName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Points:</strong> {{totalPoints}} points</p>\n                            <p style=\"margin: 8px 0;\"><strong>Submission Type:</strong> {{submissionType}}</p>\n                        </div>\n                        \n                        <div style=\"background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;\">\n                            <h4 style=\"color: #1d4ed8; margin-top: 0;\">\ud83d\udcdd Quick Tips:</h4>\n                            <ul style=\"color: #1e40af; margin: 0;\">\n                                <li>Review the assignment rubric</li>\n                                <li>Check your work before submitting</li>\n                                <li>Submit early to avoid technical issues</li>\n                                <li>Contact your instructor if you have questions</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{assignmentUrl}}\" style=\"background: #ea580c; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-right: 10px;\">Submit Assignment</a>\n                            <a href=\"{{helpUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Need Help?</a>\n                        </div>\n                        \n                        <p style=\"font-size: 14px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 20px;\">\n                            This is an automated reminder. If you've already submitted your assignment, please disregard this message.\n                        </p>\n                        \n                        <p>Good luck with your assignment!<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\u23f0 Assignment Reminder - Don't miss your deadline\n\nThis is a friendly reminder that your assignment \"{{assignmentName}}\" is due soon.\n\n\ud83d\udcc5 Due Date: {{dueDate}} at {{dueTime}}\n\n\ud83d\udccb Assignment Details:\n- Course: {{courseName}}\n- Assignment: {{assignmentName}}\n- Points: {{totalPoints}} points\n- Submission Type: {{submissionType}}\n\n\ud83d\udcdd Quick Tips:\n- Review the assignment rubric\n- Check your work before submitting\n- Submit early to avoid technical issues\n- Contact your instructor if you have questions\n\nSubmit your assignment: {{assignmentUrl}}\nNeed help? {{helpUrl}}\n\nThis is an automated reminder. If you've already submitted your assignment, please disregard this message.\n\nGood luck with your assignment!\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "education",
+      "created_at": "2025-09-29 10:10:45.837973",
+      "updated_at": "2025-09-29 10:10:45.837992"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "2f33ffa5-4cf8-430e-9af8-1d67ded6b0e5",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Course Enrollment Confirmation",
+      "subject": "Welcome to {{courseName}} - Enrollment Confirmed",
+      "html_content": "<div style=\"font-family: 'Open Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fefefe;\">\n                    <div style=\"background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83c\udf93 Enrollment Confirmed!</h1>\n                        <p style=\"font-size: 18px; margin: 10px 0 0 0;\">Welcome to your learning journey</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;\">\n                        <h2 style=\"color: #374151;\">Hi {{firstName}},</h2>\n                        <p>Congratulations! You've successfully enrolled in <strong>{{courseName}}</strong>. We're excited to support your learning journey.</p>\n                        \n                        <div style=\"background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0;\">\n                            <h3 style=\"color: #4b5563; margin-top: 0;\">\ud83d\udcda Course Details:</h3>\n                            <p style=\"margin: 8px 0;\"><strong>Course:</strong> {{courseName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Instructor:</strong> {{instructorName}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Start Date:</strong> {{startDate}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Duration:</strong> {{courseDuration}}</p>\n                            <p style=\"margin: 8px 0;\"><strong>Schedule:</strong> {{classSchedule}}</p>\n                        </div>\n                        \n                        <div style=\"background: #ddd6fe; border-left: 4px solid #7c3aed; padding: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #5b21b6; margin-top: 0;\">\ud83d\ude80 Getting Started:</h3>\n                            <ul style=\"color: #6d28d9; margin: 0;\">\n                                <li>Access your course materials online</li>\n                                <li>Join the class discussion forum</li>\n                                <li>Download required reading materials</li>\n                                <li>Set up your study schedule</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 25px;\">\n                            <h3 style=\"color: #4b5563;\">\ud83d\udcbb Technical Requirements:</h3>\n                            <p>Make sure you have reliable internet access and the latest version of your web browser for the best learning experience.</p>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{courseUrl}}\" style=\"background: #7c3aed; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 10px;\">Access Course</a>\n                            <a href=\"{{supportUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;\">Get Support</a>\n                        </div>\n                        \n                        <p>We're here to help you succeed. If you have any questions, don't hesitate to reach out!</p>\n                        <p>Best of luck with your studies,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83c\udf93 Enrollment Confirmed! Welcome to your learning journey\n\nCongratulations! You've successfully enrolled in {{courseName}}. We're excited to support your learning journey.\n\n\ud83d\udcda Course Details:\n- Course: {{courseName}}\n- Instructor: {{instructorName}}\n- Start Date: {{startDate}}\n- Duration: {{courseDuration}}\n- Schedule: {{classSchedule}}\n\n\ud83d\ude80 Getting Started:\n- Access your course materials online\n- Join the class discussion forum\n- Download required reading materials\n- Set up your study schedule\n\n\ud83d\udcbb Technical Requirements:\nMake sure you have reliable internet access and the latest version of your web browser for the best learning experience.\n\nAccess your course: {{courseUrl}}\nGet support: {{supportUrl}}\n\nWe're here to help you succeed. If you have any questions, don't hesitate to reach out!\n\nBest of luck with your studies,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "education",
+      "created_at": "2025-09-29 10:10:45.658311",
+      "updated_at": "2025-09-29 10:10:45.658329"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "badc419e-14b1-46d3-830b-031ef53ef545",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Investment Portfolio Update",
+      "subject": "Portfolio Performance Update - {{updatePeriod}}",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;\">\n                    <div style=\"background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83d\udcc8 Portfolio Update</h1>\n                        <p style=\"font-size: 16px; margin: 10px 0 0 0;\">Your investment performance summary</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.07);\">\n                        <h2 style=\"color: #1e293b;\">Hello {{firstName}},</h2>\n                        <p>Here's your portfolio performance update for {{updatePeriod}}. Our team continues to monitor and optimize your investments.</p>\n                        \n                        <div style=\"display: flex; margin: 25px 0;\">\n                            <div style=\"flex: 1; background: #f0f9ff; padding: 20px; border-radius: 8px; margin-right: 10px; text-align: center;\">\n                                <h3 style=\"color: #0ea5e9; margin: 0 0 10px 0;\">Portfolio Value</h3>\n                                <p style=\"font-size: 24px; font-weight: bold; color: #0c4a6e; margin: 0;\">${{portfolioValue}}</p>\n                            </div>\n                            <div style=\"flex: 1; background: #f0fdf4; padding: 20px; border-radius: 8px; margin-left: 10px; text-align: center;\">\n                                <h3 style=\"color: #22c55e; margin: 0 0 10px 0;\">Period Return</h3>\n                                <p style=\"font-size: 24px; font-weight: bold; color: #15803d; margin: 0;\">{{periodReturn}}%</p>\n                            </div>\n                        </div>\n                        \n                        <div style=\"background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 25px 0;\">\n                            <h3 style=\"color: #92400e; margin-top: 0;\">\ud83d\udcca Key Highlights:</h3>\n                            <ul style=\"color: #92400e; margin: 0;\">\n                                <li>Diversified across {{assetClasses}} asset classes</li>\n                                <li>{{topPerformer}} was your top performing investment</li>\n                                <li>Risk level remains aligned with your goals</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 25px;\">\n                            <h3 style=\"color: #475569;\">\ud83d\udca1 Market Insights</h3>\n                            <p>{{marketInsight}}</p>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{portfolioUrl}}\" style=\"background: #1e40af; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-right: 10px;\">View Full Report</a>\n                            <a href=\"{{scheduleUrl}}\" style=\"background: #6b7280; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Schedule Review</a>\n                        </div>\n                        \n                        <p>Best regards,<br>Your {{organizationName}} Investment Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hello {{firstName}},\n\n\ud83d\udcc8 Portfolio Update - Your investment performance summary\n\nHere's your portfolio performance update for {{updatePeriod}}. Our team continues to monitor and optimize your investments.\n\nPortfolio Value: ${{portfolioValue}}\nPeriod Return: {{periodReturn}}%\n\n\ud83d\udcca Key Highlights:\n- Diversified across {{assetClasses}} asset classes\n- {{topPerformer}} was your top performing investment\n- Risk level remains aligned with your goals\n\n\ud83d\udca1 Market Insights:\n{{marketInsight}}\n\nView your full report: {{portfolioUrl}}\nSchedule a review: {{scheduleUrl}}\n\nBest regards,\nYour {{organizationName}} Investment Team",
+      "is_default": true,
+      "category": "finance",
+      "created_at": "2025-09-29 10:10:45.479389",
+      "updated_at": "2025-09-29 10:10:45.479405"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "c900ce36-cd8b-4a73-8e17-1cbc7150def9",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Financial Statement Ready",
+      "subject": "Your {{statementType}} Statement is Ready",
+      "html_content": "<div style=\"font-family: 'Times New Roman', serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fafafa;\">\n                    <div style=\"background: white; border: 1px solid #e5e7eb; border-radius: 8px;\">\n                        <div style=\"background: #1f2937; color: white; padding: 25px; text-align: center;\">\n                            <h1 style=\"margin: 0; font-size: 24px;\">\ud83d\udcca Financial Statement Available</h1>\n                            <p style=\"margin: 10px 0 0 0;\">{{organizationName}}</p>\n                        </div>\n                        <div style=\"padding: 30px;\">\n                            <p>Dear {{firstName}},</p>\n                            <p>Your {{statementType}} statement for the period ending {{periodEnd}} is now available for review.</p>\n                            \n                            <div style=\"background: #f9fafb; border: 1px solid #d1d5db; padding: 20px; border-radius: 6px; margin: 25px 0;\">\n                                <h3 style=\"color: #374151; margin-top: 0;\">Statement Summary:</h3>\n                                <p style=\"margin: 8px 0;\"><strong>Account Number:</strong> {{accountNumber}}</p>\n                                <p style=\"margin: 8px 0;\"><strong>Statement Period:</strong> {{statementPeriod}}</p>\n                                <p style=\"margin: 8px 0;\"><strong>Statement Type:</strong> {{statementType}}</p>\n                            </div>\n                            \n                            <div style=\"background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;\">\n                                <h4 style=\"color: #1e40af; margin-top: 0;\">Important Notes:</h4>\n                                <ul style=\"color: #1e40af; margin: 5px 0;\">\n                                    <li>Review all transactions carefully</li>\n                                    <li>Report any discrepancies within 30 days</li>\n                                    <li>Keep statements for your records</li>\n                                </ul>\n                            </div>\n                            \n                            <div style=\"text-align: center; margin: 30px 0;\">\n                                <a href=\"{{statementUrl}}\" style=\"background: #1f2937; color: white; padding: 15px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;\">Download Statement</a>\n                            </div>\n                            \n                            <p style=\"font-size: 14px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 25px;\">\n                                For questions about your statement, please contact us at {{supportPhone}} or visit {{websiteUrl}}.\n                            </p>\n                            \n                            <p>Sincerely,<br>{{organizationName}} Customer Service</p>\n                        </div>\n                    </div>\n                </div>",
+      "text_content": "Dear {{firstName}},\n\n\ud83d\udcca Financial Statement Available - {{organizationName}}\n\nYour {{statementType}} statement for the period ending {{periodEnd}} is now available for review.\n\nStatement Summary:\n- Account Number: {{accountNumber}}\n- Statement Period: {{statementPeriod}}\n- Statement Type: {{statementType}}\n\nImportant Notes:\n- Review all transactions carefully\n- Report any discrepancies within 30 days\n- Keep statements for your records\n\nDownload your statement: {{statementUrl}}\n\nFor questions about your statement, please contact us at {{supportPhone}} or visit {{websiteUrl}}.\n\nSincerely,\n{{organizationName}} Customer Service",
+      "is_default": true,
+      "category": "finance",
+      "created_at": "2025-09-29 10:10:45.304019",
+      "updated_at": "2025-09-29 10:10:45.304033"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "d855bf22-b12a-4223-9d2b-b745c7c46fe5",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Healthcare Wellness Newsletter",
+      "subject": "Your Monthly Wellness Update from {{organizationName}}",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;\">\n                    <div style=\"background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83d\udc9a Wellness Update</h1>\n                        <p style=\"font-size: 16px; margin: 10px 0 0 0;\">Your health journey matters to us</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n                        <h2 style=\"color: #065f46;\">Hi {{firstName}},</h2>\n                        <p>Welcome to your monthly wellness update! Here are some health tips and updates from our team.</p>\n                        \n                        <div style=\"border-top: 2px solid #d1fae5; margin: 25px 0; padding-top: 20px;\">\n                            <h3 style=\"color: #047857;\">\ud83c\udf4e This Month's Health Tip</h3>\n                            <p>Stay hydrated! Aim for 8 glasses of water daily to support optimal body function and maintain energy levels throughout the day.</p>\n                        </div>\n                        \n                        <div style=\"background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                            <h3 style=\"color: #065f46; margin-top: 0;\">\ud83d\udcc5 Upcoming Health Screenings</h3>\n                            <ul style=\"color: #059669;\">\n                                <li>Annual physical exams - Schedule now</li>\n                                <li>Flu vaccinations available</li>\n                                <li>Blood pressure checks - Walk-ins welcome</li>\n                            </ul>\n                        </div>\n                        \n                        <div style=\"border-left: 4px solid #10b981; padding-left: 20px; margin: 20px 0;\">\n                            <h3 style=\"color: #065f46;\">\ud83c\udfc3\u200d\u2640\ufe0f Wellness Challenge</h3>\n                            <p>Join our \"10,000 Steps Challenge\" this month! Track your daily steps and win prizes for reaching your goals.</p>\n                        </div>\n                        \n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{portalUrl}}\" style=\"background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Access Health Portal</a>\n                        </div>\n                        \n                        <p>Stay healthy and take care,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\udc9a Wellness Update - Your health journey matters to us\n\nWelcome to your monthly wellness update! Here are some health tips and updates from our team.\n\n\ud83c\udf4e This Month's Health Tip:\nStay hydrated! Aim for 8 glasses of water daily to support optimal body function and maintain energy levels.\n\n\ud83d\udcc5 Upcoming Health Screenings:\n- Annual physical exams - Schedule now\n- Flu vaccinations available\n- Blood pressure checks - Walk-ins welcome\n\n\ud83c\udfc3\u200d\u2640\ufe0f Wellness Challenge:\nJoin our \"10,000 Steps Challenge\" this month! Track your daily steps and win prizes for reaching your goals.\n\nAccess your health portal: {{portalUrl}}\n\nStay healthy and take care,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "healthcare",
+      "created_at": "2025-09-29 10:10:45.126978",
+      "updated_at": "2025-09-29 10:10:45.126996"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "1a88422c-6a42-4fc5-b260-d6ea4dc59d4c",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Healthcare Appointment Reminder",
+      "subject": "Appointment Reminder - {{appointmentDate}}",
+      "html_content": "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f0f8ff;\">\n                    <div style=\"background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n                        <div style=\"background: #2563eb; color: white; padding: 25px; text-align: center;\">\n                            <h1 style=\"margin: 0; font-size: 24px;\">\ud83c\udfe5 Appointment Reminder</h1>\n                            <p style=\"margin: 10px 0 0 0; font-size: 16px;\">{{organizationName}}</p>\n                        </div>\n                        <div style=\"padding: 30px;\">\n                            <p>Dear {{firstName}},</p>\n                            <p>This is a friendly reminder about your upcoming appointment with our healthcare team.</p>\n                            <div style=\"background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                                <h3 style=\"color: #1e40af; margin-top: 0;\">Appointment Details:</h3>\n                                <p style=\"margin: 5px 0;\"><strong>Date:</strong> {{appointmentDate}}</p>\n                                <p style=\"margin: 5px 0;\"><strong>Time:</strong> {{appointmentTime}}</p>\n                                <p style=\"margin: 5px 0;\"><strong>Provider:</strong> {{providerName}}</p>\n                                <p style=\"margin: 5px 0;\"><strong>Location:</strong> {{clinicLocation}}</p>\n                            </div>\n                            <div style=\"background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;\">\n                                <h4 style=\"color: #92400e; margin-top: 0;\">Please Remember:</h4>\n                                <ul style=\"color: #92400e; margin: 0;\">\n                                    <li>Arrive 15 minutes early</li>\n                                    <li>Bring your insurance card</li>\n                                    <li>Bring a list of current medications</li>\n                                </ul>\n                            </div>\n                            <div style=\"text-align: center; margin: 25px 0;\">\n                                <a href=\"{{confirmUrl}}\" style=\"background: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; margin-right: 10px; display: inline-block;\">Confirm Appointment</a>\n                                <a href=\"{{rescheduleUrl}}\" style=\"background: #6b7280; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; display: inline-block;\">Reschedule</a>\n                            </div>\n                            <p>If you have any questions, please call us at {{clinicPhone}}.</p>\n                            <p>Best regards,<br>{{organizationName}}</p>\n                        </div>\n                    </div>\n                </div>",
+      "text_content": "Dear {{firstName}},\n\n\ud83c\udfe5 Appointment Reminder - {{organizationName}}\n\nThis is a friendly reminder about your upcoming appointment with our healthcare team.\n\nAppointment Details:\n- Date: {{appointmentDate}}\n- Time: {{appointmentTime}}\n- Provider: {{providerName}}\n- Location: {{clinicLocation}}\n\nPlease Remember:\n- Arrive 15 minutes early\n- Bring your insurance card\n- Bring a list of current medications\n\nConfirm: {{confirmUrl}}\nReschedule: {{rescheduleUrl}}\n\nIf you have any questions, please call us at {{clinicPhone}}.\n\nBest regards,\n{{organizationName}}",
+      "is_default": true,
+      "category": "healthcare",
+      "created_at": "2025-09-29 10:10:44.947417",
+      "updated_at": "2025-09-29 10:10:44.947429"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "6258411a-fecb-4493-a537-d49b67f25eba",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Tech Security Alert",
+      "subject": "\ud83d\udd12 Important Security Update for Your Account",
+      "html_content": "<div style=\"font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\">\n                    <div style=\"background-color: #fed7d7; border-left: 4px solid #e53e3e; padding: 20px; border-radius: 4px; margin-bottom: 20px;\">\n                        <h1 style=\"color: #c53030; margin: 0;\">\ud83d\udd12 Security Update Required</h1>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; border: 1px solid #e2e8f0;\">\n                        <p>Hi {{firstName}},</p>\n                        <p>We've enhanced our security systems and need you to verify your account to ensure continued protection.</p>\n                        <div style=\"background-color: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4299e1;\">\n                            <h3 style=\"color: #2b6cb0; margin-top: 0;\">Action Required:</h3>\n                            <ul>\n                                <li>Update your password</li>\n                                <li>Enable two-factor authentication</li>\n                                <li>Review login activity</li>\n                            </ul>\n                        </div>\n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{securityUrl}}\" style=\"background: #e53e3e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Update Security Settings</a>\n                        </div>\n                        <p style=\"font-size: 14px; color: #718096;\">This is an automated security message from {{organizationName}}. Please do not reply to this email.</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\udd12 Security Update Required\n\nWe've enhanced our security systems and need you to verify your account to ensure continued protection.\n\nAction Required:\n- Update your password\n- Enable two-factor authentication\n- Review login activity\n\nUpdate your security settings: {{securityUrl}}\n\nThis is an automated security message from {{organizationName}}. Please do not reply to this email.",
+      "is_default": true,
+      "category": "technology",
+      "created_at": "2025-09-29 10:10:44.771962",
+      "updated_at": "2025-09-29 10:10:44.771979"
+    }
+  },
+  {
+    "model": "core.emailtemplate",
+    "pk": "0455bf9a-d5e8-478a-9862-7d546f9097f9",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "name": "Tech Product Launch",
+      "subject": "Introducing Our Latest Innovation - {{productName}}",
+      "html_content": "<div style=\"font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fb;\">\n                    <div style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; text-align: center;\">\n                        <h1 style=\"margin: 0; font-size: 28px;\">\ud83d\ude80 {{productName}} is Here!</h1>\n                        <p style=\"font-size: 18px; margin: 10px 0 0 0;\">Revolutionary technology meets seamless user experience</p>\n                    </div>\n                    <div style=\"background: white; padding: 30px; border-radius: 8px; margin: 20px 0;\">\n                        <h2 style=\"color: #2d3748;\">Hi {{firstName}},</h2>\n                        <p>We're excited to announce the launch of {{productName}}, designed to transform how you work and innovate.</p>\n                        <div style=\"background-color: #edf2f7; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n                            <h3 style=\"color: #4a5568; margin-top: 0;\">Key Features:</h3>\n                            <ul style=\"color: #718096;\">\n                                <li>Advanced AI-powered automation</li>\n                                <li>Real-time collaboration tools</li>\n                                <li>Enterprise-grade security</li>\n                                <li>Seamless API integration</li>\n                            </ul>\n                        </div>\n                        <div style=\"text-align: center; margin: 30px 0;\">\n                            <a href=\"{{productUrl}}\" style=\"background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;\">Explore Now</a>\n                        </div>\n                        <p>Best regards,<br>The {{organizationName}} Team</p>\n                    </div>\n                </div>",
+      "text_content": "Hi {{firstName}},\n\n\ud83d\ude80 {{productName}} is Here!\n\nWe're excited to announce the launch of {{productName}}, designed to transform how you work and innovate.\n\nKey Features:\n- Advanced AI-powered automation\n- Real-time collaboration tools\n- Enterprise-grade security\n- Seamless API integration\n\nLearn more: {{productUrl}}\n\nBest regards,\nThe {{organizationName}} Team",
+      "is_default": true,
+      "category": "technology",
+      "created_at": "2025-09-29 10:10:44.595125",
+      "updated_at": "2025-09-29 10:10:44.595140"
+    }
+  },
+  {
+    "model": "core.subscriptionnotification",
+    "pk": "11a910fd-164a-4776-9368-dfca7a1bed71",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "user": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+      "notification_type": "team_invitation_accepted",
+      "channel": "in_app",
+      "status": "pending",
+      "is_read": true,
+      "sent_at": null,
+      "read_at": "2025-09-29 12:54:52.641770+00:00",
+      "metadata": {
+        "role": "analyst",
+        "accepted_at": "2025-09-29T11:11:46.441200+00:00",
+        "role_display": "Analyst",
+        "invitation_id": "a925036f-d53d-45ba-afa4-0698e8021b63",
+        "accepted_by_email": "bhavesh.singh@aabhyasa.com",
+        "organization_name": "Kaycee Mariya's Organization"
+      },
+      "error_message": null,
+      "delivery_attempts": 0,
+      "created_at": "2025-09-29 11:11:46.486788+00:00",
+      "updated_at": "2025-09-29 12:54:52.641974+00:00"
+    }
+  },
+  {
+    "model": "core.subscriptionnotification",
+    "pk": "674c9aeb-ab08-47c2-8a30-48b06d73b78e",
+    "fields": {
+      "organization": "723f8f47-04e0-47d1-8b18-87ee40a68d60",
+      "user": "99db8140-cc05-4f5a-af97-961578bf1ff3",
+      "notification_type": "team_invitation_accepted",
+      "channel": "in_app",
+      "status": "pending",
+      "is_read": true,
+      "sent_at": null,
+      "read_at": "2025-09-29 10:55:47.650329+00:00",
+      "metadata": {
+        "role": "campaign_manager",
+        "accepted_at": "2025-09-29T10:55:09.217650+00:00",
+        "role_display": "Campaign Manager",
+        "invitation_id": "56d052a1-abb8-44e2-b845-e26aad9c1133",
+        "accepted_by_email": "abhishek.dubey@aabhyasa.com",
+        "organization_name": "Kaycee Mariya's Organization"
+      },
+      "error_message": null,
+      "delivery_attempts": 0,
+      "created_at": "2025-09-29 10:55:09.265219+00:00",
+      "updated_at": "2025-09-29 10:55:47.650445+00:00"
+    }
+  },
+  {
+    "model": "core.subscriptionnotification",
+    "pk": "0e2dc131-1e7a-44a3-b5b3-503611cdcae6",
+    "fields": {
+      "organization": "79232167-0306-4f45-8ef5-37c5c2e9290f",
+      "user": "d1c55166-ba90-4c93-9f06-e7902e4f617c",
+      "notification_type": "team_invitation_received",
+      "channel": "in_app",
+      "status": "pending",
+      "is_read": false,
+      "sent_at": null,
+      "read_at": null,
+      "metadata": {
+        "role": "campaign_manager",
+        "role_display": "Campaign Manager",
+        "invitation_id": "56d052a1-abb8-44e2-b845-e26aad9c1133",
+        "invitation_url": "/invite/aHrPqUVoNohNp7Nyp0WHTFxUZS1xsg97-kGWYfsaH8A",
+        "invited_by_name": "Kaycee Mariya",
+        "organization_name": "Kaycee Mariya's Organization"
+      },
+      "error_message": null,
+      "delivery_attempts": 0,
+      "created_at": "2025-09-29 10:54:13.142175+00:00",
+      "updated_at": "2025-09-29 10:54:13.142185+00:00"
+    }
+  }
+]
