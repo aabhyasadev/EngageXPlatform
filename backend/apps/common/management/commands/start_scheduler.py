@@ -112,8 +112,9 @@ class Command(BaseCommand):
     
     def check_trial_expirations(self):
         """Check for expiring trials and send reminders"""
-        from core.models import Organization, SubscriptionPlan
-        from core.notifications import send_trial_expiry_reminder
+        from apps.accounts.models import Organization
+from apps.common.constants import SubscriptionPlan
+        from apps.notifications.notifications import send_trial_expiry_reminder
         
         now = timezone.now()
         results = {'7_day': 0, '1_day': 0, 'errors': 0}
@@ -156,8 +157,9 @@ class Command(BaseCommand):
     
     def check_subscription_expirations(self):
         """Check for expiring subscriptions and send notifications"""
-        from core.models import Organization, SubscriptionStatus
-        from core.notifications import send_subscription_expiry_reminder
+        from apps.accounts.models import Organization
+from apps.common.constants import SubscriptionStatus
+        from apps.notifications.notifications import send_subscription_expiry_reminder
         
         now = timezone.now()
         results = {'30_day': 0, '7_day': 0, '1_day': 0, 'errors': 0}
@@ -206,7 +208,7 @@ class Command(BaseCommand):
                 org.is_subscription_active = False
                 org.save()
                 
-                from core.notifications import send_subscription_expired_notification
+                from apps.notifications.notifications import send_subscription_expired_notification
                 send_subscription_expired_notification(org)
                 logger.info(f"Marked org {org.id} subscription as expired")
                 
@@ -217,8 +219,9 @@ class Command(BaseCommand):
     
     def check_usage_limits(self):
         """Check usage limits and send warnings when approaching limits"""
-        from core.models import Organization, UsageTracking
-        from core.notifications import send_usage_limit_warning
+        from apps.accounts.models import Organization
+from apps.subscriptions.models import UsageTracking
+        from apps.notifications.notifications import send_usage_limit_warning
         
         results = {'warnings_sent': 0, 'errors': 0}
         

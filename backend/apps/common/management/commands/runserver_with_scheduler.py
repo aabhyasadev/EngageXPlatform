@@ -43,7 +43,7 @@ class Command(RunServerCommand):
     def start_scheduler(self):
         """Start the scheduler in a background thread"""
         def run_scheduler():
-            from core.management.commands.start_scheduler import Command as SchedulerCommand
+            from apps.common.management.commands.start_scheduler import Command as SchedulerCommand
             
             try:
                 # Create an instance of the scheduler command
