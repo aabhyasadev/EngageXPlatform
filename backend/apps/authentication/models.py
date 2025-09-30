@@ -16,7 +16,6 @@ class EmailOTP(models.Model):
     max_attempts = models.IntegerField(default=5)
 
     class Meta:
-        app_label = 'core'
         db_table = 'email_otps'
         indexes = [
             models.Index(fields=['email', 'is_verified']),
@@ -40,5 +39,4 @@ class Session(models.Model):
     expire = models.DateTimeField(db_index=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'sessions'

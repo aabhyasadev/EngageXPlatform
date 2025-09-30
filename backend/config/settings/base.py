@@ -36,7 +36,6 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'core',  # Keep for migrations compatibility
     'apps.common',
     'apps.accounts',
     'apps.authentication',
@@ -100,7 +99,7 @@ DATABASES = {
 }
 
 # Custom User Model
-AUTH_USER_MODEL = 'core.User'
+AUTH_USER_MODEL = 'accounts.User'
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [

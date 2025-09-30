@@ -21,7 +21,6 @@ class EmailTemplate(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'email_templates'
         ordering = ['-created_at']
 

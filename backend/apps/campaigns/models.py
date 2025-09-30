@@ -70,7 +70,6 @@ class Campaign(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'campaigns'
 
     def __str__(self):
@@ -115,7 +114,6 @@ class CampaignRecipient(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'campaign_recipients'
         unique_together = ['campaign', 'contact']
 

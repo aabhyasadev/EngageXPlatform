@@ -19,7 +19,7 @@ class SubscriptionNotification(models.Model):
         related_name='subscription_notifications'
     )
     user = models.ForeignKey(
-        'core.User',
+        'accounts.User',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -48,7 +48,6 @@ class SubscriptionNotification(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'subscription_notifications'
         ordering = ['-created_at']
         indexes = [

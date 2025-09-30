@@ -27,7 +27,6 @@ class Domain(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'domains'
 
     def __str__(self):

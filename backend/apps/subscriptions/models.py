@@ -65,7 +65,6 @@ class SubscriptionHistory(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'subscription_history'
         ordering = ['-created_at']
 
@@ -88,7 +87,6 @@ class ProcessedWebhookEvent(models.Model):
     metadata = models.JSONField(default=dict, blank=True)
     
     class Meta:
-        app_label = 'core'
         db_table = 'processed_webhook_events'
         indexes = [
             models.Index(fields=['event_id']),
@@ -125,7 +123,6 @@ class PlanFeatures(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'plan_features'
         verbose_name = 'Plan Features'
         verbose_name_plural = 'Plan Features'
@@ -154,7 +151,6 @@ class UsageTracking(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        app_label = 'core'
         db_table = 'usage_tracking'
         unique_together = ['organization', 'month']
         indexes = [
@@ -219,7 +215,6 @@ class Card(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'cards'
         indexes = [
             models.Index(fields=['organization', 'is_default']),

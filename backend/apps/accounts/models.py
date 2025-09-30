@@ -70,7 +70,6 @@ class Organization(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'organizations'
 
     def __str__(self):
@@ -115,7 +114,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     class Meta:
-        app_label = 'core'
         db_table = 'users'
 
     def __str__(self):
@@ -181,7 +179,6 @@ class OrganizationMembership(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        app_label = 'core'
         db_table = 'organization_memberships'
         unique_together = ['user', 'organization']
         indexes = [
@@ -224,7 +221,6 @@ class Invitation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'invitations'
         indexes = [
             models.Index(fields=['organization', 'email', 'status']),

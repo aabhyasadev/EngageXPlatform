@@ -18,7 +18,6 @@ class ContactGroup(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'contact_groups'
 
     def __str__(self):
@@ -43,7 +42,6 @@ class Contact(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'contacts'
         unique_together = ['organization', 'email']
 
@@ -72,7 +70,6 @@ class ContactGroupMembership(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        app_label = 'core'
         db_table = 'contact_group_memberships'
         unique_together = ['contact', 'group']
 
