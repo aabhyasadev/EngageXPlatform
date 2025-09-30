@@ -1,0 +1,186 @@
+{
+  "dashboard": {
+    "title": "EngageX - Subscriptions & Billing",
+    "tags": ["engagex", "billing", "subscriptions"],
+    "timezone": "browser",
+    "refresh": "5m",
+    "time": {
+      "from": "now-30d",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Monthly Recurring Revenue (MRR)",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(subscription_mrr_total)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 0
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Active Subscriptions",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "count(subscription_status{status=\"active\"})"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Churn Rate (30d)",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(increase(subscription_cancelled_total[30d])) / (sum(subscription_active_total) + sum(increase(subscription_cancelled_total[30d]))) * 100"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 20,
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Trial Conversions",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(increase(subscription_trial_converted_total[30d]))"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Subscriptions by Plan",
+        "type": "piechart",
+        "gridPos": {"x": 0, "y": 6, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "sum by (plan) (subscription_active{status=\"active\"})",
+            "legendFormat": "{{plan}}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "New Subscriptions (Daily)",
+        "type": "graph",
+        "gridPos": {"x": 8, "y": 6, "w": 16, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(increase(subscription_created_total[1d]))",
+            "legendFormat": "New Subscriptions"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Failed Payments",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 14, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(subscription_payment_failed_total[1h])",
+            "legendFormat": "Failed Payments/hour"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Successful Payments",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 14, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(subscription_payment_succeeded_total[1h])",
+            "legendFormat": "Successful Payments/hour"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Usage vs Limits by Organization",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 22, "w": 24, "h": 8},
+        "targets": [
+          {
+            "expr": "(subscription_usage_current / subscription_usage_limit) * 100",
+            "legendFormat": "{{organization}} - {{resource_type}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Stripe Webhook Success Rate",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 30, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "(rate(stripe_webhook_received_total[5m]) - rate(stripe_webhook_failed_total[5m])) / rate(stripe_webhook_received_total[5m]) * 100"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 95, "color": "yellow"},
+                {"value": 99, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Revenue by Plan (30d)",
+        "type": "bargauge",
+        "gridPos": {"x": 8, "y": 30, "w": 16, "h": 6},
+        "targets": [
+          {
+            "expr": "sum by (plan) (increase(subscription_revenue_total[30d]))",
+            "legendFormat": "{{plan}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        }
+      }
+    ]
+  }
+}

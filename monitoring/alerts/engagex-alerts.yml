@@ -1,0 +1,216 @@
+groups:
+  - name: engagex_application
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: rate(django_http_responses_total_by_status_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(django_http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s (threshold: 2s)"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: django_db_connections_total >= django_db_max_connections * 0.9
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "{{ $value }} connections in use (90% of max capacity)"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}%"
+
+  - name: engagex_email_delivery
+    interval: 60s
+    rules:
+      - alert: EmailDeliveryFailureRate
+        expr: rate(email_delivery_failed_total[10m]) / rate(email_delivery_total[10m]) > 0.1
+        for: 10m
+        labels:
+          severity: critical
+          component: email
+        annotations:
+          summary: "High email delivery failure rate"
+          description: "{{ $value | humanizePercentage }} of emails are failing to deliver"
+
+      - alert: EmailBounceRateHigh
+        expr: rate(email_bounces_total[1h]) / rate(email_delivery_total[1h]) > 0.05
+        for: 30m
+        labels:
+          severity: warning
+          component: email
+        annotations:
+          summary: "High email bounce rate"
+          description: "Bounce rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      - alert: EmailQueueBacklog
+        expr: email_queue_size > 10000
+        for: 15m
+        labels:
+          severity: warning
+          component: email
+        annotations:
+          summary: "Large email queue backlog"
+          description: "{{ $value }} emails pending in queue"
+
+      - alert: SendGridAPIErrors
+        expr: rate(sendgrid_api_errors_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: email
+        annotations:
+          summary: "SendGrid API errors detected"
+          description: "SendGrid API error rate: {{ $value }} errors/second"
+
+  - name: engagex_subscriptions
+    interval: 60s
+    rules:
+      - alert: StripeWebhookFailures
+        expr: rate(stripe_webhook_failed_total[10m]) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          component: billing
+        annotations:
+          summary: "Stripe webhook failures detected"
+          description: "{{ $value }} webhook failures per second"
+
+      - alert: FailedPayments
+        expr: rate(subscription_payment_failed_total[1h]) > 5
+        for: 30m
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "High rate of failed payments"
+          description: "{{ $value }} payment failures per hour"
+
+      - alert: UsageLimitApproaching
+        expr: (subscription_usage_current / subscription_usage_limit) > 0.95
+        for: 1h
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "Organization approaching usage limit"
+          description: "Organization {{ $labels.organization }} at {{ $value | humanizePercentage }} of limit"
+
+  - name: engagex_campaigns
+    interval: 60s
+    rules:
+      - alert: CampaignProcessingStalled
+        expr: rate(campaign_processed_total[10m]) == 0 and campaign_queue_size > 0
+        for: 15m
+        labels:
+          severity: critical
+          component: campaigns
+        annotations:
+          summary: "Campaign processing has stalled"
+          description: "No campaigns processed in 15 minutes despite {{ $value }} in queue"
+
+      - alert: HighCampaignFailureRate
+        expr: rate(campaign_failed_total[30m]) / rate(campaign_started_total[30m]) > 0.2
+        for: 15m
+        labels:
+          severity: warning
+          component: campaigns
+        annotations:
+          summary: "High campaign failure rate"
+          description: "{{ $value | humanizePercentage }} of campaigns are failing"
+
+  - name: engagex_database
+    interval: 30s
+    rules:
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+
+      - alert: HighDatabaseConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database connection usage"
+          description: "Database connections at {{ $value | humanizePercentage }} of max"
+
+      - alert: SlowQueries
+        expr: rate(pg_stat_statements_mean_exec_time[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query time is {{ $value }}ms"
+
+      - alert: DatabaseDiskSpaceRunningOut
+        expr: (node_filesystem_avail_bytes{mountpoint="/var/lib/postgresql"} / node_filesystem_size_bytes{mountpoint="/var/lib/postgresql"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database disk space critically low"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining"
+
+  - name: engagex_service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has been down for more than 2 minutes"
+
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request latency detected"
+          description: "99th percentile latency is {{ $value }}s"

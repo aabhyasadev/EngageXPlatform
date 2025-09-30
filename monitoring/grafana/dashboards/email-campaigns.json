@@ -1,0 +1,173 @@
+{
+  "dashboard": {
+    "title": "EngageX - Email Campaigns & Delivery",
+    "tags": ["engagex", "email", "campaigns"],
+    "timezone": "browser",
+    "refresh": "1m",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Emails Sent (Rate)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(email_delivery_total[5m])",
+            "legendFormat": "Sent"
+          },
+          {
+            "expr": "rate(email_delivery_failed_total[5m])",
+            "legendFormat": "Failed"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Email Delivery Success Rate",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "(rate(email_delivery_total[5m]) - rate(email_delivery_failed_total[5m])) / rate(email_delivery_total[5m]) * 100"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 90, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Total Emails Today",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(increase(email_delivery_total[24h]))"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Active Campaigns",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 4, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "count(campaign_status{status=\"sending\"})"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Email Opens Rate",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(email_opens_total[1h]) / rate(email_delivery_total[1h]) * 100",
+            "legendFormat": "Open Rate %"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Email Click Rate",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(email_clicks_total[1h]) / rate(email_delivery_total[1h]) * 100",
+            "legendFormat": "Click Rate %"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Bounce Rate",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(email_bounces_total[1h]) / rate(email_delivery_total[1h]) * 100",
+            "legendFormat": "Hard Bounces"
+          },
+          {
+            "expr": "rate(email_soft_bounces_total[1h]) / rate(email_delivery_total[1h]) * 100",
+            "legendFormat": "Soft Bounces"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Unsubscribe Rate",
+        "type": "graph",
+        "gridPos": {"x": 8, "y": 16, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(email_unsubscribes_total[1h]) / rate(email_delivery_total[1h]) * 100",
+            "legendFormat": "Unsubscribe Rate %"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Campaign Processing Queue",
+        "type": "graph",
+        "gridPos": {"x": 16, "y": 16, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "campaign_queue_size",
+            "legendFormat": "Pending"
+          },
+          {
+            "expr": "rate(campaign_processed_total[5m])",
+            "legendFormat": "Processing Rate"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "SendGrid API Response Time",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(sendgrid_api_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(sendgrid_api_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "SendGrid API Errors",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(sendgrid_api_errors_total[5m])",
+            "legendFormat": "{{error_type}}"
+          }
+        ]
+      }
+    ]
+  }
+}
