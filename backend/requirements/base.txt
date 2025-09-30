@@ -1,0 +1,30 @@
+# Core Django packages
+django>=4.2,<5.0
+djangorestframework>=3.14
+django-cors-headers>=4.0
+django-filter>=23.0
+django-redis>=5.3
+
+# Database
+psycopg2-binary>=2.9
+
+# Environment and configuration
+python-decouple>=3.8
+python-dotenv>=1.0
+
+# Static files
+whitenoise>=6.5
+
+# Task queue
+celery>=5.3
+redis>=4.6
+
+# Third-party integrations
+sendgrid>=6.10
+stripe>=5.5
+
+# Utilities
+requests>=2.31
+dnspython>=2.4
+openpyxl>=3.1
+schedule>=1.2

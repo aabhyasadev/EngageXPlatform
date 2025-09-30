@@ -1,0 +1,8 @@
+# Include base requirements
+-r base.txt
+
+# Production server
+gunicorn>=21.0
+
+# Monitoring and performance
+sentry-sdk>=1.32
