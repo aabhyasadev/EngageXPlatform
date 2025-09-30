@@ -113,7 +113,7 @@ class Command(BaseCommand):
     def check_trial_expirations(self):
         """Check for expiring trials and send reminders"""
         from apps.accounts.models import Organization
-from apps.common.constants import SubscriptionPlan
+        from apps.common.constants import SubscriptionPlan
         from apps.notifications.notifications import send_trial_expiry_reminder
         
         now = timezone.now()
@@ -158,7 +158,7 @@ from apps.common.constants import SubscriptionPlan
     def check_subscription_expirations(self):
         """Check for expiring subscriptions and send notifications"""
         from apps.accounts.models import Organization
-from apps.common.constants import SubscriptionStatus
+        from apps.common.constants import SubscriptionStatus
         from apps.notifications.notifications import send_subscription_expiry_reminder
         
         now = timezone.now()
@@ -220,7 +220,7 @@ from apps.common.constants import SubscriptionStatus
     def check_usage_limits(self):
         """Check usage limits and send warnings when approaching limits"""
         from apps.accounts.models import Organization
-from apps.subscriptions.models import UsageTracking
+        from apps.subscriptions.models import UsageTracking
         from apps.notifications.notifications import send_usage_limit_warning
         
         results = {'warnings_sent': 0, 'errors': 0}
