@@ -1,31 +1,15 @@
 import uuid
 from django.db import models
-
+from apps.contacts.models import Contact
+from apps.campaigns.models import Campaign
 from apps.common.constants import EventType
 from apps.accounts.models import Organization
-from apps.campaigns.models import Campaign
-from apps.contacts.models import Contact
-
 
 class AnalyticsEvent(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='analytics_events'
-    )
-    campaign = models.ForeignKey(
-        Campaign,
-        on_delete=models.CASCADE,
-        related_name='analytics_events',
-        null=True, blank=True
-    )
-    contact = models.ForeignKey(
-        Contact,
-        on_delete=models.CASCADE,
-        related_name='analytics_events',
-        null=True, blank=True
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='analytics_events')
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='analytics_events', null=True, blank=True)
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name='analytics_events', null=True, blank=True)
     event_type = models.CharField(max_length=50, choices=EventType.choices)
     user_agent = models.TextField(null=True, blank=True)
     ip_address = models.CharField(max_length=45, null=True, blank=True)

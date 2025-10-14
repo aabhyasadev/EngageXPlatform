@@ -1,17 +1,14 @@
 import json
 import hmac
-import hashlib
 import time
-from django.contrib.auth.backends import BaseBackend
-from django.contrib.auth import get_user_model
+import hashlib
 from django.conf import settings
-from rest_framework.authentication import BaseAuthentication, SessionAuthentication
-from rest_framework.exceptions import AuthenticationFailed
-
 from apps.accounts.models import Organization
+from django.contrib.auth import get_user_model
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.authentication import BaseAuthentication, SessionAuthentication
 
 User = get_user_model()
-
 
 class SignedHeaderAuthentication(BaseAuthentication):
     """
@@ -96,58 +93,6 @@ class SignedHeaderAuthentication(BaseAuthentication):
             
         except (json.JSONDecodeError, ValueError, TypeError) as e:
             raise AuthenticationFailed(f'Invalid user data format: {str(e)}')
-
-
-class ReplitAuthBackend(BaseBackend):
-    """
-    Django authentication backend for Replit Auth integration
-    """
-    
-    def authenticate(self, request, user_id=None, user_email=None, organization_id=None, **kwargs):
-        if not user_id or not user_email:
-            return None
-        
-        try:
-            # Validate organization exists if provided
-            organization = None
-            if organization_id:
-                try:
-                    organization = Organization.objects.get(id=organization_id)
-                except Organization.DoesNotExist:
-                    organization = None
-            
-            # Get or create user by replit_id
-            user, created = User.objects.get_or_create(
-                replit_id=user_id,
-                defaults={
-                    'email': user_email,
-                    'organization': organization
-                }
-            )
-            
-            # Update user data if not created
-            if not created:
-                updated = False
-                if user.email != user_email:
-                    user.email = user_email
-                    updated = True
-                if user.organization_id != organization_id:
-                    user.organization_id = organization_id
-                    updated = True
-                if updated:
-                    user.save()
-            
-            return user
-            
-        except Exception as e:
-            return None
-    
-    def get_user(self, user_id):
-        try:
-            return User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return None
-
 
 class CSRFExemptSessionAuthentication(SessionAuthentication):
     """

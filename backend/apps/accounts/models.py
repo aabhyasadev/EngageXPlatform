@@ -1,17 +1,9 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import EmailValidator
-
-from apps.common.constants import (
-    UserRole,
-    MembershipStatus,
-    SubscriptionPlan,
-    SubscriptionStatus,
-    BillingCycle,
-    InvitationStatus
-)
 from apps.common.utils import generate_invitation_token
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from apps.common.constants import (UserRole, MembershipStatus, SubscriptionPlan, SubscriptionStatus, BillingCycle, InvitationStatus)
 
 
 class UserManager(BaseUserManager):
@@ -145,23 +137,9 @@ class OrganizationMembership(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='memberships')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='memberships')
-    role = models.CharField(
-        max_length=20,
-        choices=UserRole.choices,
-        default=UserRole.CAMPAIGN_MANAGER
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=MembershipStatus.choices,
-        default=MembershipStatus.ACTIVE
-    )
-    invited_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='invited_memberships'
-    )
+    role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CAMPAIGN_MANAGER)
+    status = models.CharField(max_length=20, choices=MembershipStatus.choices, default=MembershipStatus.ACTIVE)
+    invited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='invited_memberships')
     joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -180,28 +158,12 @@ class OrganizationMembership(models.Model):
 
 class Invitation(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='invitations'
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='invitations')
     email = models.EmailField(max_length=255, validators=[EmailValidator()])
-    role = models.CharField(
-        max_length=20,
-        choices=UserRole.choices,
-        default=UserRole.CAMPAIGN_MANAGER
-    )
+    role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CAMPAIGN_MANAGER)
     token = models.CharField(max_length=64, unique=True, default=generate_invitation_token)
-    status = models.CharField(
-        max_length=20,
-        choices=InvitationStatus.choices,
-        default=InvitationStatus.PENDING
-    )
-    invited_by = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='sent_invitations'
-    )
+    status = models.CharField(max_length=20, choices=InvitationStatus.choices, default=InvitationStatus.PENDING)
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

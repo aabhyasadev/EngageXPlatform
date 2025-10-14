@@ -1,18 +1,16 @@
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from django.db.models import Sum, Count
+from django.db.models import Sum
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from django.middleware.csrf import get_token
-
-from apps.accounts.models import Organization, OrganizationMembership
-from apps.accounts.serializers import UserSerializer
-from apps.common.constants import MembershipStatus
+from django.utils import timezone
+from django.contrib.auth import logout
 from apps.contacts.models import Contact
 from apps.campaigns.models import Campaign
+from django.middleware.csrf import get_token
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+from apps.common.constants import MembershipStatus
+from apps.accounts.models import OrganizationMembership
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 
 User = get_user_model()
 
@@ -34,8 +32,6 @@ def test_connection(request):
         'message': 'Django is connected to frontend!',
         'timestamp': timezone.now().isoformat()
     })
-
-
 
 
 @api_view(['GET'])

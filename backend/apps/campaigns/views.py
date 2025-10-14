@@ -1,21 +1,14 @@
+from apps.contacts.models import Contact
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from apps.common.tasks import send_campaign_emails
+from apps.common.viewsets import BaseOrganizationViewSet
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
-
-from apps.common.viewsets import BaseOrganizationViewSet
 from apps.campaigns.models import Campaign, CampaignRecipient
 from apps.campaigns.serializers import CampaignSerializer, CampaignSendSerializer
-from apps.contacts.models import Contact
-from apps.common.tasks import send_campaign_emails
-from apps.subscriptions.subscription_views import (
-    check_subscription_active,
-    check_feature_available,
-    check_usage_limit,
-    get_current_usage,
-    update_usage_tracking
-)
+from apps.subscriptions.subscription_views import (check_subscription_active, check_feature_available, check_usage_limit, get_current_usage, update_usage_tracking)
 
 
 class DefaultPagination(PageNumberPagination):
@@ -46,9 +39,7 @@ class CampaignViewSet(BaseOrganizationViewSet):
         
         if not request.user.organization:
             logger.error("No organization found for user")
-            return Response({
-                'error': 'No organization found'
-            }, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'No organization found'}, status=status.HTTP_403_FORBIDDEN)
         
         # Check campaign limit
         limit_check = check_usage_limit(request.user.organization, 'campaigns')
@@ -92,15 +83,10 @@ class CampaignViewSet(BaseOrganizationViewSet):
             logger.error(f"Exception type: {type(e)}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
-            return Response({
-                'error': f'Campaign creation failed: {str(e)}'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'Campaign creation failed: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):
-        serializer.save(
-            organization=self.request.user.organization,
-            created_by=self.request.user
-        )
+        serializer.save(organization=self.request.user.organization, created_by=self.request.user)
 
     @action(detail=True, methods=['post'])
     def send(self, request, pk=None):

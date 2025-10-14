@@ -2,9 +2,6 @@ import uuid
 from django.db import models
 from django.core.validators import EmailValidator
 
-from apps.accounts.models import User
-
-
 class EmailOTP(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=255, validators=[EmailValidator()])
@@ -31,7 +28,6 @@ class EmailOTP(models.Model):
 
     def is_max_attempts_reached(self):
         return self.attempts >= self.max_attempts
-
 
 class Session(models.Model):
     sid = models.CharField(max_length=40, primary_key=True)

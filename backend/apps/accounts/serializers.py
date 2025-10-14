@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-
-from .models import Organization, User, Invitation, OrganizationMembership
 from apps.common.constants import MembershipStatus
+from .models import Organization, User, Invitation, OrganizationMembership
 
 User = get_user_model()
 

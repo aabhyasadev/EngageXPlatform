@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from apps.campaigns.models import Campaign, CampaignRecipient
 
 
@@ -94,7 +93,6 @@ class CampaignSerializer(serializers.ModelSerializer):
                 
         return camel_case_data
 
-
 class CampaignRecipientSerializer(serializers.ModelSerializer):
     contact_email = serializers.CharField(source='contact.email', read_only=True)
     contact_name = serializers.CharField(source='contact.full_name', read_only=True)
@@ -112,18 +110,9 @@ class CampaignRecipientSerializer(serializers.ModelSerializer):
             'bounced_at', 'unsubscribed_at', 'created_at'
         ]
 
-
 class CampaignSendSerializer(serializers.Serializer):
-    contact_ids = serializers.ListField(
-        child=serializers.CharField(),
-        required=False,
-        allow_empty=True
-    )
-    group_ids = serializers.ListField(
-        child=serializers.CharField(),
-        required=False,
-        allow_empty=True
-    )
+    contact_ids = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=True)
+    group_ids = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=True)
     send_all = serializers.BooleanField(default=False)
 
     def validate(self, attrs):

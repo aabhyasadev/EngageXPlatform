@@ -1,21 +1,15 @@
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import AnonymousUser
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework import status
-from datetime import timedelta
-import random
-import string
 import logging
-
-from apps.accounts.models import User, Organization, OrganizationMembership
+from datetime import timedelta
+from django.conf import settings
+from rest_framework import status
+from django.utils import timezone
+from django.contrib.auth import login
+from django.core.mail import send_mail
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from apps.common.constants import MembershipStatus
+from rest_framework.decorators import api_view, permission_classes
+from apps.accounts.models import User, Organization, OrganizationMembership
 
 logger = logging.getLogger(__name__)
 

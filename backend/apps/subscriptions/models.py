@@ -1,12 +1,7 @@
 import uuid
 from django.db import models
-
-from apps.common.constants import (
-    SubscriptionPlan,
-    SubscriptionStatus,
-    SubscriptionEventType
-)
 from apps.accounts.models import Organization
+from apps.common.constants import (SubscriptionPlan, SubscriptionStatus, SubscriptionEventType)
 
 
 class WebhookEventStatus(models.TextChoices):
@@ -18,40 +13,13 @@ class WebhookEventStatus(models.TextChoices):
 
 class SubscriptionHistory(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='subscription_history'
-    )
-    event_type = models.CharField(
-        max_length=30,
-        choices=SubscriptionEventType.choices
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='subscription_history')
+    event_type = models.CharField(max_length=30, choices=SubscriptionEventType.choices)
     stripe_event_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    old_plan = models.CharField(
-        max_length=30,
-        choices=SubscriptionPlan.choices,
-        null=True,
-        blank=True
-    )
-    new_plan = models.CharField(
-        max_length=30,
-        choices=SubscriptionPlan.choices,
-        null=True,
-        blank=True
-    )
-    old_status = models.CharField(
-        max_length=20,
-        choices=SubscriptionStatus.choices,
-        null=True,
-        blank=True
-    )
-    new_status = models.CharField(
-        max_length=20,
-        choices=SubscriptionStatus.choices,
-        null=True,
-        blank=True
-    )
+    old_plan = models.CharField(max_length=30, choices=SubscriptionPlan.choices, null=True, blank=True)
+    new_plan = models.CharField(max_length=30, choices=SubscriptionPlan.choices, null=True, blank=True)
+    old_status = models.CharField(max_length=20, choices=SubscriptionStatus.choices, null=True, blank=True)
+    new_status = models.CharField(max_length=20, choices=SubscriptionStatus.choices, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, default='USD')
     payment_method = models.CharField(max_length=50, null=True, blank=True)
@@ -84,11 +52,7 @@ class ProcessedWebhookEvent(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     event_id = models.CharField(max_length=255, unique=True, db_index=True)
     event_type = models.CharField(max_length=100)
-    status = models.CharField(
-        max_length=20,
-        choices=WebhookEventStatus.choices,
-        default=WebhookEventStatus.PENDING
-    )
+    status = models.CharField(max_length=20, choices=WebhookEventStatus.choices, default=WebhookEventStatus.PENDING)
     processed_at = models.DateTimeField(auto_now_add=True)
     error_message = models.TextField(null=True, blank=True)
     metadata = models.JSONField(default=dict, blank=True)
@@ -108,11 +72,7 @@ class ProcessedWebhookEvent(models.Model):
 class PlanFeatures(models.Model):
     """Model to store plan features and pricing configuration"""
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    plan = models.CharField(
-        max_length=30,
-        choices=SubscriptionPlan.choices,
-        unique=True
-    )
+    plan = models.CharField(max_length=30, choices=SubscriptionPlan.choices, unique=True)
     price_cents = models.IntegerField()
     contacts_limit = models.IntegerField()
     campaigns_limit = models.IntegerField()
@@ -141,11 +101,7 @@ class PlanFeatures(models.Model):
 class UsageTracking(models.Model):
     """Model to track monthly usage for organizations"""
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='usage_tracking'
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='usage_tracking')
     month = models.DateField()
     emails_sent = models.IntegerField(default=0)
     campaigns_created = models.IntegerField(default=0)
@@ -188,11 +144,7 @@ class UsageTracking(models.Model):
         from apps.contacts.models import Contact
         from apps.campaigns.models import Campaign
         contacts_count = Contact.objects.filter(organization=organization).count()
-        campaigns_sent = Campaign.objects.filter(
-            organization=organization,
-            created_at__month=timezone.now().month,
-            created_at__year=timezone.now().year
-        ).count()
+        campaigns_sent = Campaign.objects.filter(organization=organization, created_at__month=timezone.now().month, created_at__year=timezone.now().year).count()
         
         return {
             'emails_sent': usage.emails_sent,
@@ -207,11 +159,7 @@ class UsageTracking(models.Model):
 class Card(models.Model):
     """Model to store card details"""
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='cards'
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='cards')
     cardholder_name = models.CharField(max_length=255, default='Card Holder')
     last4 = models.CharField(max_length=4)
     brand = models.CharField(max_length=50)
@@ -232,8 +180,5 @@ class Card(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_default:
-            Card.objects.filter(
-                organization=self.organization,
-                is_default=True
-            ).exclude(id=self.id).update(is_default=False)
+            Card.objects.filter(organization=self.organization, is_default=True).exclude(id=self.id).update(is_default=False)
         super().save(*args, **kwargs)

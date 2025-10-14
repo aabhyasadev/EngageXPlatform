@@ -1,16 +1,15 @@
-from rest_framework import viewsets, filters
+from apps.contacts.models import Contact
+from apps.campaigns.models import Campaign
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, filters
 from django.db.models import Sum, Avg, Max, Min
-
 from apps.analytics.models import AnalyticsEvent
-from apps.analytics.serializers import AnalyticsEventSerializer, DashboardStatsSerializer
+from rest_framework.permissions import IsAuthenticated
 from apps.common.viewsets import BaseOrganizationViewSet
-from apps.campaigns.models import Campaign
-from apps.contacts.models import Contact
 from apps.common.middleware import requires_plan_feature
+from django_filters.rest_framework import DjangoFilterBackend
+from apps.analytics.serializers import AnalyticsEventSerializer, DashboardStatsSerializer
 
 
 class AnalyticsEventViewSet(BaseOrganizationViewSet):

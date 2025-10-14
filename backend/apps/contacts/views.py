@@ -1,22 +1,18 @@
+import io
+import csv
+import openpyxl
+from django.db.models import Q
+from django.http import HttpResponse
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from apps.common.tasks import import_contacts_from_csv
+from apps.common.viewsets import BaseOrganizationViewSet
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
-from django.http import HttpResponse
-import csv
-import io
-import openpyxl
-
 from apps.contacts.models import ContactGroup, Contact, ContactGroupMembership
-from apps.contacts.serializers import (
-    ContactGroupSerializer, ContactSerializer, ContactGroupMembershipSerializer,
-    ContactImportSerializer
-)
-from apps.common.viewsets import BaseOrganizationViewSet
-from apps.common.tasks import import_contacts_from_csv
 from apps.subscriptions.subscription_views import check_usage_limit, update_usage_tracking
+from apps.contacts.serializers import (ContactGroupSerializer, ContactSerializer, ContactImportSerializer)
 
 
 class DefaultPagination(PageNumberPagination):

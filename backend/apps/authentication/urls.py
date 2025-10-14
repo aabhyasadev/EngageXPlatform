@@ -1,17 +1,7 @@
 from django.urls import path
-from .auth_views import (
-    auth_user, dashboard_stats, logout_view, get_csrf_token, test_connection, switch_organization
-)
-from .signup_views import (
-    check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account
-)
-from .signin_views import (
-    validate_organization_email,
-    authenticate_credentials, 
-    verify_mfa_otp_sso,
-    forgot_account,
-    logout_user
-)
+from .signup_views import (check_email, basic_info, business_info, send_otp, resend_otp, verify_otp, create_account)
+from .auth_views import (auth_user, dashboard_stats, logout_view, get_csrf_token, test_connection, switch_organization)
+from .signin_views import (validate_organization_email, authenticate_credentials, verify_mfa_otp_sso, forgot_account, logout_user)
 
 urlpatterns = [
     # Test endpoint for Django-frontend connection

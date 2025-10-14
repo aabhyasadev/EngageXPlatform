@@ -1,19 +1,17 @@
-import secrets
 import random
 from datetime import timedelta
+from django.conf import settings
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password
 from django.db import transaction
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
-from django.conf import settings
-import os
-from apps.accounts.models import User, Organization
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from apps.authentication.models import EmailOTP
+from apps.accounts.models import User, Organization
+from django.contrib.auth.hashers import make_password
 from apps.common.constants import UserRole, SubscriptionPlan
+from rest_framework.decorators import api_view, permission_classes
 from apps.accounts.serializers import UserSerializer, OrganizationSerializer
 
 

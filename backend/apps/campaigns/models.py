@@ -1,56 +1,27 @@
 import uuid
 from django.db import models
-from django.core.validators import EmailValidator
-
-from apps.common.constants import CampaignStatus, RecipientStatus
-from apps.accounts.models import Organization, User
-from apps.templates.models import EmailTemplate
-from apps.contacts.models import ContactGroup, Contact
 from apps.domains.models import Domain
+from apps.templates.models import EmailTemplate
+from django.core.validators import EmailValidator
+from apps.accounts.models import Organization, User
+from apps.contacts.models import ContactGroup, Contact
+from apps.common.constants import CampaignStatus, RecipientStatus
 
 
 class Campaign(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='campaigns'
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='campaigns')
     name = models.CharField(max_length=255)
     subject = models.CharField(max_length=255)
     from_email = models.EmailField(max_length=255, validators=[EmailValidator()])
     from_name = models.CharField(max_length=255, null=True, blank=True)
     reply_to_email = models.EmailField(max_length=255, null=True, blank=True, validators=[EmailValidator()])
-    
-    template = models.ForeignKey(
-        EmailTemplate,
-        on_delete=models.SET_NULL,
-        related_name='campaigns',
-        null=True,
-        blank=True
-    )
-    domain = models.ForeignKey(
-        Domain,
-        on_delete=models.SET_NULL,
-        related_name='campaigns',
-        null=True,
-        blank=True
-    )
-    contact_group = models.ForeignKey(
-        ContactGroup,
-        on_delete=models.SET_NULL,
-        related_name='campaigns',
-        null=True,
-        blank=True
-    )
-    
+    template = models.ForeignKey(EmailTemplate, on_delete=models.SET_NULL, related_name='campaigns', null=True, blank=True)
+    domain = models.ForeignKey(Domain, on_delete=models.SET_NULL, related_name='campaigns', null=True, blank=True)
+    contact_group = models.ForeignKey(ContactGroup, on_delete=models.SET_NULL, related_name='campaigns', null=True, blank=True)
     html_content = models.TextField(null=True, blank=True)
     text_content = models.TextField(null=True, blank=True)
-    status = models.CharField(
-        max_length=20,
-        choices=CampaignStatus.choices,
-        default=CampaignStatus.DRAFT
-    )
+    status = models.CharField(max_length=20, choices=CampaignStatus.choices, default=CampaignStatus.DRAFT)
     scheduled_at = models.DateTimeField(null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)
     total_recipients = models.IntegerField(default=0)
@@ -60,12 +31,7 @@ class Campaign(models.Model):
     total_clicked = models.IntegerField(default=0)
     total_bounced = models.IntegerField(default=0)
     total_unsubscribed = models.IntegerField(default=0)
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='created_campaigns',
-        db_column='created_by'
-    )
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_campaigns', db_column='created_by')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -96,24 +62,11 @@ class Campaign(models.Model):
             return (self.total_clicked / self.total_delivered) * 100
         return 0
 
-
 class CampaignRecipient(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    campaign = models.ForeignKey(
-        Campaign,
-        on_delete=models.CASCADE,
-        related_name='recipients'
-    )
-    contact = models.ForeignKey(
-        Contact,
-        on_delete=models.CASCADE,
-        related_name='campaign_recipients'
-    )
-    status = models.CharField(
-        max_length=50,
-        choices=RecipientStatus.choices,
-        default=RecipientStatus.PENDING
-    )
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='recipients')
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name='campaign_recipients')
+    status = models.CharField(max_length=50, choices=RecipientStatus.choices, default=RecipientStatus.PENDING)
     sent_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
     opened_at = models.DateTimeField(null=True, blank=True)
