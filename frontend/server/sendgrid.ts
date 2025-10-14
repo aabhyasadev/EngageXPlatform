@@ -1,4 +1,11 @@
+import path from "path";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 import { MailService } from '@sendgrid/mail';
+
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename); 
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("SENDGRID_API_KEY not set - email sending will be disabled");
@@ -31,7 +38,7 @@ export async function sendEmail(
       to: params.to,
       from: params.from,
       subject: params.subject,
-      text: params.text,
+      text: params.text ?? "",
       html: params.html,
     });
     return true;

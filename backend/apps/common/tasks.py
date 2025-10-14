@@ -1,18 +1,16 @@
+import logging
+import dns.resolver
 from celery import shared_task
+from datetime import timedelta
+from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
-import dns.resolver
-import logging
-from django.core.mail import EmailMessage
-import re
-from django.conf import settings
-from datetime import timedelta
-
 from apps.domains.models import Domain
-from apps.campaigns.models import Campaign, CampaignRecipient
 from apps.contacts.models import Contact
+from django.core.mail import EmailMessage
 from apps.analytics.models import AnalyticsEvent
 from apps.accounts.models import Organization, User
+from apps.campaigns.models import Campaign, CampaignRecipient
 from apps.common.constants import SubscriptionPlan, SubscriptionStatus
 
 logger = logging.getLogger(__name__)

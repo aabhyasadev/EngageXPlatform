@@ -34,22 +34,9 @@ class UserManager(BaseUserManager):
 class Organization(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    subscription_plan = models.CharField(
-        max_length=30,
-        choices=SubscriptionPlan.choices,
-        default=SubscriptionPlan.FREE_TRIAL
-    )
-    subscription_status = models.CharField(
-        max_length=20,
-        choices=SubscriptionStatus.choices,
-        default=SubscriptionStatus.TRIALING
-    )
-    billing_cycle = models.CharField(
-        max_length=20,
-        choices=BillingCycle.choices,
-        null=True,
-        blank=True
-    )
+    subscription_plan = models.CharField(max_length=30, choices=SubscriptionPlan.choices, default=SubscriptionPlan.FREE_TRIAL)
+    subscription_status = models.CharField(max_length=20, choices=SubscriptionStatus.choices, default=SubscriptionStatus.TRIALING)
+    billing_cycle = models.CharField(max_length=20, choices=BillingCycle.choices, null=True, blank=True)
     trial_ends_at = models.DateTimeField(null=True, blank=True)
     subscription_ends_at = models.DateTimeField(null=True, blank=True)
     current_period_end = models.DateTimeField(null=True, blank=True)
@@ -71,6 +58,14 @@ class Organization(models.Model):
 
     class Meta:
         db_table = 'organizations'
+        indexes = [
+            models.Index(fields=['subscription_plan']),
+            models.Index(fields=['subscription_status']),
+            models.Index(fields=['stripe_customer_id']),
+            models.Index(fields=['trial_ends_at']),
+            models.Index(fields=['subscription_ends_at']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return self.name
@@ -86,17 +81,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, null=True, blank=True)
     profile_image_url = models.URLField(max_length=500, null=True, blank=True)
     stripe_customer_id = models.CharField(max_length=255, null=True, blank=True)
-    organization = models.ForeignKey(
-        Organization, 
-        on_delete=models.CASCADE, 
-        related_name='users',
-        null=True, blank=True
-    )
-    role = models.CharField(
-        max_length=20,
-        choices=UserRole.choices,
-        default=UserRole.CAMPAIGN_MANAGER
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
+    role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CAMPAIGN_MANAGER)
     mfa_enabled = models.BooleanField(default=False)
     otp_secret = models.CharField(max_length=32, null=True, blank=True)
     sso_enabled = models.BooleanField(default=False)
@@ -115,6 +101,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = 'users'
+        indexes = [
+            models.Index(fields=['replit_id']),
+            models.Index(fields=['email']),
+            models.Index(fields=['organization']),
+            models.Index(fields=['role']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['stripe_customer_id']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return self.email
@@ -148,16 +143,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 class OrganizationMembership(models.Model):
     """Connects users to organizations with specific roles"""
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='memberships'
-    )
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name='memberships'
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='memberships')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='memberships')
     role = models.CharField(
         max_length=20,
         choices=UserRole.choices,

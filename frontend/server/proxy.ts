@@ -1,6 +1,13 @@
-import { createProxyMiddleware } from "http-proxy-middleware";
-import type { Express } from "express";
+import path from "path";
+import dotenv from "dotenv";
 import crypto from "crypto";
+import { fileURLToPath } from "url";
+import type { Express } from "express";
+import { createProxyMiddleware } from "http-proxy-middleware";
+
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename); 
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const DJANGO_URL = "http://127.0.0.1:8001";
 // Require AUTH_SECRET for security
@@ -16,7 +23,7 @@ function createAuthHeaders(userId: string, userEmail: string, organizationId?: s
   const timestamp = Date.now().toString();
   const userData = JSON.stringify({ userId, userEmail, organizationId, timestamp });
   const signature = crypto
-    .createHmac("sha256", AUTH_SECRET)
+    .createHmac("sha256", AUTH_SECRET as string)
     .update(userData)
     .digest("hex");
 

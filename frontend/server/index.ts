@@ -1,7 +1,14 @@
-import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 import { startDjangoServer } from "./django";
+import { setupVite, serveStatic, log } from "./vite";
+import express, { type Request, Response, NextFunction } from "express";
+
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename); 
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const app = express();
 
@@ -71,9 +78,8 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
     port,
-    host: "0.0.0.0",
-    reusePort: true,
+    host: "127.0.0.1",
   }, () => {
-    log(`serving on port ${port}`);
+    log(`Serving on http://127.0.0.1:${port}`);
   });
 })();

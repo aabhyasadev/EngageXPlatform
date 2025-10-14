@@ -71,6 +71,15 @@ class Campaign(models.Model):
 
     class Meta:
         db_table = 'campaigns'
+        indexes = [
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['status']),
+            models.Index(fields=['scheduled_at']),
+            models.Index(fields=['sent_at']),
+            models.Index(fields=['created_by']),
+            models.Index(fields=['organization', '-created_at']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return self.name
@@ -116,6 +125,15 @@ class CampaignRecipient(models.Model):
     class Meta:
         db_table = 'campaign_recipients'
         unique_together = ['campaign', 'contact']
+        indexes = [
+            models.Index(fields=['campaign', 'status']),
+            models.Index(fields=['contact']),
+            models.Index(fields=['status']),
+            models.Index(fields=['sent_at']),
+            models.Index(fields=['opened_at']),
+            models.Index(fields=['clicked_at']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return f"{self.campaign.name} - {self.contact.email}"

@@ -67,6 +67,13 @@ class SubscriptionHistory(models.Model):
     class Meta:
         db_table = 'subscription_history'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'event_type']),
+            models.Index(fields=['event_type']),
+            models.Index(fields=['stripe_event_id']),
+            models.Index(fields=['invoice_id']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return f"{self.organization.name} - {self.event_type} - {self.created_at}"

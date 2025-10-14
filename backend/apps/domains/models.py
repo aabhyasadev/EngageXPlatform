@@ -28,6 +28,13 @@ class Domain(models.Model):
 
     class Meta:
         db_table = 'domains'
+        indexes = [
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['domain']),
+            models.Index(fields=['status']),
+            models.Index(fields=['verified_at']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return self.domain

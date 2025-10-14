@@ -22,8 +22,8 @@ class UserSerializer(serializers.ModelSerializer):
     organization = OrganizationSerializer(read_only=True)
     full_name = serializers.ReadOnlyField()
     role = serializers.SerializerMethodField()
-    is_active = serializers.SerializerMethodField()  # Organization-scoped activity status
-    membership_status = serializers.SerializerMethodField()  # Explicit membership status
+    is_active = serializers.SerializerMethodField()
+    membership_status = serializers.SerializerMethodField()
 
     class Meta:
         model = User

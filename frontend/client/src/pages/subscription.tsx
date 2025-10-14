@@ -316,17 +316,7 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4 max-w-7xl">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" data-testid="text-subscription-title">
-            Subscription Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your subscription, billing, and payment methods
-          </p>
-        </div>
-
+      <div className="p-6 bg-background space-y-8">
         {/* Tabs for different sections */}
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-3">

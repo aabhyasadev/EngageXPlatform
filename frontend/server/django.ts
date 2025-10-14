@@ -1,5 +1,12 @@
-import { spawn, type ChildProcess } from "child_process";
+import path from "path";
+import dotenv from "dotenv";
 import { log } from "./vite";
+import { fileURLToPath } from "url";
+import { spawn, type ChildProcess } from "child_process";
+
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename); 
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 let djangoProcess: ChildProcess | null = null;
 
@@ -11,8 +18,12 @@ export async function startDjangoServer(): Promise<void> {
     log("Starting Django backend server...");
     
     djangoProcess = spawn("python", ["manage.py", "runserver_with_scheduler", "127.0.0.1:8001", "--noreload"], {
-      cwd: "backend",
+      cwd: "../backend",
       stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        DOTENV_FILE: "../.env",
+      },
     });
 
     let startupTimeout: NodeJS.Timeout | null = null;

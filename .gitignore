@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+db.sqlite3
+
+# Virtual environments
+environment/
+
+# Django
+staticfiles/
+media/
+*.log
+*.json
+
+# Environment variables
+.env
+.envs/.env.development
+.envs/.env.production
+
+# Node.js
+node_modules/
+dist/
+server/public
+
+# Frontend / Vite
+vite.config.ts.*
+package-lock.json
+yarn.lock
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Makefile
+Makefile

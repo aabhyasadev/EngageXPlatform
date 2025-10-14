@@ -1,22 +1,20 @@
 import os
 from pathlib import Path
-from decouple import config
+from decouple import Config, RepositoryEnv
 from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # Updated to account for new directory structure: backend/config/settings/
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+config = Config(RepositoryEnv(os.getenv('DOTENV_FILE', '../.env')))
+
 # Security settings
 SECRET_KEY = config('SECRET_KEY', default=get_random_secret_key())
 
 ALLOWED_HOSTS = [
     "localhost",
-    "127.0.0.1", 
-    "0.0.0.0",
-    ".replit.dev",
-    ".replit.app",
-    ".repl.co"
+    "127.0.0.1",
 ]
 
 # Application definition
@@ -173,10 +171,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Use regex patterns for wildcard domains
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.replit\.dev$",
-    r"^https://.*\.replit\.app$",
-]
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+#     r"^https://.*\.replit\.dev$",
+#     r"^https://.*\.replit\.app$",
+# ]
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
@@ -208,9 +206,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
-    "https://*.replit.dev",
-    "https://*.replit.app",
-    "https://*.repl.co",
 ]
 
 CSRF_COOKIE_NAME = 'csrftoken'

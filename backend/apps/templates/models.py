@@ -23,6 +23,13 @@ class EmailTemplate(models.Model):
     class Meta:
         db_table = 'email_templates'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['organization']),
+            models.Index(fields=['is_default']),
+            models.Index(fields=['category']),
+            models.Index(fields=['organization', 'is_default']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return self.name

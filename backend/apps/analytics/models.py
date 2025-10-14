@@ -34,6 +34,14 @@ class AnalyticsEvent(models.Model):
 
     class Meta:
         db_table = 'analytics_events'
+        indexes = [
+            models.Index(fields=['organization', 'event_type']),
+            models.Index(fields=['campaign', 'event_type']),
+            models.Index(fields=['contact']),
+            models.Index(fields=['event_type']),
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['organization', '-created_at']),
+        ]
 
     def __str__(self):
         return f"{self.event_type} - {self.campaign.name if self.campaign else 'No Campaign'}"

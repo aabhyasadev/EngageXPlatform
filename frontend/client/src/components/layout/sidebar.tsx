@@ -1,30 +1,14 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
-import { Badge } from "@/components/ui/badge";
 import { useState, useMemo } from "react";
 import UserModal from "./user-modal";
 import { NavigationItem, canAccessNavItem } from "@/lib/permissions";
-import { 
-  Home, 
-  Users, 
-  Send, 
-  FileText, 
-  Globe, 
-  BarChart3, 
-  UserCog, 
-  CreditCard, 
-  Settings,
-  Mail,
-  User,
-  ChevronRight
-} from "lucide-react";
+import { Home, Users, Send, FileText, Globe, BarChart3, UserCog, CreditCard, Settings, Mail, User, ChevronRight } from "lucide-react";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
-  const { subscription, isTrialUser, daysRemaining } = useSubscription();
   const { prefetchRoute } = useRoutePrefetch();
   const [showUserModal, setShowUserModal] = useState(false);
 
@@ -145,19 +129,6 @@ export default function Sidebar() {
               <p className="text-xs text-muted-foreground" data-testid="text-organization-name">
                 {user?.organization?.name || "Loading..."}
               </p>
-              {subscription && (
-                <Badge 
-                  variant={isTrialUser ? "secondary" : subscription.is_expired ? "destructive" : "default"}
-                  className="text-xs px-1.5 py-0"
-                  data-testid="badge-subscription-status"
-                >
-                  {isTrialUser 
-                    ? `Trial (${daysRemaining}d)`
-                    : subscription.is_expired 
-                    ? "Expired"
-                    : subscription.plan_name?.replace(' Monthly', '').replace(' Yearly', '')}
-                </Badge>
-              )}
             </div>
           </div>
         </div>

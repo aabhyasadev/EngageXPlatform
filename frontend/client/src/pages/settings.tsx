@@ -54,16 +54,10 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-6 bg-background max-w-4xl mx-auto">
+    <div className="p-6 bg-background space-y-8">
       <div className="space-y-6">
         {/* Organization Information */}
         <Card>
-          <CardHeader>
-            <CardTitle>Organization Information</CardTitle>
-            <CardDescription>
-              View your organization details and basic information
-            </CardDescription>
-          </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div>

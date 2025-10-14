@@ -1,10 +1,10 @@
-import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger } from "vite";
+import { nanoid } from "nanoid";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
-import { nanoid } from "nanoid";
+import express, { type Express } from "express";
+import { createServer as createViteServer, createLogger } from "vite";
 
 const viteLogger = createLogger();
 
@@ -68,7 +68,7 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  const distPath = path.resolve(import.meta.dirname, "../dist/public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(

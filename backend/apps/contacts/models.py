@@ -19,6 +19,10 @@ class ContactGroup(models.Model):
 
     class Meta:
         db_table = 'contact_groups'
+        indexes = [
+            models.Index(fields=['organization']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return self.name
@@ -44,6 +48,12 @@ class Contact(models.Model):
     class Meta:
         db_table = 'contacts'
         unique_together = ['organization', 'email']
+        indexes = [
+            models.Index(fields=['organization', 'is_subscribed']),
+            models.Index(fields=['email']),
+            models.Index(fields=['is_subscribed']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.email}" if self.first_name else self.email
@@ -72,6 +82,11 @@ class ContactGroupMembership(models.Model):
     class Meta:
         db_table = 'contact_group_memberships'
         unique_together = ['contact', 'group']
+        indexes = [
+            models.Index(fields=['contact']),
+            models.Index(fields=['group']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return f"{self.contact.email} in {self.group.name}"

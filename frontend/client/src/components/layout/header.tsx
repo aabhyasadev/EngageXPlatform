@@ -1,4 +1,6 @@
 import { useLocation } from "wouter";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { useState } from "react";
@@ -7,6 +9,7 @@ import CampaignModal from "@/components/campaigns/campaign-modal";
 export default function Header() {
   const [location] = useLocation();
   const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const { subscription, isTrialUser, daysRemaining } = useSubscription();
 
   const getPageTitle = () => {
     switch (location) {
@@ -47,16 +50,36 @@ export default function Header() {
           <NotificationDropdown />
           {location === "/" && (
             <>
-              <Button 
-                onClick={() => setShowCampaignModal(true)}
-                data-testid="button-header-new-campaign"
-              >
-                <i className="fas fa-plus mr-2"></i>
+              <Button onClick={() => setShowCampaignModal(true)} data-testid="button-header-new-campaign">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-plus h-4 w-4 mr-2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
                 New Campaign
               </Button>
               <div className="flex items-center space-x-2 bg-accent px-3 py-2 rounded-md">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-accent-foreground">Trial: 14 days left</span>
+                <span className="text-sm text-accent-foreground">
+                  {subscription && (
+                    <Badge 
+                      variant={
+                        isTrialUser 
+                          ? "secondary" 
+                          : subscription.is_expired 
+                          ? "destructive" 
+                          : "default"
+                      }
+                      className="text-xs px-1.5 py-0"
+                      data-testid="badge-subscription-status"
+                    >
+                      {isTrialUser 
+                        ? `Trial: ${daysRemaining} days left`
+                        : subscription.is_expired 
+                        ? "Expired"
+                        : subscription.plan_name
+                            ?.replace(' Monthly', '')
+                            ?.replace(' Yearly', '')
+                      }
+                    </Badge>
+                  )}
+                </span>
               </div>
             </>
           )}

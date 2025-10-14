@@ -4,7 +4,7 @@ from .base import *
 DEBUG = True
 
 # Email backend - Console for development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Cache configuration - Use dummy cache for development
 CACHES = {
