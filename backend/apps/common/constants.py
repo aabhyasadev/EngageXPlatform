@@ -6,7 +6,7 @@ from django.db import models
 
 class UserRole(models.TextChoices):
     ADMIN = 'admin', 'Admin'
-    ORGANIZER = 'organizer', 'Organizer'  # Organization Owner
+    ORGANIZER = 'organizer', 'Organizer'
     CAMPAIGN_MANAGER = 'campaign_manager', 'Campaign Manager'
     ANALYST = 'analyst', 'Analyst'
     EDITOR = 'editor', 'Editor'

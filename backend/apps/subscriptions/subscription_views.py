@@ -1,38 +1,22 @@
 import stripe
+import logging
+from decimal import Decimal
+from datetime import datetime
+from django.db.models import F
+from datetime import timedelta
 from django.conf import settings
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
+from django.db import transaction
 from rest_framework import status
 from django.utils import timezone
-from datetime import timedelta
-from django.db.models import F
-from django.db import transaction
-from datetime import datetime
-import json
-import logging
-import hashlib
-from decimal import Decimal
-
-from apps.accounts.models import Organization, User
-from apps.subscriptions.models import (
-    SubscriptionHistory,
-    PlanFeatures,
-    UsageTracking,
-    ProcessedWebhookEvent,
-    WebhookEventStatus
-)
+from django.http import JsonResponse
+from rest_framework.response import Response
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from apps.accounts.models import Organization
 from apps.notifications.models import SubscriptionNotification
-from apps.common.constants import (
-    SubscriptionPlan,
-    SubscriptionEventType,
-    SubscriptionStatus,
-    NotificationType,
-    NotificationChannel
-)
+from apps.common.constants import (SubscriptionPlan, SubscriptionEventType, SubscriptionStatus)
+from apps.subscriptions.models import (SubscriptionHistory, PlanFeatures, UsageTracking, ProcessedWebhookEvent, WebhookEventStatus)
 
 logger = logging.getLogger(__name__)
 

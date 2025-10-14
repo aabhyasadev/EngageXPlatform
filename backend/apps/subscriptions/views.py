@@ -1,14 +1,10 @@
 from rest_framework import status
+from apps.subscriptions.models import Card
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-
-from apps.subscriptions.models import Card
-from apps.subscriptions.serializers import (
-    CardSerializer, CardCreateSerializer, CardUpdateSerializer
-)
-from apps.accounts.models import Organization
 from apps.common.viewsets import BaseOrganizationViewSet
+from apps.subscriptions.serializers import (CardSerializer, CardCreateSerializer, CardUpdateSerializer)
 
 
 class CardViewSet(BaseOrganizationViewSet):
@@ -21,9 +17,7 @@ class CardViewSet(BaseOrganizationViewSet):
         """Get cards for the current organization"""
         if not self.request.user.organization:
             return Card.objects.none()
-        return Card.objects.filter(
-            organization=self.request.user.organization
-        ).order_by('-is_default', '-created_at')
+        return Card.objects.filter(organization=self.request.user.organization).order_by('-is_default', '-created_at')
 
     def get_serializer_class(self):
         """Use different serializers for different actions"""
