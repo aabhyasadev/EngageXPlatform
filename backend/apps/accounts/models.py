@@ -65,7 +65,6 @@ class Organization(models.Model):
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.CharField(max_length=36, primary_key=True, default=uuid.uuid4, editable=False)
-    replit_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     username = models.CharField(max_length=150, unique=True, null=True, blank=True)
     email = models.EmailField(unique=True, validators=[EmailValidator()])
     first_name = models.CharField(max_length=100, null=True, blank=True)
@@ -94,7 +93,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         db_table = 'users'
         indexes = [
-            models.Index(fields=['replit_id']),
             models.Index(fields=['email']),
             models.Index(fields=['organization']),
             models.Index(fields=['role']),

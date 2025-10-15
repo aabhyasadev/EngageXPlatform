@@ -68,26 +68,61 @@ export default function Domains() {
 
   const createDomainMutation = useMutation({
     mutationFn: async (data: DomainFormData) => {
-      const response = await apiRequest("POST", "/api/domains/", { 
+      const normalizedDomain = data.domain.trim().toLowerCase();
+      const existingDomains = queryClient.getQueryData<any[]>(["/api/domains/"]);
+
+      if (
+        existingDomains?.some(
+          (d) => d.domain.trim().toLowerCase() === normalizedDomain
+        )
+      ) {
+        throw new Error(`Domain "${normalizedDomain}" already exists.`);
+      }
+
+      // Step 1: Create domain
+      const response = await apiRequest("POST", "/api/domains/", {
         domain: data.domain,
-        // Backend expects organization ID, not full object
         organization: user?.organizationId || user?.organization?.id
       });
-      return response.json();
+      
+      if (!response.ok) {
+        throw new Error("Failed to create domain");
+      }
+      const domain = await response.json();
+
+      // Step 2: Generate DNS records automatically
+      const dnsResponse = await apiRequest(
+        "POST",
+        `/api/domains/${domain.id}/generate_dns_records/`
+      );
+      if (!dnsResponse.ok) {
+        throw new Error("Failed to generate DNS records");
+      }
+      const dnsData = await dnsResponse.json();
+
+      // Return DNS data for modal display
+      return dnsData;
     },
-    onSuccess: () => {
+    onSuccess: (dnsData) => {
       toast({
-        title: "Success",
-        description: "Domain added successfully! Please verify DNS records.",
+        title: "Domain Added",
+        description: "DNS records generated successfully. Please configure them in your DNS provider.",
       });
+
+      // Refresh domain list
       queryClient.invalidateQueries({ queryKey: ["/api/domains/"] });
+
+      // Show DNS modal directly
+      setSelectedDomain(dnsData);
       setShowAddModal(false);
+      setShowVerificationModal(true);
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add domain",
+        description:
+          error.message || "Failed to add domain or generate DNS records",
         variant: "destructive",
       });
     },
@@ -96,19 +131,52 @@ export default function Domains() {
   const verifyDomainMutation = useMutation({
     mutationFn: async (domainId: string) => {
       const response = await apiRequest("POST", `/api/domains/${domainId}/verify/`);
-      return response.json();
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage =
+          data.error ||
+          data.detail ||
+          "Verification failed. Please check your DNS settings.";
+        const errorCode = data.code || "UNKNOWN_ERROR";
+        const error = new Error(`${errorCode}: ${errorMessage}`);
+        (error as any).code = errorCode;
+        throw error;
+      }
+
+      return data;
     },
-    onSuccess: () => {
+
+    // ✅ disable retry completely (no second call)
+    retry: false,
+
+    onSuccess: (data) => {
       toast({
         title: "Success",
-        description: "Domain verified successfully!",
+        description: data.message || "Domain verification started successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/domains/"] });
     },
-    onError: (error) => {
+
+    onError: (error: any) => {
+      const message = error.message || "";
+      let friendlyMessage = "Please check your DNS records and try again.";
+
+      if (message.includes("SUBSCRIPTION_REQUIRED")) {
+        friendlyMessage = "You need an active subscription to verify this domain.";
+      } else if (message.includes("NXDOMAIN")) {
+        friendlyMessage = "Domain not found in DNS. Please verify your domain name.";
+      } else if (message.includes("NO_TXT_RECORDS")) {
+        friendlyMessage = "No TXT records found. Ensure you've added the correct DNS TXT record.";
+      } else if (message.includes("TXT_RECORD_NOT_FOUND")) {
+        friendlyMessage = "TXT record not matched. Please double-check the verification code.";
+      } else if (message.includes("DNS_ERROR")) {
+        friendlyMessage = "DNS verification failed. Please try again later.";
+      }
+
       toast({
         title: "Verification Failed",
-        description: error.message || "Please check your DNS records and try again",
+        description: friendlyMessage,
         variant: "destructive",
       });
     },

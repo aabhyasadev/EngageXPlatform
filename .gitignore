@@ -32,3 +32,6 @@ Dockerfile
 
 # Makefile
 Makefile
+docker-compose.yml
+*.csv
+Dockerfile
